@@ -1,7 +1,7 @@
-# Plataforma para la Gestión de Torneos Universitarios
+# Plataforma para la Gestión de Torneos
 
 ## Descripción
-La **Plataforma para la Gestión de Torneos Universitarios** es una aplicación web diseñada para optimizar la administración de torneos deportivos y de esports en universidades. Permite a los organizadores gestionar inscripciones, programar partidos, automatizar emparejamientos y visualizar estadísticas de manera eficiente.
+La **Plataforma para la Gestión de Torneos** es una aplicación web diseñada para optimizar la administración de torneos deportivos y de esports en la Universidad de Antioquia. Permite a los organizadores gestionar inscripciones, programar partidos, automatizar emparejamientos y visualizar estadísticas de manera eficiente.
 
 ## Tecnologías Utilizadas
 - **Frontend:** React + Vite
