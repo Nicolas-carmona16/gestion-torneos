@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
@@ -17,6 +18,9 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+
+// Routes
+app.use("/api/users", userRoutes);
 
 // Middleware for handling errors
 app.use(notFound);
