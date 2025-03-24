@@ -15,6 +15,12 @@ const validateRegister = [
   check("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
+  check("birthDate")
+    .isISO8601()
+    .withMessage("Invalid birth date format (YYYY-MM-DD)"),
+  check("role")
+    .isIn(["admin", "player", "referee"])
+    .withMessage("Invalid role"),
   validateFields,
 ];
 
@@ -29,6 +35,10 @@ router.get("/profile", protect, (req, res) => {
 // Solo el admin puede ver todos los usuarios
 router.get("/all-users", protect, authorizeRoles("admin"), async (req, res) => {
   const users = await User.find({});
+  if (!users) {
+    res.status(404);
+    throw new Error("No users found");
+  }
   res.json(users);
 });
 

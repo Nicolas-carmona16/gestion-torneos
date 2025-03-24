@@ -1,6 +1,6 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import generateToken from "../config/generateToken.js";
 import asyncHandler from "express-async-handler";
 
 // @desc Register new user
@@ -29,14 +29,21 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
+    const token = generateToken(user._id);
+
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(201).json({
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
-      birthDate: user.birthDate,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
     });
   } else {
     res.status(400);
@@ -44,7 +51,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Login user & get token
+// @desc Login user & store token in cookie
 // @route POST /api/users/login
 // @access Public
 const loginUser = asyncHandler(async (req, res) => {
@@ -53,25 +60,27 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await bcrypt.compare(password, user.password))) {
+    const token = generateToken(user._id);
+
+    // Store token in cookie
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
     res.json({
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
     });
   } else {
     res.status(401);
     throw new Error("Invalid email or password");
   }
 });
-
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-};
 
 export { registerUser, loginUser };
