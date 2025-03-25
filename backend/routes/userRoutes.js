@@ -1,7 +1,7 @@
 import express from "express";
 import User from "../models/userModel.js";
 import { check } from "express-validator";
-import { registerUser, loginUser } from "../controllers/userController.js";
+import { registerUser, loginUser, logoutUser } from "../controllers/userController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 import validateFields from "../middlewares/validationMiddleware.js";
 
@@ -26,6 +26,7 @@ const validateRegister = [
 
 router.post("/register", validateRegister, registerUser);
 router.post("/login", loginUser);
+router.post("/logout", logoutUser);
 
 // Protect routes
 router.get("/profile", protect, (req, res) => {
