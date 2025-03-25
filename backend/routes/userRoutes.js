@@ -4,6 +4,7 @@ import { check } from "express-validator";
 import { registerUser, loginUser, logoutUser } from "../controllers/userController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 import validateFields from "../middlewares/validationMiddleware.js";
+import loginLimiter from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ const validateRegister = [
 ];
 
 router.post("/register", validateRegister, registerUser);
-router.post("/login", loginUser);
+router.post("/login", loginLimiter, loginUser);
 router.post("/logout", logoutUser);
 
 // Protect routes
