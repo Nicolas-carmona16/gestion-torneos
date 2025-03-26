@@ -40,4 +40,20 @@ const validateUpdateUser = [
   validateFields,
 ];
 
-export { validateRegister, validateUpdateUser };
+const validateAdminCreate = [
+  check("firstName").notEmpty().withMessage("First name is required"),
+  check("lastName").notEmpty().withMessage("Last name is required"),
+  check("email").isEmail().withMessage("Invalid email"),
+  check("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+  check("birthDate")
+    .isISO8601()
+    .withMessage("Invalid birth date format (YYYY-MM-DD)"),
+  check("role")
+    .isIn(["admin", "player", "referee"])
+    .withMessage("Invalid role"),
+  validateFields,
+];
+
+export { validateRegister, validateUpdateUser, validateAdminCreate };
