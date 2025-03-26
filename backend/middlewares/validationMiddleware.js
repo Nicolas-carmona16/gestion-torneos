@@ -12,8 +12,13 @@ const validateRegister = [
     .isISO8601()
     .withMessage("Invalid birth date format (YYYY-MM-DD)"),
   check("role")
-    .isIn(["admin", "player", "referee"])
-    .withMessage("Invalid role"),
+    .optional()
+    .custom((value) => {
+      if (value && value !== "player") {
+        throw new Error("Only the 'player' role is allowed for registration");
+      }
+      return true;
+    }),
   validateFields,
 ];
 
