@@ -25,16 +25,16 @@ const Header = ({ isAuthenticated }) => {
         </Link>
         {!isAuthenticated ? (
           <div>
-            <Button color="inherit" component={Link} to="/login">
-              Login
+            <Button color="inherit" component={Link} to="/iniciar-sesion">
+              Iniciar sesión
             </Button>
-            <Button color="inherit" component={Link} to="/register">
-              Register
+            <Button color="inherit" component={Link} to="/registrarse">
+              Registrarse
             </Button>
           </div>
         ) : (
-          <Button color="inherit" component={Link} to="/logout">
-            Logout
+          <Button color="inherit" component={Link} to="/cerrar-sesion">
+            Cerrar sesión
           </Button>
         )}
       </Toolbar>
