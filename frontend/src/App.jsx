@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import theme from "./theme/theme";
+import NotFound from "./pages/NotFound";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,6 +17,7 @@ const App = () => {
         <div className="app-container">
           <Header isAuthenticated={isAuthenticated} />
           <Routes>
+            <Route path="*" element={<NotFound />} />
             <Route path="/" element={<Home />} />
             <Route
               path="/registrarse"
