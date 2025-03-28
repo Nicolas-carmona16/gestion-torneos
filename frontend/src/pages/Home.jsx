@@ -40,6 +40,7 @@ const Home = () => {
                 width: "150px",
                 padding: "10px 0",
                 fontSize: "16px",
+                borderRadius: "15px",
               }}
               component={Link}
               to={path}
@@ -55,6 +56,7 @@ const Home = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            marginBottom: "30px",
           }}
         >
           <Carousel
