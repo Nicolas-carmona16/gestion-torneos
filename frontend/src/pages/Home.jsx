@@ -15,8 +15,7 @@ const Home = () => {
     <Container className="mt-10">
       <Grid container spacing={3} justifyContent="center" alignItems="center">
         <Grid
-          item
-          xs={12}
+          size={{ xs: 12 }}
           style={{
             display: "flex",
             justifyContent: "center",
@@ -50,8 +49,7 @@ const Home = () => {
           ))}
         </Grid>
         <Grid
-          item
-          xs={12}
+          size={{ xs: 12 }}
           style={{
             display: "flex",
             justifyContent: "center",

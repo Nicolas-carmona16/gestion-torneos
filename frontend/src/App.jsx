@@ -9,14 +9,19 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import { getUser } from "./services/authService";
 import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const user = await getUser();
-      setIsAuthenticated(!!user);
+      try {
+        const user = await getUser();
+        setIsAuthenticated(!!user);
+      } catch {
+        setIsAuthenticated(false);
+      }
     };
     checkAuth();
   }, []);
@@ -41,7 +46,15 @@ const App = () => {
               path="/iniciar-sesion"
               element={<Login setIsAuthenticated={setIsAuthenticated} />}
             />
-            <Route path="/perfil" element={<Profile />} />
+            {/* Ruta protegida */}
+            <Route
+              path="/perfil"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </Router>
