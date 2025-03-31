@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import { getUser } from "./services/authService";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ManageUsers from "./pages/ManageUsers";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -52,6 +53,14 @@ const App = () => {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestion-usuarios"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <ManageUsers />
                 </ProtectedRoute>
               }
             />

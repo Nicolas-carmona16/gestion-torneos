@@ -35,3 +35,39 @@ export const logoutUser = async () => {
     console.error("Error cerrando sesión:", error);
   }
 };
+
+export const getAllUsers = async () => {
+  try {
+    const response = await api.get("/users/all-users", {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error obteniendo todos los usuarios:", error);
+    throw error;
+  }
+};
+
+export const deleteUser = async (userId) => {
+  try {
+    const response = await api.delete(`/users/${userId}`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error eliminando usuario:", error);
+    throw error;
+  }
+};
+
+export const updateUser = async (userId, userData) => {
+  try {
+    const response = await api.put(`/users/${userId}`, userData, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error actualizando usuario:", error);
+    throw error;
+  }
+};

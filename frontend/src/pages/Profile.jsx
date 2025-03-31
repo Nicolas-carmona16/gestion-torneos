@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -7,23 +8,29 @@ import {
   Avatar,
   Divider,
   Paper,
+  Button,
 } from "@mui/material";
-import { getUser } from "../services/authService";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { getUser } from "../services/authService";
 import { roleMapping } from "../utils/roleUtils";
 import { formatBirthDate } from "../utils/dateUtils";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [loadingUsers, _setLoadingUsers] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await getUser();
       setUser(userData);
     };
-
     fetchUser();
   }, []);
+
+  const handleViewUsers = () => {
+    navigate("/gestion-usuarios");
+  };
 
   if (!user) {
     return (
@@ -34,15 +41,10 @@ const Profile = () => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 10 }}>
+    <Container maxWidth="sm" sx={{ mt: 10, mb: 5 }}>
       <Paper
         elevation={4}
-        sx={{
-          mt: 5,
-          p: 3,
-          borderRadius: 3,
-          textAlign: "center",
-        }}
+        sx={{ mt: 5, p: 3, borderRadius: 3, textAlign: "center" }}
       >
         <Avatar
           sx={{
@@ -58,14 +60,7 @@ const Profile = () => {
           Perfil de Usuario
         </Typography>
         <Divider sx={{ my: 2 }} />
-        <Card
-          sx={{
-            mt: 2,
-            p: 2,
-            borderRadius: 2,
-            bgcolor: "grey.100",
-          }}
-        >
+        <Card sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: "grey.100" }}>
           <CardContent>
             <Typography variant="h6">
               <strong>Nombre:</strong> {user.firstName} {user.lastName}
@@ -82,6 +77,18 @@ const Profile = () => {
             </Typography>
           </CardContent>
         </Card>
+
+        {user.role === "admin" && (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={handleViewUsers}
+            disabled={loadingUsers}
+          >
+            {loadingUsers ? "Cargando..." : "Ver Usuarios"}
+          </Button>
+        )}
       </Paper>
     </Container>
   );
