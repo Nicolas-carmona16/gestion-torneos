@@ -67,43 +67,23 @@ const RegisterForm = ({ setIsAuthenticated }) => {
           }
         }}
       >
-        {({ errors, touched, isSubmitting }) => (
+        {({ errors, isSubmitting }) => (
           <Form className="flex flex-col gap-4">
             {errors.form && <Alert severity="error">{errors.form}</Alert>}
 
-            <FormTextField
-              name="firstName"
-              label="Nombre"
-              errors={errors}
-              touched={touched}
-            />
-            <FormTextField
-              name="lastName"
-              label="Apellido"
-              errors={errors}
-              touched={touched}
-            />
+            <FormTextField name="firstName" label="Nombre" />
+            <FormTextField name="lastName" label="Apellido" />
             <FormTextField
               name="birthDate"
               label="Fecha de Nacimiento"
               type="date"
-              errors={errors}
-              touched={touched}
             />
             <FormTextField
               name="email"
               label="Correo Electrónico"
               type="email"
-              errors={errors}
-              touched={touched}
             />
-            <FormTextField
-              name="password"
-              label="Contraseña"
-              type="password"
-              errors={errors}
-              touched={touched}
-            />
+            <FormTextField name="password" label="Contraseña" type="password" />
 
             <Button
               type="submit"

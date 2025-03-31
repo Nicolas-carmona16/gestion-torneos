@@ -7,13 +7,15 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import logo from "../assets/logoUdeA.png";
+import { logoutUser } from "../services/authService";
 
-const Header = ({ isAuthenticated }) => {
+const Header = ({ isAuthenticated, setIsAuthenticated }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const navigate = useNavigate();
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -21,6 +23,13 @@ const Header = ({ isAuthenticated }) => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    handleMenuClose();
+    await logoutUser();
+    setIsAuthenticated(false);
+    navigate("/iniciar-sesion");
   };
 
   return (
@@ -40,7 +49,7 @@ const Header = ({ isAuthenticated }) => {
           </Typography>
         </Link>
         <Link to={"/"}>
-          <img src={logo} alt="Logo" className="h-20" />{" "}
+          <img src={logo} alt="Logo" className="h-20" />
         </Link>
         {!isAuthenticated ? (
           <div>
@@ -50,9 +59,7 @@ const Header = ({ isAuthenticated }) => {
               to="/iniciar-sesion"
               sx={{
                 backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                },
+                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
               }}
             >
               Iniciar sesión
@@ -63,9 +70,7 @@ const Header = ({ isAuthenticated }) => {
               to="/registrarse"
               sx={{
                 backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                },
+                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
               }}
             >
               Registrarse
@@ -78,9 +83,7 @@ const Header = ({ isAuthenticated }) => {
               onClick={handleMenuOpen}
               sx={{
                 backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                },
+                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
               }}
             >
               <AccountCircleIcon style={{ fontSize: "40px" }} />
@@ -89,17 +92,17 @@ const Header = ({ isAuthenticated }) => {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              disableScrollLock
             >
-              <MenuItem onClick={handleMenuClose} component={Link} to="/perfil">
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  navigate("/perfil");
+                }}
+              >
                 Perfil
               </MenuItem>
-              <MenuItem
-                onClick={handleMenuClose}
-                component={Link}
-                to="/cerrar-sesion"
-              >
-                Cerrar sesión
-              </MenuItem>
+              <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
             </Menu>
           </div>
         )}
