@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getAllUsers, deleteUser, updateUser } from "../services/authService";
-import { Paper, Typography, TablePagination, Snackbar } from "@mui/material";
+import {
+  Paper,
+  Typography,
+  TablePagination,
+  Snackbar,
+  CircularProgress,
+  Box,
+} from "@mui/material";
 import FilterManageUsers from "../components/FilterManageUsers";
 import UserTable from "../components/UserTable";
 import EditUserDialog from "../components/EditUserDialog";
+import ConfirmDeleteUserDialog from "../components/ConfirmDeleteUserDialog";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -15,6 +23,7 @@ const ManageUsers = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -26,11 +35,21 @@ const ManageUsers = () => {
     role: "",
   });
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     const fetchUsers = async () => {
-      const usersData = await getAllUsers();
-      setUsers(usersData);
-      setFilteredUsers(usersData);
+      try {
+        const usersData = await getAllUsers();
+        setUsers(usersData);
+        setFilteredUsers(usersData);
+      } catch (error) {
+        console.error("Error al obtener usuarios", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchUsers();
   }, []);
@@ -89,20 +108,30 @@ const ManageUsers = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const confirmDeleteUser = (userId) => {
+    setUserToDelete(userId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    setDeleting(true);
     try {
-      await deleteUser(userId);
+      await deleteUser(userToDelete);
       setSnackbarMessage("Usuario eliminado correctamente");
       setSnackbarOpen(true);
 
-      setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user._id !== userToDelete)
+      );
       setFilteredUsers((prevUsers) =>
-        prevUsers.filter((user) => user._id !== userId)
+        prevUsers.filter((user) => user._id !== userToDelete)
       );
     } catch {
       setSnackbarMessage("Hubo un error al eliminar el usuario");
       setSnackbarOpen(true);
     }
+    setDeleting(false);
+    setDeleteModalOpen(false);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -112,6 +141,19 @@ const ManageUsers = () => {
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Paper
@@ -139,7 +181,7 @@ const ManageUsers = () => {
         filteredUsers={filteredUsers}
         page={page}
         handleEditUser={handleEditUser}
-        handleDeleteUser={handleDeleteUser}
+        handleDeleteUser={confirmDeleteUser}
       />
 
       <TablePagination
@@ -164,6 +206,13 @@ const ManageUsers = () => {
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
         message={snackbarMessage}
+      />
+
+      <ConfirmDeleteUserDialog
+        open={deleteModalOpen}
+        handleClose={() => setDeleteModalOpen(false)}
+        handleDeleteUser={handleDeleteUser}
+        deleting={deleting}
       />
     </Paper>
   );

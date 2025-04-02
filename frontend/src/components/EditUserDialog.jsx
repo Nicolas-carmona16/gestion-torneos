@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -21,7 +20,9 @@ const EditUserDialog = ({
 }) => {
   return (
     <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Editar Usuario</DialogTitle>
+      <DialogTitle color="primary" sx={{ fontWeight: "bold" }}>
+        Editar Usuario
+      </DialogTitle>
       <DialogContent>
         <TextField
           label="Nombre"
