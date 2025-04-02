@@ -51,6 +51,7 @@ const EditUserDialog = ({
         <TextField
           label="Fecha de Nacimiento"
           type="date"
+          inputProps={{ max: new Date().toISOString().split("T")[0] }}
           fullWidth
           margin="dense"
           value={updatedData.birthDate}

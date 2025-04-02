@@ -77,6 +77,9 @@ const RegisterForm = ({ setIsAuthenticated }) => {
               name="birthDate"
               label="Fecha de Nacimiento"
               type="date"
+              inputProps={{
+                max: new Date().toISOString().split("T")[0],
+              }}
             />
             <FormTextField
               name="email"
