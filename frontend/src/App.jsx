@@ -82,7 +82,10 @@ const App = () => {
             <Route
               path="/gestion-usuarios"
               element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <ProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  allowedRoles={["admin"]}
+                >
                   <ManageUsers />
                 </ProtectedRoute>
               }
