@@ -10,7 +10,16 @@ const validateRegister = [
     .withMessage("Password must be at least 6 characters long"),
   check("birthDate")
     .isISO8601()
-    .withMessage("Invalid birth date format (YYYY-MM-DD)"),
+    .withMessage("Invalid birth date format (YYYY-MM-DD)")
+    .custom((value) => {
+      const currentDate = new Date();
+      const birthDate = new Date(value);
+      if (birthDate > currentDate) {
+        throw new Error("Birth date cannot be in the future");
+      }
+      return true;
+    }),
+
   check("role")
     .optional()
     .custom((value) => {
@@ -32,7 +41,15 @@ const validateUpdateUser = [
   check("birthDate")
     .optional()
     .isISO8601()
-    .withMessage("Invalid birth date format (YYYY-MM-DD)"),
+    .withMessage("Invalid birth date format (YYYY-MM-DD)")
+    .custom((value) => {
+      const currentDate = new Date();
+      const birthDate = new Date(value);
+      if (birthDate > currentDate) {
+        throw new Error("Birth date cannot be in the future");
+      }
+      return true;
+    }),
   check("role")
     .optional()
     .isIn(["admin", "player", "referee"])
