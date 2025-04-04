@@ -10,6 +10,8 @@ import {
   MenuItem,
   Button,
 } from "@mui/material";
+import { validationSchemaEdit } from "../utils/validationSchema";
+import { useState } from "react";
 
 const EditUserDialog = ({
   open,
@@ -18,6 +20,8 @@ const EditUserDialog = ({
   setUpdatedData,
   handleUpdateUser,
 }) => {
+  const [errors, setErrors] = useState({});
+
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle color="primary" sx={{ fontWeight: "bold" }}>
@@ -56,9 +60,20 @@ const EditUserDialog = ({
           fullWidth
           margin="dense"
           value={updatedData.birthDate}
-          onChange={(e) =>
-            setUpdatedData({ ...updatedData, birthDate: e.target.value })
-          }
+          error={!!errors.birthDate}
+          helperText={errors.birthDate}
+          onChange={async (e) => {
+            const inputValue = e.target.value;
+            try {
+              await validationSchemaEdit.validateAt("birthDate", {
+                birthDate: inputValue,
+              });
+              setUpdatedData({ ...updatedData, birthDate: inputValue });
+              setErrors({ ...errors, birthDate: "" });
+            } catch (error) {
+              setErrors({ ...errors, birthDate: error.message });
+            }
+          }}
         />
         <FormControl fullWidth margin="dense">
           <InputLabel>Rol</InputLabel>

@@ -9,7 +9,13 @@ export const validationSchema = Yup.object({
   password: Yup.string()
     .min(6, "Debe tener al menos 6 caracteres")
     .required("La contraseña es obligatoria"),
-  birthDate: Yup.string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Formato inválido (YYYY-MM-DD)")
+  birthDate: Yup.date()
+    .max(new Date(), "La fecha no puede ser mayor a la actual")
+    .required("Fecha obligatoria"),
+});
+
+export const validationSchemaEdit = Yup.object({
+  birthDate: Yup.date()
+    .max(new Date(), "La fecha no puede ser mayor a la actual")
     .required("Fecha obligatoria"),
 });
