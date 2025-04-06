@@ -45,6 +45,12 @@ npm install
 # Configurar variables de entorno (crear archivo .env)
 npm run dev
 ```
+#### 2.1. Ver documentación del backend
+```
+# Debe estar en la carpeta del backend y no en la raiz
+npm run doc
+# Abrir el index.html que esta en backend/docs
+```
 ### **2. Configurar el Frontend**
 ```
 cd ../frontend

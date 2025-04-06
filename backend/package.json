@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "doc": "jsdoc -c jsdoc.json"
   },
   "keywords": [],
   "author": "",
@@ -21,8 +22,11 @@
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^7.5.0",
     "express-validator": "^7.2.1",
+    "jsdoc": "^4.0.4",
     "jsonwebtoken": "^9.0.2",
+    "minami": "^1.2.3",
     "mongoose": "^8.12.2",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "taffydb": "^2.7.3"
   }
 }

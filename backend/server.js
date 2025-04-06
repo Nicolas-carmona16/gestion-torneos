@@ -1,3 +1,8 @@
+/**
+ * @file server.js
+ * @description This file sets up the Express server, Set up middleware, routes, and error handling.
+ */
+
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
@@ -12,22 +17,28 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Middlewares
 app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Test route
+/**
+ * @route GET /
+ * @description Test route to check if the server is running
+ */
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Routes
+// API Routes
 app.use("/api/users", userRoutes);
 
 // Middleware for handling errors
 app.use(notFound);
 app.use(errorHandler);
 
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

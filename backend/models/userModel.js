@@ -1,4 +1,20 @@
+/**
+ * @file userModel.js
+ * @module models/userModel
+ * @description This file defines the User model using Mongoose for MongoDB.
+ */
+
 import mongoose from "mongoose";
+
+/**
+ * @typedef {Object} User
+ * @property {String} firstName - The first name of the user.
+ * @property {String} lastName - The last name of the user.
+ * @property {Date} birthDate - The birth date of the user.
+ * @property {String} email - The email address of the user, must be unique.
+ * @property {String} password - encrypted password of the user.
+ * @property {String} role - The role of the user (admin, player, referee).
+ */
 
 const userSchema = new mongoose.Schema(
   {

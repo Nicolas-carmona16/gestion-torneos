@@ -1,6 +1,16 @@
+/**
+ * @fileoverview Middlewares for validating user input on different user-related routes.
+ * @module middlewares/validationMiddleware
+ */
+
 import { check } from "express-validator";
 import validateFields from "./validateFields.js";
 
+/**
+ * Validation rules for user registration.
+ * @constant
+ * @type {Array<Function>}
+ */
 const validateRegister = [
   check("firstName").notEmpty().withMessage("First name is required"),
   check("lastName").notEmpty().withMessage("Last name is required"),
@@ -31,6 +41,11 @@ const validateRegister = [
   validateFields,
 ];
 
+/**
+ * Validation rules for updating a user (admin only).
+ * @constant
+ * @type {Array<Function>}
+ */
 const validateUpdateUser = [
   check("firstName")
     .optional()
@@ -57,6 +72,11 @@ const validateUpdateUser = [
   validateFields,
 ];
 
+/**
+ * Validation rules for admin to create a user.
+ * @constant
+ * @type {Array<Function>}
+ */
 const validateAdminCreate = [
   check("firstName").notEmpty().withMessage("First name is required"),
   check("lastName").notEmpty().withMessage("Last name is required"),

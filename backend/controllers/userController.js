@@ -1,11 +1,19 @@
+/**
+ * @fileoverview Controller functions for handling user operations such as register, login, logout, CRUD, and profile retrieval.
+ * @module controllers/userController
+ */
+
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 import asyncHandler from "express-async-handler";
 
-// @desc Register new user
-// @route POST /api/users/register
-// @access Public
+/**
+ * @function registerUser
+ * @desc Register new user
+ * @route POST /api/users/register
+ * @access Public
+ */
 const registerUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, birthDate, email, password, role } = req.body;
 
@@ -50,9 +58,12 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Login user & store token in cookie
-// @route POST /api/users/login
-// @access Public
+/**
+ * @function loginUser
+ * @desc Login user & store token in cookie
+ * @route POST /api/users/login
+ * @access Public
+ */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -82,9 +93,12 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Logout user & clear cookie
-// @route POST /api/users/logout
-// @access Public
+/**
+ * @function logoutUser
+ * @desc Logout user & clear cookie
+ * @route POST /api/users/logout
+ * @access Public
+ */
 const logoutUser = (req, res) => {
   res.cookie("jwt", "", {
     httpOnly: true,
@@ -93,9 +107,12 @@ const logoutUser = (req, res) => {
   res.status(200).json({ message: "User logged out" });
 };
 
-// @desc Delete a user
-// @route DELETE /api/users/:id
-// @access Private (Admin only)
+/**
+ * @function deleteUser
+ * @desc Delete a user
+ * @route DELETE /api/users/:id
+ * @access Private (Admin only)
+ */
 const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) {
@@ -112,9 +129,12 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.json({ message: "User deleted" });
 });
 
-// @desc Update user details
-// @route PUT /api/users/:id
-// @access Private (Admin only)
+/**
+ * @function updateUser
+ * @desc Update user details
+ * @route PUT /api/users/:id
+ * @access Private (Admin only)
+ */
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
@@ -141,9 +161,12 @@ const updateUser = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc Create a new user (Admin only)
-// @route POST /api/users/admin-create
-// @access Private (Admin only)
+/**
+ * @function createUser
+ * @desc Create a new user (Admin only)
+ * @route POST /api/users/admin-create
+ * @access Private (Admin only)
+ */
 const createUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, birthDate, email, password, role } = req.body;
 
@@ -179,9 +202,12 @@ const createUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Get all users
-// @route GET /api/users/all-users
-// @access Private (Admin only)
+/**
+ * @function getAllUsers
+ * @desc Get all users
+ * @route GET /api/users/all-users
+ * @access Private (Admin only)
+ */
 const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find({});
   if (!users || users.length === 0) {
@@ -191,9 +217,12 @@ const getAllUsers = asyncHandler(async (req, res) => {
   res.json(users);
 });
 
-// @desc Get user profile
-// @route GET /api/users/profile
-// @access Private (Authenticated users)
+/**
+ * @function getUserProfile
+ * @desc Get user profile
+ * @route GET /api/users/profile
+ * @access Private (Authenticated users)
+ */
 const getUserProfile = asyncHandler(async (req, res) => {
   res.json(req.user);
 });
