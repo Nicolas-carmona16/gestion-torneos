@@ -59,3 +59,6 @@ coverage/
 junit.xml
 *.test
 *.spec
+
+# Ignore the docs folder
+/docs

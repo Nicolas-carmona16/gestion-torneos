@@ -15,6 +15,12 @@ import { getUser } from "../services/authService";
 import { roleMapping } from "../utils/roleUtils";
 import { formatBirthDate } from "../utils/dateUtils";
 
+/**
+ * @module Profile
+ * @description Displays the logged-in user's profile information. Admins can access the user management panel.
+ * @returns {JSX.Element} User profile page.
+ */
+
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [loadingUsers, _setLoadingUsers] = useState(false);

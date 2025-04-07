@@ -1,5 +1,20 @@
+/**
+ * @module theme
+ * @description Custom Material UI theme configuration for the application.
+ */
+
 import { createTheme } from "@mui/material/styles";
 
+/**
+ * @constant {Object} theme
+ * @description Defines the application's global theme including colors, typography, and component styles.
+ * - Primary color: Dark green (#026937)
+ * - Secondary color: Light green (#35944b)
+ * - Typography: Times New Roman
+ * - Overrides:
+ *   - Outlined inputs: green border when focused
+ *   - Buttons: custom background and hover shadow
+ */
 const theme = createTheme({
   palette: {
     primary: {

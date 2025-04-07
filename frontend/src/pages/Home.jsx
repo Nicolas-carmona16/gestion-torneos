@@ -10,6 +10,11 @@ const images = [
   "/images/ganadores3.jpg",
 ];
 
+/**
+ * @module Home
+ * @description Home page component with navigation buttons and an image carousel.
+ * @returns {JSX.Element} Home page layout.
+ */
 const Home = () => {
   return (
     <Container className="mt-10">

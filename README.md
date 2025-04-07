@@ -51,12 +51,18 @@ npm run dev
 npm run doc
 # Abrir el index.html que esta en backend/docs
 ```
-### **2. Configurar el Frontend**
+### **3. Configurar el Frontend**
 ```
 cd ../frontend
 npm install
 # Configurar variables de entorno (crear archivo .env)
 npm run dev
+```
+#### 3.1. Ver documentación del frontend
+```
+# Debe estar en la carpeta del frontend y no en la raiz
+npm run doc
+# Abrir el index.html que esta en backend/docs
 ```
 
 ## Funcionalidades clave

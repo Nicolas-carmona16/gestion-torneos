@@ -11,6 +11,20 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import FormTextField from "./FormTextFields";
 
+/**
+ * @module LoginForm
+ * @component
+ * @description Login form component that allows users to sign in with their email and password.
+ *              It uses Formik for form state management and displays error or success messages accordingly.
+ *
+ * @param {Object} props - Component props.
+ * @param {Function} props.setIsAuthenticated - Function to set the authenticated state after successful login.
+ *
+ * @returns {JSX.Element} A login form with input fields, validation feedback, and loading state.
+ *
+ * @example
+ * <LoginForm setIsAuthenticated={setAuth} />
+ */
 const LoginForm = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [message, setMessage] = useState({ text: "", type: "" });

@@ -6,10 +6,30 @@ import { registerUser } from "../services/authService";
 import { validationSchema } from "../utils/validationSchema";
 import FormTextField from "./FormTextFields";
 
+/**
+ * @module RegisterForm
+ * @component
+ * @description User registration form that collects personal details and credentials,
+ *              validates them with Formik and Yup, and handles server-side errors.
+ *
+ * @param {Object} props - Component props.
+ * @param {function} props.setIsAuthenticated - Function to update authentication state on successful registration.
+ *
+ * @returns {JSX.Element} A registration form UI with validation, error handling, and redirection after success.
+ *
+ * @example
+ * <RegisterForm setIsAuthenticated={setIsAuthenticated} />
+ */
 const RegisterForm = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [successMessage, setSuccessMessage] = useState("");
 
+  /**
+   * Handles server-side registration errors and maps them to Formik fields.
+   *
+   * @param {Object} err - Error object from the server.
+   * @param {Function} setErrors - Formik method to set form errors.
+   */
   const handleErrors = (err, setErrors) => {
     if (err.response?.status === 400) {
       const errorMsg = err.response.data.message;

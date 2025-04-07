@@ -15,6 +15,11 @@ import ConfirmDeleteUserDialog from "../components/ConfirmDeleteUserDialog";
 
 const ITEMS_PER_PAGE = 5;
 
+/**
+ * @module ManageUsers
+ * @description Admin panel to manage users: list, filter, edit, and delete users.
+ * @returns {JSX.Element} User management interface.
+ */
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);

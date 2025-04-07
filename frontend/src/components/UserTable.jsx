@@ -13,6 +13,27 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { formatBirthDate } from "../utils/dateUtils";
 import { roleMapping } from "../utils/roleUtils";
 
+/**
+ * @module UserTable
+ * @component
+ * @description Displays a paginated table of users with options to edit or delete each user.
+ *
+ * @param {Object} props - Component props.
+ * @param {Array<Object>} props.filteredUsers - The list of users to display, possibly filtered from the full user list.
+ * @param {number} props.page - The current pagination page (0-indexed).
+ * @param {function} props.handleEditUser - Callback when the edit button is clicked for a user.
+ * @param {function} props.handleDeleteUser - Callback when the delete button is clicked for a user.
+ *
+ * @returns {JSX.Element} A Material UI table displaying user information and actions.
+ *
+ * @example
+ * <UserTable
+ *   filteredUsers={users}
+ *   page={0}
+ *   handleEditUser={editUserHandler}
+ *   handleDeleteUser={deleteUserHandler}
+ * />
+ */
 const UserTable = ({
   filteredUsers,
   page,

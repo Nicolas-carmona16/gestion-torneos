@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Main App component that handles routing, theme, authentication state and protected routes.
+ * @module App
+ */
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
@@ -17,10 +22,20 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ManageUsers from "./pages/ManageUsers";
 
+/**
+ * Main App component responsible for rendering routes, layout, and theme.
+ * Handles authentication check on mount and displays a loading spinner while checking.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered React component
+ */
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * useEffect hook to check user authentication status on initial load.
+   */
   useEffect(() => {
     const checkAuth = async () => {
       try {

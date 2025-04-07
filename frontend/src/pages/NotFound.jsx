@@ -2,6 +2,11 @@ import { Box, Typography, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 
+/**
+ * @module NotFound
+ * @description Component shown when no route matches (404 page).
+ * @returns {JSX.Element} Not found error page.
+ */
 const NotFound = () => {
   return (
     <Box

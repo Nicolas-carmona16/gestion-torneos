@@ -8,6 +8,27 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+/**
+ * @module ConfirmDeleteUserDialog
+ * @component
+ * @description A modal dialog that prompts the user to confirm the deletion of another user.
+ *
+ * @param {Object} props - Component props.
+ * @param {boolean} props.open - Controls whether the dialog is visible.
+ * @param {Function} props.handleClose - Callback function to close the dialog.
+ * @param {Function} props.handleDeleteUser - Callback function to execute the user deletion.
+ * @param {boolean} props.deleting - Indicates if the deletion process is currently ongoing (shows a loading spinner).
+ *
+ * @returns {JSX.Element} A dialog component that confirms user deletion with Cancel and Delete options.
+ *
+ * @example
+ * <ConfirmDeleteUserDialog
+ *   open={isDialogOpen}
+ *   handleClose={closeDialog}
+ *   handleDeleteUser={confirmDelete}
+ *   deleting={isDeleting}
+ * />
+ */
 const ConfirmDeleteUserDialog = ({
   open,
   handleClose,

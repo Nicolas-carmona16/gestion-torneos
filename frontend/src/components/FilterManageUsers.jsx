@@ -9,6 +9,27 @@ import {
 } from "@mui/material";
 import { roleMapping } from "../utils/roleUtils";
 
+/**
+ * @module FilterManageUsers
+ * @component
+ * @description Provides UI controls to filter the list of users by name/email and role.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} props.searchTerm - Current text in the search input.
+ * @param {Function} props.setSearchTerm - Function to update the search term.
+ * @param {string} props.roleFilter - Currently selected role filter.
+ * @param {Function} props.setRoleFilter - Function to update the selected role.
+ *
+ * @returns {JSX.Element} A filter section with a text input and role dropdown.
+ *
+ * @example
+ * <FilterManageUsers
+ *   searchTerm={searchTerm}
+ *   setSearchTerm={setSearchTerm}
+ *   roleFilter={roleFilter}
+ *   setRoleFilter={setRoleFilter}
+ * />
+ */
 const FilterManageUsers = ({
   searchTerm,
   setSearchTerm,

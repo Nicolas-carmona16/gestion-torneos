@@ -13,6 +13,29 @@ import {
 import { validationSchemaEdit } from "../utils/validationSchema";
 import { useState } from "react";
 
+/**
+ * @module EditUserDialog
+ * @component
+ * @description Dialog component for editing a user's personal data and role.
+ *
+ * @param {Object} props - Component props.
+ * @param {boolean} props.open - Whether the dialog is open.
+ * @param {Function} props.handleClose - Function to close the dialog.
+ * @param {Object} props.updatedData - The current user data being edited.
+ * @param {Function} props.setUpdatedData - Function to update the user data state.
+ * @param {Function} props.handleUpdateUser - Function to handle user update submission.
+ *
+ * @returns {JSX.Element} A dialog with fields to edit a user's name, birthdate, and role.
+ *
+ * @example
+ * <EditUserDialog
+ *   open={isDialogOpen}
+ *   handleClose={closeDialog}
+ *   updatedData={userData}
+ *   setUpdatedData={setUserData}
+ *   handleUpdateUser={submitUpdate}
+ * />
+ */
 const EditUserDialog = ({
   open,
   handleClose,

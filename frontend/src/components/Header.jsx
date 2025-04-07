@@ -13,6 +13,20 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import logo from "../assets/logoUdeA.png";
 import { logoutUser } from "../services/authService";
 
+/**
+ * @module Header
+ * @component
+ * @description Navigation bar that shows app title, logo, and login/logout options based on user authentication state.
+ *
+ * @param {Object} props - Component props.
+ * @param {boolean} props.isAuthenticated - Whether the user is currently authenticated.
+ * @param {Function} props.setIsAuthenticated - Function to update the authentication state after logout.
+ *
+ * @returns {JSX.Element} The application header with navigation links and user menu.
+ *
+ * @example
+ * <Header isAuthenticated={true} setIsAuthenticated={setAuth} />
+ */
 const Header = ({ isAuthenticated, setIsAuthenticated }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
