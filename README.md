@@ -72,5 +72,3 @@ npm run doc
 - Emparejamientos automáticos
 - Visualización de estadísticas y reportes
 - Personalización de reglas y criterios de desempate
-
-## Test 2
