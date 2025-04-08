@@ -76,8 +76,8 @@ const Home = () => {
                   src={src}
                   alt={`Imagen ${index + 1}`}
                   style={{
-                    width: "100%",
-                    maxHeight: "500px",
+                    width: "90%",
+                    maxHeight: "450px",
                     objectFit: "cover",
                     borderRadius: "10px",
                   }}
