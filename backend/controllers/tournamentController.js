@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Controller functions for handling tournament operations such as creating, retrieving, updating, and deleting tournaments.
+ * @module controllers/tournamentController
+ */
+
 import Tournament from "../models/tournamentModel.js";
 import Sport from "../models/sportModel.js";
 import asyncHandler from "express-async-handler";
@@ -8,9 +13,13 @@ import {
 } from "../utils/tournamentValidators.js";
 import { calculateTournamentStatus } from "../utils/tournamentStatus.js";
 
-// @desc    Create a new tournament
-// @route   POST /api/tournaments
-// @access  Private (Admin only)
+
+/**
+ * @function createTournament
+ * @desc Create a new tournament
+ * @route POST /api/tournaments
+ * @access Private (Admin only)
+ */
 const createTournament = asyncHandler(async (req, res) => {
   const {
     name,
@@ -62,9 +71,12 @@ const createTournament = asyncHandler(async (req, res) => {
   res.status(201).json(createdTournament);
 });
 
-// @desc    Get all tournaments
-// @route   GET /api/tournaments
-// @access  Public
+/**
+ * @function getAllTournaments
+ * @desc Get all tournaments
+ * @route GET /api/tournaments
+ * @access Public
+ */
 const getAllTournaments = asyncHandler(async (req, res) => {
   try {
     const tournaments = await Tournament.find()
@@ -80,9 +92,13 @@ const getAllTournaments = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Get a tournament by ID
-// @route   GET /api/tournaments/:id
-// @access  Public
+/**
+ * @function getTournamentById
+ * @desc Get a tournament by ID
+ * @route GET /api/tournaments/:id
+ * @access Public
+ * @param {string} id - The ID of the tournament to retrieve
+ */
 const getTournamentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -110,9 +126,13 @@ const getTournamentById = asyncHandler(async (req, res) => {
   res.status(200).json(tournament);
 });
 
-// @desc    Editar un torneo existente
-// @route   PUT /api/tournaments/:id
-// @access  Private (Admin only)
+/**
+ * @function updateTournament
+ * @desc Update a tournament
+ * @route PUT /api/tournaments/:id
+ * @access Private (Admin only)
+ * @param {string} id - The ID of the tournament to update
+ */
 const updateTournament = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -183,9 +203,13 @@ const updateTournament = asyncHandler(async (req, res) => {
   res.status(200).json(updatedTournament);
 });
 
-// @desc    Delete a tournament
-// @route   DELETE /api/tournaments/:id
-// @access  Private (Admin only)
+/**
+ * @function deleteTournament
+ * @desc Delete a tournament
+ * @route DELETE /api/tournaments/:id
+ * @access Private (Admin only)
+ * @param {string} id - The ID of the tournament to delete
+ */
 const deleteTournament = asyncHandler(async (req, res) => {
   const { id } = req.params;
 

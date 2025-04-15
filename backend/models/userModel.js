@@ -14,6 +14,16 @@ import mongoose from "mongoose";
  * @property {String} email - The email address of the user, must be unique.
  * @property {String} password - encrypted password of the user.
  * @property {String} role - The role of the user (admin, player, referee).
+ * 
+ * @example
+ * const newUser = new User({
+ *  firstName: "John",
+ *  lastName: "Doe",
+ *  birthDate: new Date("1990-01-01"),
+ *  email: "john.doe@example.com",
+ *  password: "hashed_password",
+ *  role: "player",
+ * });
  */
 
 const userSchema = new mongoose.Schema(

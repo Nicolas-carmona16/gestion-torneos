@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Defines all tournament-related API routes.
+ * @module routes/tournamentRoutes
+ */
+
 import express from "express";
 import {
   createTournament,
@@ -14,33 +19,43 @@ const router = express.Router();
  * Public routes
  */
 
-// @desc    Get all tournaments
-// @route   GET /api/tournaments
-// @access  Public
+/**
+ * @route GET /api/tournaments
+ * @desc Get all tournaments
+ * @access Public
+ */
 router.get("/", getAllTournaments);
 
-// @desc    Get tournament by ID
-// @route   GET /api/tournaments/:id
-// @access  Public
+/**
+ * @route GET /api/tournaments/:id
+ * @desc Get tournament by ID
+ * @access Public
+ */
 router.get("/:id", getTournamentById);
 
 /**
  * Admin-only routes
  */
 
-// @desc    Create a new tournament
-// @route   POST /api/tournaments
-// @access  Private (Admin only)
+/**
+ * @route POST /api/tournaments
+ * @desc Create a new tournament
+ * @access Private (Admin only)
+ */
 router.post("/", protect, authorizeRoles("admin"), createTournament);
 
-// @desc    Update a tournament
-// @route   PUT /api/tournaments/:id
-// @access  Private (Admin only)
+/**
+ * @route PUT /api/tournaments/:id
+ * @desc Update a tournament by ID
+ * @access Private (Admin only)
+ */
 router.put("/:id", protect, authorizeRoles("admin"), updateTournament);
 
-// @desc    Delete a tournament
-// @route   DELETE /api/tournaments/:id
-// @access  Private (Admin only)
+/**
+ * @route DELETE /api/tournaments/:id
+ * @desc Delete a tournament by ID
+ * @access Private (Admin only)
+ */
 router.delete("/:id", protect, authorizeRoles("admin"), deleteTournament);
 
 export default router;

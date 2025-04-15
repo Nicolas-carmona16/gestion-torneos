@@ -1,9 +1,17 @@
+/**
+ * @fileoverview Controller functions for handling sport-related operations such as retrieving sport rules.
+ * @module controllers/sportController
+ */
+
 import Sport from "../models/sportModel.js";
 import asyncHandler from "express-async-handler";
 
-// @desc    Get rules of a specific sport
-// @route   GET /api/sports/:id
-// @access  Public
+/**
+ * @function getSportRules
+ * @desc Get rules of a specific sport
+ * @route GET /api/sports/:id
+ * @access Public
+ */
 const getSportRules = asyncHandler(async (req, res) => {
   const sport = await Sport.findById(req.params.id);
   if (!sport) {
