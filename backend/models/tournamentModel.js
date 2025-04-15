@@ -52,8 +52,8 @@ const tournamentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["registration", "active", "finished"],
-      default: "registration",
+      enum: ["pending", "registration", "active", "finished"],
+      default: "pending",
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

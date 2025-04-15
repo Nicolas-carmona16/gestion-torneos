@@ -52,3 +52,13 @@ export const validateObjectId = (id, fieldName = "ID") => {
   }
   return [];
 };
+
+export const validateTournamentUpdate = (tournament) => {
+  const errors = [];
+  if (!["pending", "registration"].includes(tournament.status)) {
+    errors.push(
+      "Only tournaments in 'pending' or 'registration' status can be edited"
+    );
+  }
+  return errors;
+};

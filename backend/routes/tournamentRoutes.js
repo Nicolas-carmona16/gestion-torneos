@@ -3,6 +3,7 @@ import {
   createTournament,
   getAllTournaments,
   getTournamentById,
+  updateTournament,
 } from "../controllers/tournamentController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
@@ -22,5 +23,10 @@ router.get("/", getAllTournaments);
 // @route   GET /api/tournaments/:id
 // @access  Public
 router.get("/:id", getTournamentById);
+
+// @desc    Update a tournament
+// @route   PUT /api/tournaments/:id
+// @access  Private (Admin only)
+router.put("/:id", protect, authorizeRoles("admin"), updateTournament);
 
 export default router;
