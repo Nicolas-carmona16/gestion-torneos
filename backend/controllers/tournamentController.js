@@ -183,9 +183,32 @@ const updateTournament = asyncHandler(async (req, res) => {
   res.status(200).json(updatedTournament);
 });
 
+// @desc    Delete a tournament
+// @route   DELETE /api/tournaments/:id
+// @access  Private (Admin only)
+const deleteTournament = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const errors = validateObjectId(id, "tournament ID");
+  if (errors.length > 0) {
+    res.status(400);
+    throw new Error(errors.join(". "));
+  }
+
+  const tournament = await Tournament.findById(id);
+  if (!tournament) {
+    res.status(404);
+    throw new Error("Tournament not found");
+  }
+
+  await tournament.deleteOne();
+  res.status(200).json({ message: "Tournament deleted successfully" });
+});
+
 export {
   createTournament,
   getAllTournaments,
   getTournamentById,
   updateTournament,
+  deleteTournament,
 };
