@@ -45,3 +45,10 @@ export const validateTournamentInput = (data) => {
 
   return errors;
 };
+
+export const validateObjectId = (id, fieldName = "ID") => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return [`Invalid ${fieldName}`];
+  }
+  return [];
+};

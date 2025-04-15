@@ -1,7 +1,10 @@
 import Tournament from "../models/tournamentModel.js";
 import Sport from "../models/sportModel.js";
 import asyncHandler from "express-async-handler";
-import { validateTournamentInput } from "../utils/tournamentValidators.js";
+import {
+  validateTournamentInput,
+  validateObjectId,
+} from "../utils/tournamentValidators.js";
 
 // @desc    Create a new tournament
 // @route   POST /api/tournaments
@@ -71,4 +74,28 @@ const getAllTournaments = asyncHandler(async (req, res) => {
   }
 });
 
-export { createTournament, getAllTournaments };
+// @desc    Get a tournament by ID
+// @route   GET /api/tournaments/:id
+// @access  Public
+const getTournamentById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const errors = validateObjectId(id, "tournament ID");
+  if (errors.length > 0) {
+    res.status(400);
+    throw new Error(errors.join(". "));
+  }
+
+  const tournament = await Tournament.findById(id)
+    .populate("sport", "name")
+    .populate("createdBy", "firstName lastName");
+
+  if (!tournament) {
+    res.status(404);
+    throw new Error("Tournament not found");
+  }
+
+  res.status(200).json(tournament);
+});
+
+export { createTournament, getAllTournaments, getTournamentById };
