@@ -4,13 +4,20 @@
  */
 
 import express from "express";
-import { getSportRules } from "../controllers/sportController.js";
+import { getAllSports, getSportRules } from "../controllers/sportController.js";
 
 const router = express.Router();
 
 /**
  * Public routes
  */
+
+/**
+ * @route GET /api/sports
+ * @desc Get all sports
+ * @access Public
+ */
+router.get("/", getAllSports);
 
 /**
  * @route GET /api/sports/:id
