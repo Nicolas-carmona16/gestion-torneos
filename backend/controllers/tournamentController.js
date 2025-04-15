@@ -52,7 +52,23 @@ const createTournament = asyncHandler(async (req, res) => {
 
   const createdTournament = await tournament.save();
   await createdTournament.populate("sport", "name");
+  await createdTournament.populate("createdBy", "firstName lastName");
   res.status(201).json(createdTournament);
 });
 
-export { createTournament };
+// @desc    Get all tournaments
+// @route   GET /api/tournaments
+// @access  Public
+const getAllTournaments = asyncHandler(async (req, res) => {
+  try {
+    const tournaments = await Tournament.find()
+      .populate("sport", "name")
+      .populate("createdBy", "firstName lastName")
+      .sort({ createdAt: -1 });
+    res.status(200).json(tournaments);
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+export { createTournament, getAllTournaments };
