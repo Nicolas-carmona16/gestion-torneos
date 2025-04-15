@@ -10,6 +10,8 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";
+import sportRoutes from "./routes/sportRoutes.js";
+import tournamentRoutes from "./routes/tournamentRoutes.js";
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use("/api/users", userRoutes);
+app.use("/api/sports", sportRoutes);
+app.use("/api/tournaments", tournamentRoutes);
 
 // Middleware for handling errors
 app.use(notFound);
