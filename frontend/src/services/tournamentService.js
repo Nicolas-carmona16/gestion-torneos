@@ -23,3 +23,15 @@ export const getTournamentById = async (id) => {
     throw error;
   }
 };
+
+export const createTournament = async (tournamentData) => {
+  try {
+    const response = await api.post("/tournaments", tournamentData, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creando el torneo:", error);
+    throw error;
+  }
+};

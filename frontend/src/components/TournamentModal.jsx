@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Typography,
@@ -20,6 +19,11 @@ const rulesComponents = {
   Fútbol: SoccerRules,
   Voleibol: VolleyballRules,
   "Fútbol Sala": FutsalRules,
+};
+
+const formatMapping = {
+  elimination: "Eliminación Directa",
+  "group-stage": "Fase de Grupos",
 };
 
 const TournamentModal = ({ open, loading, tournament, onClose }) => {
@@ -49,6 +53,9 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
                 <strong>Deporte:</strong> {tournament.sport?.name}
               </Typography>
               <Typography className="text-gray-700 text-sm">
+                <strong>Formato:</strong> {formatMapping[tournament.format]}
+              </Typography>
+              <Typography className="text-gray-700 text-sm">
                 <strong>Fecha de registro:</strong>{" "}
                 {formatDate(tournament.registrationStart)} -{" "}
                 {formatDate(tournament.registrationEnd)}
@@ -76,7 +83,7 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
         ) : open ? (
           <Typography color="error">No se pudieron cargar los datos</Typography>
         ) : null}
-        
+
         {SportRulesComponent && tournament?.customRules && (
           <Box className="mt-6">
             <Typography variant="h6" color="primary" gutterBottom>

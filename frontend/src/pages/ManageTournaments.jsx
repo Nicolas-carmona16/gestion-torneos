@@ -3,13 +3,16 @@ import {
   Typography,
   CircularProgress,
   TablePagination,
+  Button,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getAllTournaments,
   getTournamentById,
 } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
+import { getUser } from "../services/authService";
 import TournamentTable from "../components/TournamentTable";
 import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
@@ -29,19 +32,24 @@ const ManageTournaments = () => {
   const [page, setPage] = useState(0);
   const [registrationStart, setRegistrationStart] = useState("");
   const [registrationEnd, setRegistrationEnd] = useState("");
+  const [user, setUser] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tournamentData, sportsData] = await Promise.all([
+        const [tournamentData, sportsData, userData] = await Promise.all([
           getAllTournaments(),
           getAllSports(),
+          getUser(),
         ]);
         setTournaments(tournamentData);
         setFilteredTournaments(tournamentData);
         setSports(sportsData);
+        setUser(userData);
       } catch (error) {
-        console.error("Error al cargar torneos o deportes:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setLoading(false);
       }
@@ -57,7 +65,6 @@ const ManageTournaments = () => {
       const matchesSport = selectedSport
         ? tournament.sport?.name === selectedSport
         : true;
-
       const matchesDate =
         (!registrationStart ||
           new Date(tournament.registrationStart) >=
@@ -120,15 +127,33 @@ const ManageTournaments = () => {
 
   return (
     <Box p={3}>
-      <Typography
-        variant="h4"
-        gutterBottom
-        color="primary"
-        fontWeight="bold"
-        align="center"
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
       >
-        Gestión de Torneos
-      </Typography>
+        <Box
+          display="flex"
+          justifyContent="center"
+          flexGrow={1}
+          marginLeft={20}
+        >
+          <Typography variant="h4" color="primary" fontWeight="bold">
+            Inscripciones
+          </Typography>
+        </Box>
+
+        {user?.role === "admin" && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate("/crear-torneo")}
+          >
+            Crear Torneo
+          </Button>
+        )}
+      </Box>
 
       <FilterTournaments
         searchTerm={searchTerm}

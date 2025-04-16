@@ -42,3 +42,45 @@ export const validationSchemaEdit = Yup.object({
     .max(new Date(), "La fecha no puede ser mayor a la actual")
     .required("Fecha obligatoria"),
 });
+
+/**
+ * @constant {Yup.ObjectSchema} tournamentValidationSchema
+ * @description Validation schema for tournament creation form.
+ * validates:
+ * - name: required
+ * - description: required
+ * - sport: required
+ * - format: required, one of "group-stage" or "elimination"
+ * - registrationStart: required
+ * - registrationEnd: required, must be after registrationStart
+ * - startDate: required, must be after registrationEnd
+ * - endDate: required, must be after startDate
+ * - maxTeams: required, minimum 2
+ * - minPlayersPerTeam: required, minimum 1
+ * - maxPlayersPerTeam: required, must be greater than or equal to minPlayersPerTeam
+ */
+export const tournamentValidationSchema = Yup.object({
+  name: Yup.string().required("El nombre es obligatorio"),
+  description: Yup.string().required("La descripción es obligatoria"),
+  sport: Yup.string().required("Selecciona un deporte"),
+  format: Yup.string()
+    .oneOf(["group-stage", "elimination"])
+    .required("Selecciona un formato"),
+  registrationStart: Yup.date().required("Inicio de inscripción requerido"),
+  registrationEnd: Yup.date()
+    .min(Yup.ref("registrationStart"), "Debe ser posterior al inicio")
+    .required("Fin de inscripción requerido"),
+  startDate: Yup.date()
+    .min(Yup.ref("registrationEnd"), "Debe ser posterior al fin de inscripción")
+    .required("Fecha de inicio requerida"),
+  endDate: Yup.date()
+    .min(Yup.ref("startDate"), "Debe ser posterior a la fecha de inicio")
+    .required("Fecha de fin requerida"),
+  maxTeams: Yup.number().min(2).required("Máximo de equipos requerido"),
+  minPlayersPerTeam: Yup.number()
+    .min(1)
+    .required("Mínimo de jugadores por equipo requerido"),
+  maxPlayersPerTeam: Yup.number()
+    .min(Yup.ref("minPlayersPerTeam"), "Debe ser mayor o igual al mínimo")
+    .required("Máximo de jugadores por equipo requerido"),
+});

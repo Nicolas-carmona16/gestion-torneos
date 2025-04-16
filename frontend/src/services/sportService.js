@@ -11,3 +11,15 @@ export const getAllSports = async () => {
     throw error;
   }
 };
+
+export const getSportRules = async (sportId) => {
+  try {
+    const response = await api.get(`/sports/${sportId}`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error obteniendo las reglas del deporte:", error);
+    throw error;
+  }
+};
