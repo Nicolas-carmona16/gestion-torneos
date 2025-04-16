@@ -27,6 +27,8 @@ const ManageTournaments = () => {
   const [sports, setSports] = useState([]);
   const [selectedSport, setSelectedSport] = useState("");
   const [page, setPage] = useState(0);
+  const [registrationStart, setRegistrationStart] = useState("");
+  const [registrationEnd, setRegistrationEnd] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,11 +57,26 @@ const ManageTournaments = () => {
       const matchesSport = selectedSport
         ? tournament.sport?.name === selectedSport
         : true;
-      return matchesName && matchesSport;
+
+      const matchesDate =
+        (!registrationStart ||
+          new Date(tournament.registrationStart) >=
+            new Date(registrationStart)) &&
+        (!registrationEnd ||
+          new Date(tournament.registrationEnd) <= new Date(registrationEnd));
+
+      return matchesName && matchesSport && matchesDate;
     });
+
     setFilteredTournaments(filtered);
     setPage(0);
-  }, [searchTerm, selectedSport, tournaments]);
+  }, [
+    searchTerm,
+    selectedSport,
+    registrationStart,
+    registrationEnd,
+    tournaments,
+  ]);
 
   const handleOpenModal = async (id) => {
     setDetailLoading(true);
@@ -119,6 +136,10 @@ const ManageTournaments = () => {
         selectedSport={selectedSport}
         setSelectedSport={setSelectedSport}
         sports={sports}
+        registrationStart={registrationStart}
+        registrationEnd={registrationEnd}
+        setRegistrationStart={setRegistrationStart}
+        setRegistrationEnd={setRegistrationEnd}
       />
 
       {filteredTournaments.length === 0 ? (
