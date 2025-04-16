@@ -1,4 +1,9 @@
-import { Box, Typography, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  TablePagination,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import {
   getAllTournaments,
@@ -8,6 +13,8 @@ import { getAllSports } from "../services/sportService";
 import TournamentTable from "../components/TournamentTable";
 import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
+
+const ITEMS_PER_PAGE = 10;
 
 const ManageTournaments = () => {
   const [tournaments, setTournaments] = useState([]);
@@ -19,6 +26,7 @@ const ManageTournaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sports, setSports] = useState([]);
   const [selectedSport, setSelectedSport] = useState("");
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +58,7 @@ const ManageTournaments = () => {
       return matchesName && matchesSport;
     });
     setFilteredTournaments(filtered);
+    setPage(0);
   }, [searchTerm, selectedSport, tournaments]);
 
   const handleOpenModal = async (id) => {
@@ -70,6 +79,10 @@ const ManageTournaments = () => {
     setSelectedTournament(null);
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
   if (loading) {
     return (
       <Box
@@ -82,6 +95,11 @@ const ManageTournaments = () => {
       </Box>
     );
   }
+
+  const paginatedTournaments = filteredTournaments.slice(
+    page * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
 
   return (
     <Box p={3}>
@@ -103,10 +121,26 @@ const ManageTournaments = () => {
         sports={sports}
       />
 
-      <TournamentTable
-        tournaments={filteredTournaments}
-        onViewDetails={handleOpenModal}
-      />
+      {filteredTournaments.length === 0 ? (
+        <Typography align="center" mt={4}>
+          No se encontraron torneos con los criterios seleccionados.
+        </Typography>
+      ) : (
+        <>
+          <TournamentTable
+            tournaments={paginatedTournaments}
+            onViewDetails={handleOpenModal}
+          />
+          <TablePagination
+            rowsPerPageOptions={[ITEMS_PER_PAGE]}
+            component="div"
+            count={filteredTournaments.length}
+            rowsPerPage={ITEMS_PER_PAGE}
+            page={page}
+            onPageChange={handleChangePage}
+          />
+        </>
+      )}
 
       <TournamentModal
         open={modalOpen}
