@@ -4,29 +4,53 @@ import {
   getAllTournaments,
   getTournamentById,
 } from "../services/tournamentService";
+import { getAllSports } from "../services/sportService";
 import TournamentTable from "../components/TournamentTable";
 import TournamentModal from "../components/TournamentModal";
+import FilterTournaments from "../components/FilterTournaments";
 
 const ManageTournaments = () => {
   const [tournaments, setTournaments] = useState([]);
+  const [filteredTournaments, setFilteredTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sports, setSports] = useState([]);
+  const [selectedSport, setSelectedSport] = useState("");
 
   useEffect(() => {
-    const fetchTournaments = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getAllTournaments();
-        setTournaments(data);
+        const [tournamentData, sportsData] = await Promise.all([
+          getAllTournaments(),
+          getAllSports(),
+        ]);
+        setTournaments(tournamentData);
+        setFilteredTournaments(tournamentData);
+        setSports(sportsData);
       } catch (error) {
-        console.error("Error al cargar torneos:", error);
+        console.error("Error al cargar torneos o deportes:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchTournaments();
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    const filtered = tournaments.filter((tournament) => {
+      const matchesName = tournament.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesSport = selectedSport
+        ? tournament.sport?.name === selectedSport
+        : true;
+      return matchesName && matchesSport;
+    });
+    setFilteredTournaments(filtered);
+  }, [searchTerm, selectedSport, tournaments]);
 
   const handleOpenModal = async (id) => {
     setDetailLoading(true);
@@ -71,8 +95,16 @@ const ManageTournaments = () => {
         Gestión de Torneos
       </Typography>
 
+      <FilterTournaments
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedSport={selectedSport}
+        setSelectedSport={setSelectedSport}
+        sports={sports}
+      />
+
       <TournamentTable
-        tournaments={tournaments}
+        tournaments={filteredTournaments}
         onViewDetails={handleOpenModal}
       />
 
