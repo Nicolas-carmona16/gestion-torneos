@@ -19,7 +19,7 @@ import { getUser } from "../services/authService";
 import TournamentTable from "../components/TournamentTable";
 import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
-import ConfirmDeleteTournamentDialog from "../components/ConfirmDeleteTournamentDialog";
+import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -231,11 +231,12 @@ const ManageTournaments = () => {
         onClose={handleCloseModal}
       />
 
-      <ConfirmDeleteTournamentDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         handleClose={() => setDeleteDialogOpen(false)}
-        handleDeleteTournament={handleConfirmDeleteTournament}
+        handleConfirm={handleConfirmDeleteTournament}
         deleting={deleting}
+        entityName="torneo"
       />
 
       <Snackbar

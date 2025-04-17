@@ -12,7 +12,7 @@ import {
 import FilterManageUsers from "../components/FilterManageUsers";
 import UserTable from "../components/UserTable";
 import EditUserDialog from "../components/EditUserDialog";
-import ConfirmDeleteUserDialog from "../components/ConfirmDeleteUserDialog";
+import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -219,11 +219,12 @@ const ManageUsers = () => {
         </Alert>
       </Snackbar>
 
-      <ConfirmDeleteUserDialog
+      <ConfirmDeleteDialog
         open={deleteModalOpen}
         handleClose={() => setDeleteModalOpen(false)}
-        handleDeleteUser={handleDeleteUser}
+        handleConfirm={handleDeleteUser}
         deleting={deleting}
+        entityName="usuario"
       />
     </Paper>
   );
