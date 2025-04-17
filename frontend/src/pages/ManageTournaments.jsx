@@ -4,18 +4,22 @@ import {
   CircularProgress,
   TablePagination,
   Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getAllTournaments,
   getTournamentById,
+  deleteTournament,
 } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
 import { getUser } from "../services/authService";
 import TournamentTable from "../components/TournamentTable";
 import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
+import ConfirmDeleteTournamentDialog from "../components/ConfirmDeleteTournamentDialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -33,6 +37,10 @@ const ManageTournaments = () => {
   const [registrationStart, setRegistrationStart] = useState("");
   const [registrationEnd, setRegistrationEnd] = useState("");
   const [user, setUser] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [tournamentToDelete, setTournamentToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -107,6 +115,32 @@ const ManageTournaments = () => {
     setPage(newPage);
   };
 
+  const handleDeleteTournamentClick = (id) => {
+    setTournamentToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteTournament = async () => {
+    setDeleting(true);
+    try {
+      await deleteTournament(tournamentToDelete);
+      const updated = tournaments.filter((t) => t._id !== tournamentToDelete);
+      setTournaments(updated);
+      setFilteredTournaments(updated);
+      setSnackbarOpen(true);
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error al eliminar torneo:", error);
+    } finally {
+      setDeleting(false);
+      setTournamentToDelete(null);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   if (loading) {
     return (
       <Box
@@ -176,6 +210,8 @@ const ManageTournaments = () => {
           <TournamentTable
             tournaments={paginatedTournaments}
             onViewDetails={handleOpenModal}
+            onDeleteTournament={handleDeleteTournamentClick}
+            user={user}
           />
           <TablePagination
             rowsPerPageOptions={[ITEMS_PER_PAGE]}
@@ -194,6 +230,28 @@ const ManageTournaments = () => {
         tournament={selectedTournament}
         onClose={handleCloseModal}
       />
+
+      <ConfirmDeleteTournamentDialog
+        open={deleteDialogOpen}
+        handleClose={() => setDeleteDialogOpen(false)}
+        handleDeleteTournament={handleConfirmDeleteTournament}
+        deleting={deleting}
+      />
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Torneo eliminado exitosamente.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

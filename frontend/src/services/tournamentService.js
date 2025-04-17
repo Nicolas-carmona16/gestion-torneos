@@ -35,3 +35,15 @@ export const createTournament = async (tournamentData) => {
     throw error;
   }
 };
+
+export const deleteTournament = async (id) => {
+  try {
+    const response = await api.delete(`/tournaments/${id}`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error eliminando torneo:", error);
+    throw error;
+  }
+};

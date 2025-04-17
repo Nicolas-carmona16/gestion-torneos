@@ -7,6 +7,7 @@ import {
   Snackbar,
   CircularProgress,
   Box,
+  Alert,
 } from "@mui/material";
 import FilterManageUsers from "../components/FilterManageUsers";
 import UserTable from "../components/UserTable";
@@ -210,8 +211,13 @@ const ManageUsers = () => {
         open={snackbarOpen}
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         message={snackbarMessage}
-      />
+      >
+        <Alert onClose={handleSnackbarClose} severity="success">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
 
       <ConfirmDeleteUserDialog
         open={deleteModalOpen}

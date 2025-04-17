@@ -13,8 +13,14 @@ import { HowToReg } from "@mui/icons-material";
 import { formatDate } from "../utils/formatDate";
 import { statusMapping } from "../utils/tournamentStatusMapping";
 import InfoOutlineIcon from "@mui/icons-material/InfoOutline";
+import { Edit, Delete } from "@mui/icons-material";
 
-const TournamentTable = ({ tournaments, onViewDetails }) => (
+const TournamentTable = ({
+  tournaments,
+  onViewDetails,
+  onDeleteTournament,
+  user,
+}) => (
   <TableContainer component={Paper}>
     <Table>
       <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
@@ -42,6 +48,11 @@ const TournamentTable = ({ tournaments, onViewDetails }) => (
           <TableCell>
             <strong>Inscripción</strong>
           </TableCell>
+          {user?.role === "admin" && (
+            <TableCell>
+              <strong>Acciones</strong>
+            </TableCell>
+          )}
         </TableRow>
       </TableHead>
       <TableBody>
@@ -67,6 +78,26 @@ const TournamentTable = ({ tournaments, onViewDetails }) => (
                 </IconButton>
               </Tooltip>
             </TableCell>
+            {user?.role === "admin" && (
+              <TableCell>
+                <Tooltip title="Editar">
+                  <IconButton
+                    color="primary"
+                    onClick={() => console.log("Editar", t._id)}
+                  >
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Eliminar">
+                  <IconButton
+                    onClick={() => onDeleteTournament(t._id)}
+                    color="secondary"
+                  >
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>
