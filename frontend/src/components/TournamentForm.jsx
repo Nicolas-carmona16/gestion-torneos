@@ -1,18 +1,61 @@
+import { useState } from "react";
 import { Formik, Form } from "formik";
 import {
   Button,
   Alert,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  FormHelperText,
   Box,
+  Typography,
+  CircularProgress,
 } from "@mui/material";
-import FormTextField from "./FormTextFields";
+import TournamentFormFields from "./TournamentFormFields";
 import { tournamentValidationSchema } from "../utils/validationSchema";
+import { getSportRules } from "../services/sportService";
+
+import BasketballRules from "./sportsRules/BasketballRules";
+import SoccerRules from "./sportsRules/SoccerRules";
+import VolleyballRules from "./sportsRules/VolleyballRules";
+import FutsalRules from "./sportsRules/FutsalRules";
+
+const rulesComponents = {
+  Baloncesto: BasketballRules,
+  Fútbol: SoccerRules,
+  Voleibol: VolleyballRules,
+  "Fútbol Sala": FutsalRules,
+};
 
 const TournamentForm = ({ sports, onSubmit }) => {
+  const [selectedSport, setSelectedSport] = useState(null);
+  const [_defaultRules, setDefaultRules] = useState(null);
+  const [customRules, setCustomRules] = useState(null);
+  const [loadingRules, setLoadingRules] = useState(false);
+
+  const handleSportChange = async (event, handleChangeFormik) => {
+    const sportId = event.target.value;
+    handleChangeFormik(event);
+
+    const selected = sports.find((s) => s._id === sportId);
+    setSelectedSport(selected);
+
+    if (selected) {
+      try {
+        setLoadingRules(true);
+        const data = await getSportRules(sportId);
+        setDefaultRules(data.defaultRules || null);
+        setCustomRules(data.defaultRules || null);
+      } catch (error) {
+        console.error("Error fetching sport rules:", error);
+        setDefaultRules(null);
+        setCustomRules(null);
+      } finally {
+        setLoadingRules(false);
+      }
+    }
+  };
+
+  const SportRulesComponent = selectedSport
+    ? rulesComponents[selectedSport.name]
+    : null;
+
   return (
     <Formik
       initialValues={{
@@ -29,7 +72,13 @@ const TournamentForm = ({ sports, onSubmit }) => {
         maxPlayersPerTeam: "",
       }}
       validationSchema={tournamentValidationSchema}
-      onSubmit={onSubmit}
+      onSubmit={(values, actions) => {
+        const formData = {
+          ...values,
+          customRules,
+        };
+        onSubmit(formData, actions);
+      }}
     >
       {({
         errors,
@@ -42,99 +91,36 @@ const TournamentForm = ({ sports, onSubmit }) => {
         <Form className="flex flex-col gap-6">
           {errors.form && <Alert severity="error">{errors.form}</Alert>}
 
-          <Box className="flex flex-col md:flex-row gap-6">
-            <Box className="flex flex-col gap-4 w-full md:w-1/2">
-              <FormTextField name="name" label="Nombre del Torneo" />
-              <FormTextField
-                name="description"
-                label="Descripción"
-                multiline
-                rows={3}
-              />
-              <FormControl
-                fullWidth
-                error={Boolean(touched.sport && errors.sport)}
-              >
-                <InputLabel id="sport-label">Deporte</InputLabel>
-                <Select
-                  labelId="sport-label"
-                  name="sport"
-                  value={values.sport}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                >
-                  {sports.map((sport) => (
-                    <MenuItem key={sport._id} value={sport._id}>
-                      {sport.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {touched.sport && errors.sport && (
-                  <FormHelperText>{errors.sport}</FormHelperText>
-                )}
-              </FormControl>
-              <FormTextField
-                name="registrationStart"
-                label="Inicio de Inscripción"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-              />
-              <FormTextField
-                name="registrationEnd"
-                label="Fin de Inscripción"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-              />
-              <FormTextField
-                name="maxTeams"
-                label="Máximo de Equipos"
-                type="number"
-              />
-            </Box>
+          <TournamentFormFields
+            sports={sports}
+            values={values}
+            errors={errors}
+            touched={touched}
+            handleChange={handleChange}
+            handleBlur={handleBlur}
+            handleSportChange={handleSportChange}
+          />
 
-            <Box className="flex flex-col gap-4 w-full md:w-1/2">
-              <FormControl
-                fullWidth
-                error={Boolean(touched.format && errors.format)}
-              >
-                <InputLabel id="format-label">Formato</InputLabel>
-                <Select
-                  labelId="format-label"
-                  name="format"
-                  value={values.format}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                >
-                  <MenuItem value="group-stage">Fase de Grupos</MenuItem>
-                  <MenuItem value="elimination">Eliminación Directa</MenuItem>
-                </Select>
-                {touched.format && errors.format && (
-                  <FormHelperText>{errors.format}</FormHelperText>
-                )}
-              </FormControl>
-              <FormTextField
-                name="startDate"
-                label="Inicio del Torneo"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-              />
-              <FormTextField
-                name="endDate"
-                label="Fin del Torneo"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-              />
-              <FormTextField
-                name="minPlayersPerTeam"
-                label="Mínimo de Jugadores por Equipo"
-                type="number"
-              />
-              <FormTextField
-                name="maxPlayersPerTeam"
-                label="Máximo de Jugadores por Equipo"
-                type="number"
-              />
-            </Box>
+          <Box className="mt-6">
+            {loadingRules ? (
+              <Box className="flex justify-center py-4">
+                <CircularProgress />
+              </Box>
+            ) : (
+              SportRulesComponent &&
+              customRules && (
+                <>
+                  <Typography variant="h6" color="primary" gutterBottom>
+                    Reglas de {selectedSport?.name}
+                  </Typography>
+                  <SportRulesComponent
+                    rules={customRules}
+                    editable={true}
+                    onChange={(updatedRules) => setCustomRules(updatedRules)}
+                  />
+                </>
+              )
+            )}
           </Box>
 
           <Box

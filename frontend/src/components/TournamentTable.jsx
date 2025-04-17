@@ -20,7 +20,7 @@ const TournamentTable = ({ tournaments, onViewDetails }) => (
       <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
         <TableRow>
           <TableCell>
-            <strong>Nombre</strong>
+            <strong>Nombre del torneo</strong>
           </TableCell>
           <TableCell>
             <strong>Deporte</strong>
@@ -61,7 +61,7 @@ const TournamentTable = ({ tournaments, onViewDetails }) => (
               <Tooltip title="Inscribirse">
                 <IconButton
                   onClick={() => onViewDetails(t._id)}
-                  color="primary"
+                  color={t.status === "registration" ? "primary" : "error"}
                 >
                   <HowToReg />
                 </IconButton>

@@ -46,7 +46,7 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
               <Typography className="text-gray-700 text-sm">
                 <strong>Nombre:</strong> {tournament.name}
               </Typography>
-              <Typography className="text-gray-700 text-sm">
+              <Typography className="text-gray-700 text-sm break-words">
                 <strong>Descripción:</strong> {tournament.description}
               </Typography>
               <Typography className="text-gray-700 text-sm">
