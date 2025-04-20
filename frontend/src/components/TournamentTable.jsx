@@ -52,6 +52,11 @@ const TournamentTable = ({
           {user?.role === "admin" && (
             <TableCell>
               <strong>Acciones</strong>
+              <Tooltip title="Solo se puede editar el torneo si está en estado de registro o pendiente.">
+                <InfoOutlineIcon
+                  style={{ fontSize: "16px", marginBottom: "2px" }}
+                />
+              </Tooltip>
             </TableCell>
           )}
         </TableRow>
@@ -81,13 +86,26 @@ const TournamentTable = ({
             </TableCell>
             {user?.role === "admin" && (
               <TableCell>
-                <Tooltip title="Editar">
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleEditTournament(t)}
-                  >
-                    <Edit />
-                  </IconButton>
+                <Tooltip
+                  title={
+                    ["active", "finished"].includes(t.status)
+                      ? "No se puede editar un torneo en curso o finalizado"
+                      : "Editar"
+                  }
+                >
+                  <span>
+                    {" "}
+                    <IconButton
+                      color="primary"
+                      onClick={() =>
+                        !["active", "finished"].includes(t.status) &&
+                        handleEditTournament(t)
+                      }
+                      disabled={["active", "finished"].includes(t.status)}
+                    >
+                      <Edit />
+                    </IconButton>
+                  </span>
                 </Tooltip>
                 <Tooltip title="Eliminar">
                   <IconButton
