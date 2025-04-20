@@ -21,6 +21,8 @@ import { getUser } from "./services/authService";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ManageUsers from "./pages/ManageUsers";
+import ManageTournaments from "./pages/ManageTournaments";
+import CreateTournament from "./pages/CreateTournament";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -74,6 +76,7 @@ const App = () => {
             setIsAuthenticated={setIsAuthenticated}
           />
           <Routes>
+            {/* Ruta pública */}
             <Route path="*" element={<NotFound />} />
             <Route path="/" element={<Home />} />
             <Route
@@ -84,6 +87,7 @@ const App = () => {
               path="/iniciar-sesion"
               element={<Login setIsAuthenticated={setIsAuthenticated} />}
             />
+            <Route path="/inscripciones" element={<ManageTournaments />} />
             {/* Ruta protegida */}
             <Route
               path="/perfil"
@@ -102,6 +106,17 @@ const App = () => {
                   allowedRoles={["admin"]}
                 >
                   <ManageUsers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crear-torneo"
+              element={
+                <ProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  allowedRoles={["admin"]}
+                >
+                  <CreateTournament />
                 </ProtectedRoute>
               }
             />

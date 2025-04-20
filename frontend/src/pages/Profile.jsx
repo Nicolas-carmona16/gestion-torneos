@@ -9,6 +9,8 @@ import {
   Divider,
   Paper,
   Button,
+  Box,
+  CircularProgress,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { getUser } from "../services/authService";
@@ -40,9 +42,14 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 5, textAlign: "center" }}>
-        <Typography variant="h5">Cargando...</Typography>
-      </Container>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 

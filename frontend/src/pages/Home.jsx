@@ -1,4 +1,3 @@
-import React from "react";
 import { Container, Grid, Button } from "@mui/material";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -77,7 +76,7 @@ const Home = () => {
                   alt={`Imagen ${index + 1}`}
                   style={{
                     width: "100%",
-                    maxHeight: "450px",
+                    maxHeight: "500px",
                     objectFit: "cover",
                     borderRadius: "10px",
                   }}

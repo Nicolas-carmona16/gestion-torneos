@@ -7,11 +7,12 @@ import {
   Snackbar,
   CircularProgress,
   Box,
+  Alert,
 } from "@mui/material";
 import FilterManageUsers from "../components/FilterManageUsers";
 import UserTable from "../components/UserTable";
 import EditUserDialog from "../components/EditUserDialog";
-import ConfirmDeleteUserDialog from "../components/ConfirmDeleteUserDialog";
+import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -210,14 +211,20 @@ const ManageUsers = () => {
         open={snackbarOpen}
         autoHideDuration={4000}
         onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         message={snackbarMessage}
-      />
+      >
+        <Alert onClose={handleSnackbarClose} severity="success">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
 
-      <ConfirmDeleteUserDialog
+      <ConfirmDeleteDialog
         open={deleteModalOpen}
         handleClose={() => setDeleteModalOpen(false)}
-        handleDeleteUser={handleDeleteUser}
+        handleConfirm={handleDeleteUser}
         deleting={deleting}
+        entityName="usuario"
       />
     </Paper>
   );

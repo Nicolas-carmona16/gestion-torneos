@@ -7,6 +7,17 @@ import Sport from "../models/sportModel.js";
 import asyncHandler from "express-async-handler";
 
 /**
+ * @function getAllSports
+ * @desc Get all sports
+ * @route GET /api/sports
+ * @access Public
+ */
+const getAllSports = asyncHandler(async (req, res) => {
+  const sports = await Sport.find().sort({ name: 1 });
+  res.status(200).json(sports);
+});
+
+/**
  * @function getSportRules
  * @desc Get rules of a specific sport
  * @route GET /api/sports/:id
@@ -26,4 +37,4 @@ const getSportRules = asyncHandler(async (req, res) => {
   });
 });
 
-export { getSportRules };
+export { getSportRules, getAllSports };
