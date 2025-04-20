@@ -19,6 +19,7 @@ const TournamentTable = ({
   tournaments,
   onViewDetails,
   onDeleteTournament,
+  handleEditTournament,
   user,
 }) => (
   <TableContainer component={Paper}>
@@ -83,7 +84,7 @@ const TournamentTable = ({
                 <Tooltip title="Editar">
                   <IconButton
                     color="primary"
-                    onClick={() => console.log("Editar", t)}
+                    onClick={() => handleEditTournament(t)}
                   >
                     <Edit />
                   </IconButton>

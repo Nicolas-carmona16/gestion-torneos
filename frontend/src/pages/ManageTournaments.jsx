@@ -13,6 +13,7 @@ import {
   getAllTournaments,
   getTournamentById,
   deleteTournament,
+  updateTournament,
 } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
 import { getUser } from "../services/authService";
@@ -20,6 +21,7 @@ import TournamentTable from "../components/TournamentTable";
 import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
+import EditTournamentDialog from "../components/EditTournamentDialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -43,6 +45,22 @@ const ManageTournaments = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentTournament, setCurrentTournament] = useState(null);
+  const [updatedData, setUpdatedData] = useState({
+    name: "",
+    description: "",
+    sport: "",
+    format: "",
+    registrationStart: "",
+    registrationEnd: "",
+    startDate: "",
+    endDate: "",
+    maxTeams: "",
+    minPlayersPerTeam: "",
+    maxPlayersPerTeam: "",
+    customRules: {},
+  });
 
   const navigate = useNavigate();
 
@@ -94,6 +112,73 @@ const ManageTournaments = () => {
     registrationEnd,
     tournaments,
   ]);
+
+  const handleEditTournament = (tournament) => {
+    setCurrentTournament(tournament);
+    setUpdatedData({
+      name: tournament.name,
+      description: tournament.description,
+      sport: tournament.sport?._id,
+      format: tournament.format,
+      registrationStart: tournament.registrationStart.split("T")[0],
+      registrationEnd: tournament.registrationEnd.split("T")[0],
+      startDate: tournament.startDate.split("T")[0],
+      endDate: tournament.endDate.split("T")[0],
+      maxTeams: tournament.maxTeams,
+      minPlayersPerTeam: tournament.minPlayersPerTeam,
+      maxPlayersPerTeam: tournament.maxPlayersPerTeam,
+      customRules: tournament.customRules,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateTournament = async () => {
+    try {
+      await updateTournament(currentTournament._id, updatedData);
+      setSnackbarMessage("Torneo actualizado exitosamente.");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      const calculateStatus = (tournamentData) => {
+        const now = new Date();
+        const regStart = new Date(tournamentData.registrationStart);
+        const regEnd = new Date(tournamentData.registrationEnd);
+        const start = new Date(tournamentData.startDate);
+        const end = new Date(tournamentData.endDate);
+
+        if (now < regStart) return "pending";
+        if (now >= regStart && now < regEnd) return "registration";
+        if (now >= regEnd && now < start) return "pending";
+        if (now >= start && now < end) return "active";
+        return "finished";
+      };
+
+      const selectedSport = sports.find(
+        (sport) => sport._id === updatedData.sport
+      );
+      const updatedTournament = {
+        ...currentTournament,
+        ...updatedData,
+        sport: selectedSport,
+        status: calculateStatus(updatedData),
+      };
+      setTournaments((prev) =>
+        prev.map((t) =>
+          t._id === currentTournament._id ? updatedTournament : t
+        )
+      );
+      setFilteredTournaments((prev) =>
+        prev.map((t) =>
+          t._id === currentTournament._id ? updatedTournament : t
+        )
+      );
+      setEditModalOpen(false);
+    } catch {
+      setSnackbarMessage("Error al actualizar el torneo");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
 
   const handleOpenModal = async (id) => {
     setDetailLoading(true);
@@ -218,6 +303,7 @@ const ManageTournaments = () => {
             tournaments={paginatedTournaments}
             onViewDetails={handleOpenModal}
             onDeleteTournament={handleDeleteTournamentClick}
+            handleEditTournament={handleEditTournament}
             user={user}
           />
           <TablePagination
@@ -244,6 +330,15 @@ const ManageTournaments = () => {
         handleConfirm={handleConfirmDeleteTournament}
         deleting={deleting}
         entityName="torneo"
+      />
+
+      <EditTournamentDialog
+        open={editModalOpen}
+        handleClose={() => setEditModalOpen(false)}
+        updatedData={updatedData}
+        setUpdatedData={setUpdatedData}
+        handleUpdateTournament={handleUpdateTournament}
+        sports={sports}
       />
 
       <Snackbar
