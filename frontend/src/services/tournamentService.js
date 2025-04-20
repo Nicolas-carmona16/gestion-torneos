@@ -47,3 +47,15 @@ export const deleteTournament = async (id) => {
     throw error;
   }
 };
+
+export const updateTournament = async (id, tournamentData) => {
+  try {
+    const response = await api.put(`/tournaments/${id}`, tournamentData, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error actualizando torneo:", error);
+    throw error;
+  }
+};

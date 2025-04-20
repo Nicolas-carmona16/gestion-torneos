@@ -83,7 +83,7 @@ const TournamentTable = ({
                 <Tooltip title="Editar">
                   <IconButton
                     color="primary"
-                    onClick={() => console.log("Editar", t._id)}
+                    onClick={() => console.log("Editar", t)}
                   >
                     <Edit />
                   </IconButton>

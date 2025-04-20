@@ -41,6 +41,8 @@ const ManageTournaments = () => {
   const [tournamentToDelete, setTournamentToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("");
 
   const navigate = useNavigate();
 
@@ -127,10 +129,15 @@ const ManageTournaments = () => {
       const updated = tournaments.filter((t) => t._id !== tournamentToDelete);
       setTournaments(updated);
       setFilteredTournaments(updated);
+      setSnackbarMessage("Torneo eliminado exitosamente.");
+      setSnackbarSeverity("success");
       setSnackbarOpen(true);
       setDeleteDialogOpen(false);
-    } catch (error) {
-      console.error("Error al eliminar torneo:", error);
+    } catch {
+      setSnackbarMessage("Error al eliminar el torneo.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      setDeleteDialogOpen(false);
     } finally {
       setDeleting(false);
       setTournamentToDelete(null);
@@ -244,13 +251,10 @@ const ManageTournaments = () => {
         autoHideDuration={4000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        message={snackbarMessage}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          Torneo eliminado exitosamente.
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+          {snackbarMessage}
         </Alert>
       </Snackbar>
     </Box>
