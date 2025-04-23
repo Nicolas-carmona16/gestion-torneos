@@ -11,6 +11,7 @@ import {
   Button,
   Box,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import { tournamentEditValidationSchema } from "../utils/validationSchema";
 import { useState } from "react";
@@ -18,6 +19,7 @@ import BasketballRules from "./sportsRules/BasketballRules";
 import FutsalRules from "./sportsRules/FutsalRules";
 import SoccerRules from "./sportsRules/SoccerRules";
 import VolleyballRules from "./sportsRules/VolleyballRules";
+import { getSportRules } from "../services/sportService";
 
 const EditTournamentDialog = ({
   open,
@@ -28,6 +30,7 @@ const EditTournamentDialog = ({
   sports,
 }) => {
   const [errors, setErrors] = useState({});
+  const [loadingRules, setLoadingRules] = useState(false);
 
   const rulesComponents = {
     Baloncesto: BasketballRules,
@@ -59,6 +62,10 @@ const EditTournamentDialog = ({
   };
 
   const handleChange = async (field, value) => {
+    if (field === "sport" && value !== updatedData.sport) {
+      await loadDefaultRules(value);
+    }
+
     setUpdatedData((prev) => ({ ...prev, [field]: value }));
 
     try {
@@ -68,6 +75,28 @@ const EditTournamentDialog = ({
       setErrors((prev) => ({ ...prev, [field]: "" }));
     } catch (error) {
       setErrors((prev) => ({ ...prev, [field]: error.message }));
+    }
+  };
+
+  const loadDefaultRules = async (sportId) => {
+    if (!sportId) return;
+
+    try {
+      setLoadingRules(true);
+      const data = await getSportRules(sportId);
+
+      setUpdatedData((prev) => ({
+        ...prev,
+        customRules: data.defaultRules || null,
+      }));
+    } catch (error) {
+      console.error("Error fetching sport rules:", error);
+      setUpdatedData((prev) => ({
+        ...prev,
+        customRules: null,
+      }));
+    } finally {
+      setLoadingRules(false);
     }
   };
 
@@ -205,16 +234,24 @@ const EditTournamentDialog = ({
             <Typography variant="h6" gutterBottom>
               Reglas del torneo
             </Typography>
-            {(() => {
-              const RulesComponent = getSportRulesComponent(updatedData.sport);
-              return RulesComponent ? (
-                <RulesComponent
-                  rules={updatedData.customRules}
-                  editable={true}
-                  onChange={handleRulesChange}
-                />
-              ) : null;
-            })()}
+            {loadingRules ? (
+              <Box display="flex" justifyContent="center" my={2}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              (() => {
+                const RulesComponent = getSportRulesComponent(
+                  updatedData.sport
+                );
+                return RulesComponent && updatedData.customRules ? (
+                  <RulesComponent
+                    rules={updatedData.customRules}
+                    editable={true}
+                    onChange={handleRulesChange}
+                  />
+                ) : null;
+              })()
+            )}
           </Box>
         )}
       </DialogContent>
@@ -224,7 +261,9 @@ const EditTournamentDialog = ({
           onClick={handleSubmit}
           color="primary"
           variant="contained"
-          disabled={Object.values(errors).some((error) => error)}
+          disabled={
+            Object.values(errors).some((error) => error) || loadingRules
+          }
         >
           Actualizar
         </Button>
