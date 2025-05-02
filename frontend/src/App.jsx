@@ -13,7 +13,6 @@ import {
 } from "@mui/material";
 import Header from "./components/Header";
 import Home from "./pages/Home";
-import Register from "./pages/Register";
 import theme from "./theme/theme";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -23,6 +22,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ManageUsers from "./pages/ManageUsers";
 import ManageTournaments from "./pages/ManageTournaments";
 import CreateTournament from "./pages/CreateTournament";
+import CreateUser from "./pages/CreateUser";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -80,10 +80,6 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
             <Route path="/" element={<Home />} />
             <Route
-              path="/registrarse"
-              element={<Register setIsAuthenticated={setIsAuthenticated} />}
-            />
-            <Route
               path="/iniciar-sesion"
               element={<Login setIsAuthenticated={setIsAuthenticated} />}
             />
@@ -117,6 +113,17 @@ const App = () => {
                   allowedRoles={["admin"]}
                 >
                   <CreateTournament />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crear-usuario"
+              element={
+                <ProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  allowedRoles={["admin"]}
+                >
+                  <CreateUser />
                 </ProtectedRoute>
               }
             />

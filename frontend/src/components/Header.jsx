@@ -78,17 +78,6 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             >
               Iniciar sesión
             </Button>
-            <Button
-              color="inherit"
-              component={Link}
-              to="/registrarse"
-              sx={{
-                backgroundColor: "transparent",
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
-              }}
-            >
-              Registrarse
-            </Button>
           </div>
         ) : (
           <div>

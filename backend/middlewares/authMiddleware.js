@@ -43,7 +43,7 @@ const protect = asyncHandler(async (req, res, next) => {
  * Middleware to restrict access to users with specific roles.
  *
  * @function authorizeRoles
- * @param {...string} roles - Allowed roles ('admin', 'user', 'referee')
+ * @param {...string} roles - Allowed roles ('admin', 'captain', 'assistant')
  * @returns {Function} Middleware function
  * @throws {Error} If the user's role is not authorized.
  */

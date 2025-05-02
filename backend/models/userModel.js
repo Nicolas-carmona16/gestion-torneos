@@ -10,19 +10,21 @@ import mongoose from "mongoose";
  * @typedef {Object} User
  * @property {String} firstName - The first name of the user.
  * @property {String} lastName - The last name of the user.
- * @property {Date} birthDate - The birth date of the user.
  * @property {String} email - The email address of the user, must be unique.
  * @property {String} password - encrypted password of the user.
- * @property {String} role - The role of the user (admin, player, referee).
- * 
+ * @property {String} role - The role of the user (admin, captain, assistant).
+ * @property {Array.<mongoose.Schema.Types.ObjectId>} sports - Array of sports the user is associated with (references Sport model).
+ * @property {Array.<mongoose.Schema.Types.ObjectId>} tournaments - Array of tournaments the user is associated with (references Tournament model).
+ *
  * @example
  * const newUser = new User({
  *  firstName: "John",
  *  lastName: "Doe",
- *  birthDate: new Date("1990-01-01"),
  *  email: "john.doe@example.com",
  *  password: "hashed_password",
- *  role: "player",
+ *  role: "captain",
+ *  sports: ["5f8d0d55b54764421b7156da"],
+ *  tournaments: ["5f8d0d55b54764421b7156db"]
  * });
  */
 
@@ -38,10 +40,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    birthDate: {
-      type: Date,
-      required: true,
-    },
     email: {
       type: String,
       required: true,
@@ -54,10 +52,24 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "player", "referee"],
+      enum: ["admin", "captain", "assistant"],
       required: true,
-      default: "player",
+      default: "captain",
     },
+    sports: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Sport",
+        default: [],
+      },
+    ],
+    tournaments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tournament",
+        default: [],
+      },
+    ],
   },
   { timestamps: true }
 );
