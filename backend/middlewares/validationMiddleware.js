@@ -22,8 +22,8 @@ const validateRegister = [
   check("role")
     .optional()
     .custom((value) => {
-      if (value && value !== "player") {
-        throw new Error("Only the 'player' role is allowed for registration");
+      if (value && value !== "captain") {
+        throw new Error("Only the 'captain' role is allowed for registration");
       }
       return true;
     }),
@@ -64,7 +64,7 @@ const validateUpdateUser = [
   check("email").optional().isEmail().withMessage("Invalid email"),
   check("role")
     .optional()
-    .isIn(["admin", "player", "referee"])
+    .isIn(["admin", "captain", "assistant"])
     .withMessage("Invalid role"),
   check("sports")
     .optional()
@@ -102,7 +102,7 @@ const validateAdminCreate = [
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
   check("role")
-    .isIn(["admin", "player", "referee"])
+    .isIn(["admin", "captain", "assistant"])
     .withMessage("Invalid role"),
   check("sports")
     .optional()

@@ -160,7 +160,7 @@ export const updateUser = async (userId, userData) => {
  * @param {string} userData.lastName
  * @param {string} userData.email
  * @param {string} userData.password
- * @param {string} [userData.role="player"]
+ * @param {string} [userData.role="captain"]
  * @param {Array<string>} [userData.sports=[]] - Array of sport IDs
  * @param {Array<string>} [userData.tournaments=[]] - Array of tournament IDs
  * @returns {Promise<Object>} Created user data with populated associations

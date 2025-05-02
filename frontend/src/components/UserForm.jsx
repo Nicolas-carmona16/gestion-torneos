@@ -29,7 +29,7 @@ const UserForm = ({ sports, tournaments, onSubmit }) => {
         lastName: "",
         email: "",
         password: "",
-        role: "player",
+        role: "captain",
         sports: [],
         tournaments: [],
       }}

@@ -56,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
     lastName,
     email,
     password: hashedPassword,
-    role: role || "player",
+    role: role || "captain",
     sports: sports || [],
     tournaments: tournaments || [],
   });
@@ -272,7 +272,7 @@ const createUser = asyncHandler(async (req, res) => {
     lastName,
     email,
     password,
-    role = "player",
+    role = "captain",
     sports = [],
     tournaments = [],
   } = req.body;

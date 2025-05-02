@@ -126,8 +126,8 @@ const EditUserDialog = ({
             label="Rol"
           >
             <MenuItem value="admin">Administrador</MenuItem>
-            <MenuItem value="player">Jugador</MenuItem>
-            <MenuItem value="referee">Árbitro</MenuItem>
+            <MenuItem value="captain">Capitan</MenuItem>
+            <MenuItem value="assistant">Auxiliar</MenuItem>
           </Select>
         </FormControl>
 

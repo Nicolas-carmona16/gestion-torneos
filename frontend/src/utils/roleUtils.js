@@ -6,13 +6,13 @@
 /**
  * @constant {Object} roleMapping
  * @description Maps user roles from system identifiers to display labels.
- * @property {string} player - Mapped label for the "player" role.
- * @property {string} referee - Mapped label for the "referee" role.
+ * @property {string} captain - Mapped label for the "captain" role.
+ * @property {string} assistant - Mapped label for the "assistant" role.
  * @property {string} admin - Mapped label for the "admin" role.
  */
 
 export const roleMapping = {
-  player: "Jugador",
-  referee: "Árbitro",
+  captain: "Capitan",
+  assistant: "Auxiliar",
   admin: "Administrador",
 };
