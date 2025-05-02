@@ -5,6 +5,7 @@
 
 import { check } from "express-validator";
 import validateFields from "./validateFields.js";
+import mongoose from "mongoose";
 
 /**
  * Validation rules for user registration.
@@ -18,23 +19,31 @@ const validateRegister = [
   check("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  check("birthDate")
-    .isISO8601()
-    .withMessage("Invalid birth date format (YYYY-MM-DD)")
-    .custom((value) => {
-      const currentDate = new Date();
-      const birthDate = new Date(value);
-      if (birthDate > currentDate) {
-        throw new Error("Birth date cannot be in the future");
-      }
-      return true;
-    }),
-
   check("role")
     .optional()
     .custom((value) => {
       if (value && value !== "player") {
         throw new Error("Only the 'player' role is allowed for registration");
+      }
+      return true;
+    }),
+  check("sports")
+    .optional()
+    .isArray()
+    .withMessage("Sports must be an array")
+    .custom((value) => {
+      if (value && value.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+        throw new Error("Contains invalid sport IDs");
+      }
+      return true;
+    }),
+  check("tournaments")
+    .optional()
+    .isArray()
+    .withMessage("Tournaments must be an array")
+    .custom((value) => {
+      if (value && value.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+        throw new Error("Contains invalid tournament IDs");
       }
       return true;
     }),
@@ -53,22 +62,30 @@ const validateUpdateUser = [
     .withMessage("First name is required"),
   check("lastName").optional().notEmpty().withMessage("Last name is required"),
   check("email").optional().isEmail().withMessage("Invalid email"),
-  check("birthDate")
-    .optional()
-    .isISO8601()
-    .withMessage("Invalid birth date format (YYYY-MM-DD)")
-    .custom((value) => {
-      const currentDate = new Date();
-      const birthDate = new Date(value);
-      if (birthDate > currentDate) {
-        throw new Error("Birth date cannot be in the future");
-      }
-      return true;
-    }),
   check("role")
     .optional()
     .isIn(["admin", "player", "referee"])
     .withMessage("Invalid role"),
+  check("sports")
+    .optional()
+    .isArray()
+    .withMessage("Sports must be an array")
+    .custom((value) => {
+      if (value && !value.every((id) => mongoose.Types.ObjectId.isValid(id))) {
+        throw new Error("Sports array contains invalid ObjectId");
+      }
+      return true;
+    }),
+  check("tournaments")
+    .optional()
+    .isArray()
+    .withMessage("Tournaments must be an array")
+    .custom((value) => {
+      if (value && !value.every((id) => mongoose.Types.ObjectId.isValid(id))) {
+        throw new Error("Tournaments array contains invalid ObjectId");
+      }
+      return true;
+    }),
   validateFields,
 ];
 
@@ -84,12 +101,29 @@ const validateAdminCreate = [
   check("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  check("birthDate")
-    .isISO8601()
-    .withMessage("Invalid birth date format (YYYY-MM-DD)"),
   check("role")
     .isIn(["admin", "player", "referee"])
     .withMessage("Invalid role"),
+  check("sports")
+    .optional()
+    .isArray()
+    .withMessage("Sports must be an array")
+    .custom((value) => {
+      if (value && !value.every((id) => mongoose.Types.ObjectId.isValid(id))) {
+        throw new Error("Sports array contains invalid ObjectId");
+      }
+      return true;
+    }),
+  check("tournaments")
+    .optional()
+    .isArray()
+    .withMessage("Tournaments must be an array")
+    .custom((value) => {
+      if (value && !value.every((id) => mongoose.Types.ObjectId.isValid(id))) {
+        throw new Error("Tournaments array contains invalid ObjectId");
+      }
+      return true;
+    }),
   validateFields,
 ];
 

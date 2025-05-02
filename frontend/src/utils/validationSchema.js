@@ -16,7 +16,7 @@ import * as Yup from "yup";
  * - password: required, minimum 6 characters
  * - birthDate: required, must not be in the future
  */
-export const validationSchema = Yup.object({
+export const validationUserSchema = Yup.object({
   firstName: Yup.string().required("El nombre es obligatorio"),
   lastName: Yup.string().required("El apellido es obligatorio"),
   email: Yup.string()
@@ -25,22 +25,10 @@ export const validationSchema = Yup.object({
   password: Yup.string()
     .min(6, "Debe tener al menos 6 caracteres")
     .required("La contraseña es obligatoria"),
-  birthDate: Yup.date()
-    .max(new Date(), "La fecha no puede ser mayor a la actual")
-    .required("Fecha obligatoria"),
-});
-
-/**
- * @constant {Yup.ObjectSchema} validationSchemaEdit
- * @description Validation schema for editing user birth date.
- *
- * Validates:
- * - birthDate: required, must not be in the future
- */
-export const validationSchemaEdit = Yup.object({
-  birthDate: Yup.date()
-    .max(new Date(), "La fecha no puede ser mayor a la actual")
-    .required("Fecha obligatoria"),
+  sports: Yup.array()
+    .min(1, "Selecciona al menos un deporte")
+    .required("Los deportes son obligatorios"),
+  tournaments: Yup.array().of(Yup.string()),
 });
 
 /**

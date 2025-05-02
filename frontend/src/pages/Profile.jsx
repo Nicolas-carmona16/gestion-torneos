@@ -11,11 +11,14 @@ import {
   Button,
   Box,
   CircularProgress,
+  Chip,
+  Stack,
 } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { getUser } from "../services/authService";
 import { roleMapping } from "../utils/roleUtils";
-import { formatBirthDate } from "../utils/dateUtils";
 
 /**
  * @module Profile
@@ -30,8 +33,16 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const userData = await getUser();
-      setUser(userData);
+      try {
+        const userData = await getUser();
+        setUser({
+          ...userData,
+          sports: userData?.sports || [],
+          tournaments: userData?.tournaments || [],
+        });
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
     };
     fetchUser();
   }, []);
@@ -79,15 +90,65 @@ const Profile = () => {
               <strong>Nombre:</strong> {user.firstName} {user.lastName}
             </Typography>
             <Typography variant="h6">
-              <strong>Fecha de nacimiento:</strong>{" "}
-              {formatBirthDate(user.birthDate)}
-            </Typography>
-            <Typography variant="h6">
               <strong>Correo:</strong> {user.email}
             </Typography>
             <Typography variant="h6">
               <strong>Rol:</strong> {roleMapping[user.role] || "Desconocido"}
             </Typography>
+            <Divider textAlign="left" sx={{ my: 2 }}>
+              <Chip
+                icon={<SportsSoccerIcon />}
+                label="Deportes"
+                color="primary"
+              />
+            </Divider>
+            {user.sports.length > 0 ? (
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ flexWrap: "wrap", gap: 1, justifyContent: "center" }}
+              >
+                {user.sports.map((sport) => (
+                  <Chip
+                    key={sport._id}
+                    label={sport.name}
+                    color="secondary"
+                    variant="outlined"
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center">
+                No hay deportes asignados
+              </Typography>
+            )}
+            <Divider textAlign="left" sx={{ my: 2 }}>
+              <Chip
+                icon={<EmojiEventsIcon />}
+                label="Torneos"
+                color="primary"
+              />
+            </Divider>
+            {user.tournaments.length > 0 ? (
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ flexWrap: "wrap", gap: 1, justifyContent: "center" }}
+              >
+                {user.tournaments.map((tournament) => (
+                  <Chip
+                    key={tournament._id}
+                    label={tournament.name}
+                    color="secondary"
+                    variant="outlined"
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center">
+                No hay torneos asignados
+              </Typography>
+            )}
           </CardContent>
         </Card>
 
