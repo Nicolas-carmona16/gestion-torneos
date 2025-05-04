@@ -54,12 +54,25 @@ export const tournamentValidationSchema = Yup.object({
   format: Yup.string()
     .oneOf(["group-stage", "elimination"])
     .required("Selecciona un formato"),
+  bestOfMatches: Yup.number()
+    .transform((value, originalValue) =>
+      originalValue === "" ? undefined : value
+    )
+    .required('El campo "Mejor de" es requerido')
+    .min(1, "Debe ser al menos 1"),
+  isOlympiad: Yup.boolean(),
   registrationStart: Yup.date().required("Inicio de inscripción requerido"),
-  registrationEnd: Yup.date()
+  registrationTeamEnd: Yup.date()
+    .min(Yup.ref("registrationStart"), "Debe ser posterior al inicio")
+    .required("Fin de inscripción requerido"),
+  registrationPlayerEnd: Yup.date()
     .min(Yup.ref("registrationStart"), "Debe ser posterior al inicio")
     .required("Fin de inscripción requerido"),
   startDate: Yup.date()
-    .min(Yup.ref("registrationEnd"), "Debe ser posterior al fin de inscripción")
+    .min(
+      Yup.ref("registrationTeamEnd"),
+      "Debe ser posterior al fin de inscripción de equipos"
+    )
     .required("Fecha de inicio requerida"),
   endDate: Yup.date()
     .min(Yup.ref("startDate"), "Debe ser posterior a la fecha de inicio")
@@ -90,14 +103,25 @@ export const tournamentEditValidationSchema = Yup.object({
     .nullable()
     .oneOf(["group-stage", "elimination"], "Formato inválido")
     .required("Selecciona un formato"),
+  bestOfMatches: Yup.number()
+    .transform((value, originalValue) =>
+      originalValue === "" ? undefined : value
+    )
+    .required('El campo "Mejor de" es requerido')
+    .min(1, "Debe ser al menos 1"),
+  isOlympiad: Yup.boolean(),
   registrationStart: Yup.date()
     .nullable()
     .typeError("Fecha inválida")
     .required("Inicio de inscripción requerido"),
-  registrationEnd: Yup.date()
+  registrationTeamEnd: Yup.date()
     .nullable()
     .typeError("Fecha inválida")
-    .required("Fin de inscripción requerido"),
+    .required("Fin de registro de equipos requerido"),
+  registrationPlayerEnd: Yup.date()
+    .nullable()
+    .typeError("Fecha inválida")
+    .required("Fin de registro de jugadores requerido"),
   startDate: Yup.date()
     .nullable()
     .typeError("Fecha inválida")

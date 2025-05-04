@@ -22,6 +22,7 @@ import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import EditTournamentDialog from "../components/EditTournamentDialog";
+import { calculateTournamentStatus } from "../utils/tournamentStatusMapping";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -37,7 +38,7 @@ const ManageTournaments = () => {
   const [selectedSport, setSelectedSport] = useState("");
   const [page, setPage] = useState(0);
   const [registrationStart, setRegistrationStart] = useState("");
-  const [registrationEnd, setRegistrationEnd] = useState("");
+  const [registrationTeamEnd, setRegistrationTeamEnd] = useState("");
   const [user, setUser] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] = useState(null);
@@ -52,13 +53,21 @@ const ManageTournaments = () => {
     description: "",
     sport: "",
     format: "",
+    groupsStageSettings: {
+      teamsPerGroup: "",
+      teamsAdvancingPerGroup: "",
+      matchesPerTeamInGroup: 1,
+    },
+    bestOfMatches: 1,
     registrationStart: "",
-    registrationEnd: "",
+    registrationTeamEnd: "",
+    registrationPlayerEnd: "",
     startDate: "",
     endDate: "",
     maxTeams: "",
     minPlayersPerTeam: "",
     maxPlayersPerTeam: "",
+    isOlympiad: false,
     customRules: {},
   });
 
@@ -97,8 +106,9 @@ const ManageTournaments = () => {
         (!registrationStart ||
           new Date(tournament.registrationStart) >=
             new Date(registrationStart)) &&
-        (!registrationEnd ||
-          new Date(tournament.registrationEnd) <= new Date(registrationEnd));
+        (!registrationTeamEnd ||
+          new Date(tournament.registrationTeamEnd) <=
+            new Date(registrationTeamEnd));
 
       return matchesName && matchesSport && matchesDate;
     });
@@ -109,7 +119,7 @@ const ManageTournaments = () => {
     searchTerm,
     selectedSport,
     registrationStart,
-    registrationEnd,
+    registrationTeamEnd,
     tournaments,
   ]);
 
@@ -120,13 +130,17 @@ const ManageTournaments = () => {
       description: tournament.description,
       sport: tournament.sport?._id,
       format: tournament.format,
+      groupsStageSettings: tournament.groupsStageSettings,
+      bestOfMatches: tournament.bestOfMatches,
       registrationStart: tournament.registrationStart.split("T")[0],
-      registrationEnd: tournament.registrationEnd.split("T")[0],
+      registrationTeamEnd: tournament.registrationTeamEnd.split("T")[0],
+      registrationPlayerEnd: tournament.registrationPlayerEnd.split("T")[0],
       startDate: tournament.startDate.split("T")[0],
       endDate: tournament.endDate.split("T")[0],
       maxTeams: tournament.maxTeams,
       minPlayersPerTeam: tournament.minPlayersPerTeam,
       maxPlayersPerTeam: tournament.maxPlayersPerTeam,
+      isOlympiad: tournament.isOlympiad,
       customRules: tournament.customRules,
     });
     setEditModalOpen(true);
@@ -139,20 +153,6 @@ const ManageTournaments = () => {
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
-      const calculateStatus = (tournamentData) => {
-        const now = new Date();
-        const regStart = new Date(tournamentData.registrationStart);
-        const regEnd = new Date(tournamentData.registrationEnd);
-        const start = new Date(tournamentData.startDate);
-        const end = new Date(tournamentData.endDate);
-
-        if (now < regStart) return "pending";
-        if (now >= regStart && now < regEnd) return "registration";
-        if (now >= regEnd && now < start) return "pending";
-        if (now >= start && now < end) return "active";
-        return "finished";
-      };
-
       const selectedSport = sports.find(
         (sport) => sport._id === updatedData.sport
       );
@@ -160,7 +160,7 @@ const ManageTournaments = () => {
         ...currentTournament,
         ...updatedData,
         sport: selectedSport,
-        status: calculateStatus(updatedData),
+        status: calculateTournamentStatus(updatedData),
       };
       setTournaments((prev) =>
         prev.map((t) =>
@@ -288,9 +288,9 @@ const ManageTournaments = () => {
         setSelectedSport={setSelectedSport}
         sports={sports}
         registrationStart={registrationStart}
-        registrationEnd={registrationEnd}
+        registrationTeamEnd={registrationTeamEnd}
         setRegistrationStart={setRegistrationStart}
-        setRegistrationEnd={setRegistrationEnd}
+        setRegistrationTeamEnd={setRegistrationTeamEnd}
       />
 
       {filteredTournaments.length === 0 ? (

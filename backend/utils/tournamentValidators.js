@@ -5,7 +5,8 @@ import mongoose from "mongoose";
  *
  * @param {Object} data - The input data for the tournament.
  * @param {string} data.registrationStart - The registration start date.
- * @param {string} data.registrationEnd - The registration end date.
+ * @param {string} data.registrationTeamEnd - The registration end date for teams.
+ * @param {string} data.registrationPlayerEnd - The registration end date for players.
  * @param {string} data.startDate - The tournament start date.
  * @param {string} data.endDate - The tournament end date.
  * @param {number} data.minPlayersPerTeam - The minimum number of players per team.
@@ -19,8 +20,12 @@ import mongoose from "mongoose";
  */
 export const validateTournamentInput = (data) => {
   const {
+    format,
+    groupsStageSettings,
+    bestOfMatches,
     registrationStart,
-    registrationEnd,
+    registrationTeamEnd,
+    registrationPlayerEnd,
     startDate,
     endDate,
     minPlayersPerTeam,
@@ -34,12 +39,22 @@ export const validateTournamentInput = (data) => {
     errors.push("Invalid sport ID");
   }
 
-  if (new Date(registrationStart) >= new Date(registrationEnd)) {
-    errors.push("Registration start date must be before registration end date");
+  if (new Date(registrationStart) >= new Date(registrationTeamEnd)) {
+    errors.push(
+      "Registration start date must be before team registration end date"
+    );
   }
 
-  if (new Date(registrationEnd) >= new Date(startDate)) {
-    errors.push("Registration end date must be before tournament start date");
+  if (new Date(registrationTeamEnd) >= new Date(registrationPlayerEnd)) {
+    errors.push(
+      "Team registration end date must be before player registration end date"
+    );
+  }
+
+  if (new Date(registrationTeamEnd) >= new Date(startDate)) {
+    errors.push(
+      "Team registration end date must be before tournament start date"
+    );
   }
 
   if (new Date(startDate) >= new Date(endDate)) {
@@ -60,6 +75,42 @@ export const validateTournamentInput = (data) => {
     errors.push("There must be at least 2 teams allowed in the tournament");
   }
 
+  if (bestOfMatches < 1) {
+    errors.push("Best of matches must be at least 1");
+  }
+
+  if (format === "group-stage") {
+    if (!groupsStageSettings) {
+      errors.push("groupsStageSettings is required for group-stage format");
+    } else {
+      const { teamsPerGroup, teamsAdvancingPerGroup, matchesPerTeamInGroup } =
+        groupsStageSettings;
+
+      if (!teamsPerGroup || isNaN(teamsPerGroup) || teamsPerGroup < 2) {
+        errors.push("teamsPerGroup must be at least 2");
+      }
+
+      if (
+        !teamsAdvancingPerGroup ||
+        isNaN(teamsAdvancingPerGroup) ||
+        teamsAdvancingPerGroup < 1
+      ) {
+        errors.push("teamsAdvancingPerGroup must be at least 1");
+      }
+
+      if (teamsAdvancingPerGroup >= teamsPerGroup) {
+        errors.push("teamsAdvancingPerGroup must be less than teamsPerGroup");
+      }
+
+      if (
+        matchesPerTeamInGroup &&
+        (isNaN(matchesPerTeamInGroup) || matchesPerTeamInGroup < 1)
+      ) {
+        errors.push("matchesPerTeamInGroup must be a positive number");
+      }
+    }
+  }
+
   return errors;
 };
 
@@ -69,7 +120,7 @@ export const validateTournamentInput = (data) => {
  * @param {string} id - The ID to validate.
  * @param {string} [fieldName="ID"] - The name of the field being validated.
  * @returns {string[]} - An array containing the error message if invalid, otherwise an empty array.
- * 
+ *
  * @example
  * const errors = validateObjectId(id, "sport");
  */
@@ -86,15 +137,24 @@ export const validateObjectId = (id, fieldName = "ID") => {
  * @param {Object} tournament - The tournament object to validate.
  * @param {string} tournament.status - The current status of the tournament.
  * @returns {string[]} - An array of error messages. If empty, the update is valid.
- * 
+ *
  * @example
  * const errors = validateTournamentUpdate(tournament);
  */
 export const validateTournamentUpdate = (tournament) => {
   const errors = [];
-  if (!["pending", "registration"].includes(tournament.status)) {
+  if (
+    ![
+      "coming soon",
+      "registration open",
+      "player adjustment",
+      "preparation",
+      "in progress",
+      "completed",
+    ].includes(tournament.status)
+  ) {
     errors.push(
-      "Only tournaments in 'pending' or 'registration' status can be edited"
+      "Only tournaments in 'coming soon', 'registration open', 'player adjustment', 'preparation', 'in progress' or 'completed' status can be edited"
     );
   }
   return errors;

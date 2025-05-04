@@ -63,13 +63,21 @@ const TournamentForm = ({ sports, onSubmit }) => {
         description: "",
         sport: "",
         format: "",
+        groupsStageSettings: {
+          teamsPerGroup: "",
+          teamsAdvancingPerGroup: "",
+          matchesPerTeamInGroup: 1,
+        },
+        bestOfMatches: 1,
         registrationStart: "",
-        registrationEnd: "",
+        registrationTeamEnd: "",
+        registrationPlayerEnd: "",
         startDate: "",
         endDate: "",
         maxTeams: "",
         minPlayersPerTeam: "",
         maxPlayersPerTeam: "",
+        isOlympiad: false,
       }}
       validationSchema={tournamentValidationSchema}
       onSubmit={(values, actions) => {
