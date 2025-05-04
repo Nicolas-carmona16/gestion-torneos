@@ -13,7 +13,6 @@ import {
 } from "../utils/tournamentValidators.js";
 import { calculateTournamentStatus } from "../utils/tournamentStatus.js";
 
-
 /**
  * @function createTournament
  * @desc Create a new tournament
@@ -27,13 +26,17 @@ const createTournament = asyncHandler(async (req, res) => {
     sport,
     customRules,
     format,
+    groupsStageSettings,
+    bestOfMatches,
     registrationStart,
-    registrationEnd,
+    registrationTeamEnd,
+    registrationPlayerEnd,
     startDate,
     endDate,
     maxTeams,
     minPlayersPerTeam,
     maxPlayersPerTeam,
+    isOlympiad,
   } = req.body;
 
   const errors = validateTournamentInput(req.body);
@@ -48,19 +51,28 @@ const createTournament = asyncHandler(async (req, res) => {
     throw new Error("Sport not found");
   }
 
+  if (format === "group-stage" && !groupsStageSettings) {
+    res.status(400);
+    throw new Error("groupsStageSettings is required for group-stage format");
+  }
+
   const tournament = new Tournament({
     name,
     description,
     sport: selectedSport._id,
     customRules: customRules || selectedSport.defaultRules,
     format,
+    groupsStageSettings,
+    bestOfMatches: bestOfMatches || 1,
     registrationStart,
-    registrationEnd,
+    registrationTeamEnd,
+    registrationPlayerEnd,
     startDate,
     endDate,
     maxTeams,
     minPlayersPerTeam,
     maxPlayersPerTeam,
+    isOlympiad,
     createdBy: req.user._id,
   });
 
@@ -166,13 +178,17 @@ const updateTournament = asyncHandler(async (req, res) => {
     sport,
     customRules,
     format,
+    groupsStageSettings,
+    bestOfMatches,
     registrationStart,
-    registrationEnd,
+    registrationTeamEnd,
+    registrationPlayerEnd,
     startDate,
     endDate,
     maxTeams,
     minPlayersPerTeam,
     maxPlayersPerTeam,
+    isOlympiad,
   } = req.body;
 
   const selectedSport = await Sport.findById(sport);
@@ -181,18 +197,27 @@ const updateTournament = asyncHandler(async (req, res) => {
     throw new Error("Sport not found");
   }
 
+  if (format === "group-stage" && !groupsStageSettings) {
+    res.status(400);
+    throw new Error("groupsStageSettings is required for group-stage format");
+  }
+
   tournament.name = name;
   tournament.description = description;
   tournament.sport = selectedSport._id;
   tournament.customRules = customRules || selectedSport.defaultRules;
   tournament.format = format;
+  tournament.groupsStageSettings = format === "group-stage" ? groupsStageSettings : undefined;
+  tournament.bestOfMatches = bestOfMatches;
   tournament.registrationStart = registrationStart;
-  tournament.registrationEnd = registrationEnd;
+  tournament.registrationTeamEnd = registrationTeamEnd;
+  tournament.registrationPlayerEnd = registrationPlayerEnd;
   tournament.startDate = startDate;
   tournament.endDate = endDate;
   tournament.maxTeams = maxTeams;
   tournament.minPlayersPerTeam = minPlayersPerTeam;
   tournament.maxPlayersPerTeam = maxPlayersPerTeam;
+  tournament.isOlympiad = isOlympiad;
 
   tournament.status = calculateTournamentStatus(tournament);
 

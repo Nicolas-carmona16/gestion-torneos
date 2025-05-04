@@ -8,6 +8,7 @@ import {
   Paper,
   IconButton,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { HowToReg } from "@mui/icons-material";
 import { formatDate } from "../utils/formatDate";
@@ -33,14 +34,33 @@ const TournamentTable = ({
             <strong>Deporte</strong>
           </TableCell>
           <TableCell>
-            <strong>Fechas de Registro</strong>
+            <strong>Fecha inicio Registro</strong>
+          </TableCell>
+          <TableCell>
+            <strong>Fecha Fin Registro de Equipos</strong>
+          </TableCell>
+          <TableCell>
+            <strong>Fecha Fin Registro de Jugadores</strong>
           </TableCell>
           <TableCell>
             <strong>Fechas de Torneo</strong>
           </TableCell>
           <TableCell>
             <strong style={{ marginRight: "3px" }}>Estado</strong>
-            <Tooltip title="Si el estado está en pendiente, la inscripción no ha comenzado o ya finalizó la inscripción y el torneo no ha iniciado. Si el estado está en registro, el torneo está en proceso de inscripción. Si el estado está activo, el torneo ya ha comenzado. Si el estado está finalizado, el torneo ya ha terminado.">
+            <Tooltip
+              title={
+                <Typography sx={{ fontSize: "14px" }}>
+                  Si el estado está en próximamente, la inscripción no ha
+                  comenzado. Si el estado está en registro abierto, el torneo
+                  está en proceso de registro de equipos. Si el estado está en
+                  ajuste de jugadores, el torneo está en proceso de ajuste de
+                  jugadores. Si el estado está en preparación, ya se acabó el
+                  ajuste de jugadores y el torneo está próximo a empezar. Si el
+                  estado está en curso, el torneo está en progreso. Si el estado
+                  está en finalizado, el torneo ha terminado.
+                </Typography>
+              }
+            >
               <InfoOutlineIcon
                 style={{ fontSize: "16px", marginBottom: "2px" }}
               />
@@ -52,11 +72,6 @@ const TournamentTable = ({
           {user?.role === "admin" && (
             <TableCell>
               <strong>Acciones</strong>
-              <Tooltip title="Solo se puede editar el torneo si está en estado de registro o pendiente.">
-                <InfoOutlineIcon
-                  style={{ fontSize: "16px", marginBottom: "2px" }}
-                />
-              </Tooltip>
             </TableCell>
           )}
         </TableRow>
@@ -66,10 +81,9 @@ const TournamentTable = ({
           <TableRow key={t._id}>
             <TableCell>{t.name}</TableCell>
             <TableCell>{t.sport?.name || "N/A"}</TableCell>
-            <TableCell>
-              {formatDate(t.registrationStart)} -{" "}
-              {formatDate(t.registrationEnd)}
-            </TableCell>
+            <TableCell>{formatDate(t.registrationStart)}</TableCell>
+            <TableCell>{formatDate(t.registrationTeamEnd)}</TableCell>
+            <TableCell>{formatDate(t.registrationPlayerEnd)}</TableCell>
             <TableCell>
               {formatDate(t.startDate)} - {formatDate(t.endDate)}
             </TableCell>
@@ -78,7 +92,7 @@ const TournamentTable = ({
               <Tooltip title="Inscribirse">
                 <IconButton
                   onClick={() => onViewDetails(t._id)}
-                  color={t.status === "registration" ? "primary" : "error"}
+                  color={t.status === "registration open" ? "primary" : "error"}
                 >
                   <HowToReg />
                 </IconButton>
@@ -86,26 +100,13 @@ const TournamentTable = ({
             </TableCell>
             {user?.role === "admin" && (
               <TableCell>
-                <Tooltip
-                  title={
-                    ["active", "finished"].includes(t.status)
-                      ? "No se puede editar un torneo en curso o finalizado"
-                      : "Editar"
-                  }
-                >
-                  <span>
-                    {" "}
-                    <IconButton
-                      color="primary"
-                      onClick={() =>
-                        !["active", "finished"].includes(t.status) &&
-                        handleEditTournament(t)
-                      }
-                      disabled={["active", "finished"].includes(t.status)}
-                    >
-                      <Edit />
-                    </IconButton>
-                  </span>
+                <Tooltip title="Editar">
+                  <IconButton
+                    color="primary"
+                    onClick={() => handleEditTournament(t)}
+                  >
+                    <Edit />
+                  </IconButton>
                 </Tooltip>
                 <Tooltip title="Eliminar">
                   <IconButton

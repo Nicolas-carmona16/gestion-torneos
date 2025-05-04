@@ -5,6 +5,7 @@ import {
   DialogActions,
   TextField,
   FormControl,
+  FormControlLabel,
   InputLabel,
   Select,
   MenuItem,
@@ -12,9 +13,11 @@ import {
   Box,
   Typography,
   CircularProgress,
+  Switch,
+  Collapse,
 } from "@mui/material";
 import { tournamentEditValidationSchema } from "../utils/validationSchema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BasketballRules from "./sportsRules/BasketballRules";
 import FutsalRules from "./sportsRules/FutsalRules";
 import SoccerRules from "./sportsRules/SoccerRules";
@@ -31,6 +34,9 @@ const EditTournamentDialog = ({
 }) => {
   const [errors, setErrors] = useState({});
   const [loadingRules, setLoadingRules] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(
+    updatedData.format === "group-stage"
+  );
 
   const rulesComponents = {
     Baloncesto: BasketballRules,
@@ -38,6 +44,10 @@ const EditTournamentDialog = ({
     Fútbol: SoccerRules,
     Voleibol: VolleyballRules,
   };
+
+  useEffect(() => {
+    setShowGroupSettings(updatedData.format === "group-stage");
+  }, [updatedData.format]);
 
   const getSportRulesComponent = (sportId) => {
     const sport = sports.find((s) => s._id === sportId);
@@ -51,12 +61,16 @@ const EditTournamentDialog = ({
       });
       setErrors({});
       return true;
-    } catch (validationErrors) {
-      const newErrors = {};
-      validationErrors.inner.forEach((error) => {
-        newErrors[error.path] = error.message;
-      });
-      setErrors(newErrors);
+    } catch (error) {
+      if (error.name === "ValidationError") {
+        const newErrors = {};
+        error.inner?.forEach((err) => {
+          newErrors[err.path] = err.message;
+        });
+        setErrors(newErrors);
+      } else {
+        console.error("Validation error:", error);
+      }
       return false;
     }
   };
@@ -64,6 +78,10 @@ const EditTournamentDialog = ({
   const handleChange = async (field, value) => {
     if (field === "sport" && value !== updatedData.sport) {
       await loadDefaultRules(value);
+    }
+
+    if (field === "format") {
+      setShowGroupSettings(value === "group-stage");
     }
 
     setUpdatedData((prev) => ({ ...prev, [field]: value }));
@@ -76,6 +94,16 @@ const EditTournamentDialog = ({
     } catch (error) {
       setErrors((prev) => ({ ...prev, [field]: error.message }));
     }
+  };
+
+  const handleGroupSettingsChange = (field, value) => {
+    setUpdatedData((prev) => ({
+      ...prev,
+      groupsStageSettings: {
+        ...prev.groupsStageSettings,
+        [field]: value,
+      },
+    }));
   };
 
   const loadDefaultRules = async (sportId) => {
@@ -115,16 +143,18 @@ const EditTournamentDialog = ({
   };
 
   const dateFields = [
-    { label: "Fecha Inicio de Registro", name: "registrationStart" },
-    { label: "Fecha Fin de Registro", name: "registrationEnd" },
-    { label: "Fecha Inicio Torneo", name: "startDate" },
-    { label: "Fecha Fin Torneo", name: "endDate" },
+    { label: "Inicio Registro", name: "registrationStart" },
+    { label: "Fin Registro Equipos", name: "registrationTeamEnd" },
+    { label: "Fin Registro Jugadores", name: "registrationPlayerEnd" },
+    { label: "Inicio Torneo", name: "startDate" },
+    { label: "Fin Torneo", name: "endDate" },
   ];
 
   const numberFields = [
     { label: "Máximo Equipos", name: "maxTeams" },
     { label: "Mínimo Jugadores por Equipo", name: "minPlayersPerTeam" },
     { label: "Máximo Jugadores por Equipo", name: "maxPlayersPerTeam" },
+    { label: "Mejor de (partidos)", name: "bestOfMatches", min: 1 },
   ];
 
   return (
@@ -179,6 +209,15 @@ const EditTournamentDialog = ({
             </span>
           )}
         </FormControl>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={updatedData.isOlympiad}
+              onChange={(e) => handleChange("isOlympiad", e.target.checked)}
+            />
+          }
+          label="Es Olimpiada"
+        />
         <FormControl fullWidth margin="dense" error={!!errors.format}>
           <InputLabel>Formato</InputLabel>
           <Select
@@ -201,6 +240,65 @@ const EditTournamentDialog = ({
             </span>
           )}
         </FormControl>
+
+        <Collapse in={showGroupSettings}>
+          <Box mt={2} p={2} borderRadius={1}>
+            <Typography variant="subtitle2" gutterBottom>
+              Configuración de Fase de Grupos
+            </Typography>
+
+            <TextField
+              label="Equipos por grupo"
+              type="number"
+              fullWidth
+              margin="dense"
+              value={updatedData.groupsStageSettings?.teamsPerGroup || ""}
+              error={!!errors.groupsStageSettings?.teamsPerGroup}
+              helperText={errors.groupsStageSettings?.teamsPerGroup}
+              onChange={(e) =>
+                handleGroupSettingsChange("teamsPerGroup", e.target.value)
+              }
+              inputProps={{ min: 2 }}
+            />
+
+            <TextField
+              label="Equipos que avanzan"
+              type="number"
+              fullWidth
+              margin="dense"
+              value={
+                updatedData.groupsStageSettings?.teamsAdvancingPerGroup || ""
+              }
+              error={!!errors.groupsStageSettings?.teamsAdvancingPerGroup}
+              helperText={errors.groupsStageSettings?.teamsAdvancingPerGroup}
+              onChange={(e) =>
+                handleGroupSettingsChange(
+                  "teamsAdvancingPerGroup",
+                  e.target.value
+                )
+              }
+              inputProps={{ min: 1 }}
+            />
+
+            <TextField
+              label="Partidos por equipo"
+              type="number"
+              fullWidth
+              margin="dense"
+              value={
+                updatedData.groupsStageSettings?.matchesPerTeamInGroup || 1
+              }
+              onChange={(e) =>
+                handleGroupSettingsChange(
+                  "matchesPerTeamInGroup",
+                  e.target.value
+                )
+              }
+              inputProps={{ min: 1 }}
+            />
+          </Box>
+        </Collapse>
+
         {dateFields.map((field) => (
           <TextField
             key={field.name}

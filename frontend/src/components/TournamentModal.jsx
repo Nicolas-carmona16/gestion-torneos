@@ -7,6 +7,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import { formatDate } from "../utils/formatDate";
 import BasketballRules from "./sportsRules/BasketballRules";
@@ -33,6 +35,15 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle color="primary" fontWeight="bold">
         Detalles del Torneo
+        {tournament?.isOlympiad && (
+          <Chip
+            label="Olimpiada"
+            color="secondary"
+            size="small"
+            variant="outlined"
+            sx={{ ml: 2 }}
+          />
+        )}
       </DialogTitle>
 
       <DialogContent dividers>
@@ -52,14 +63,42 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
               <Typography className="text-gray-700 text-sm">
                 <strong>Deporte:</strong> {tournament.sport?.name}
               </Typography>
-              <Typography className="text-gray-700 text-sm">
-                <strong>Formato:</strong> {formatMapping[tournament.format]}
-              </Typography>
-              <Typography className="text-gray-700 text-sm">
-                <strong>Fecha de registro:</strong>{" "}
-                {formatDate(tournament.registrationStart)} -{" "}
-                {formatDate(tournament.registrationEnd)}
-              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography className="text-gray-700">
+                  <strong>Formato:</strong> {formatMapping[tournament.format]}
+                </Typography>
+                {tournament.bestOfMatches > 1 && (
+                  <Tooltip
+                    title={
+                      <Typography sx={{ fontSize: "14px" }}>
+                        Estos son los partidos por fase en eliminación directa.
+                        Si esta en fase de grupos, luego verás enfrentamientos
+                        de eliminación directa, y estos son los partidos que se
+                        jugarán en cada uno.
+                      </Typography>
+                    }
+                  >
+                    <Chip
+                      label={`Mejor de ${tournament.bestOfMatches}`}
+                      size="small"
+                    />
+                  </Tooltip>
+                )}
+              </Box>
+              <Box>
+                <Typography className="text-gray-700">
+                  <strong>Fechas de registro:</strong>
+                </Typography>
+                <Typography className="text-gray-700 ml-4">
+                  <strong>Equipos:</strong>{" "}
+                  {formatDate(tournament.registrationStart)} -{" "}
+                  {formatDate(tournament.registrationTeamEnd)}
+                </Typography>
+                <Typography className="text-gray-700 ml-4">
+                  <strong>Jugadores:</strong> hasta{" "}
+                  {formatDate(tournament.registrationPlayerEnd)}
+                </Typography>
+              </Box>
             </Box>
             <Box className="space-y-2">
               <Typography className="text-gray-700 text-sm">
@@ -70,14 +109,30 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
               <Typography className="text-gray-700 text-sm">
                 <strong>Cantidad de equipos:</strong> {tournament.maxTeams}
               </Typography>
-              <Typography className="text-gray-700 text-sm">
-                <strong>Mínimo de jugadores por equipo:</strong>{" "}
-                {tournament.minPlayersPerTeam}
+              <Typography className="text-gray-700">
+                <strong>Jugadores por equipo:</strong>{" "}
+                {tournament.minPlayersPerTeam} - {tournament.maxPlayersPerTeam}
               </Typography>
-              <Typography className="text-gray-700 text-sm">
-                <strong>Máximo de jugadores por equipo:</strong>{" "}
-                {tournament.maxPlayersPerTeam}
-              </Typography>
+              {tournament.format === "group-stage" &&
+                tournament.groupsStageSettings && (
+                  <Box>
+                    <Typography variant="subtitle2" color="primary">
+                      Configuración de Fase de Grupos
+                    </Typography>
+                    <Typography className="text-gray-700 text-sm">
+                      <strong>Equipos por grupo:</strong>{" "}
+                      {tournament.groupsStageSettings.teamsPerGroup}
+                    </Typography>
+                    <Typography className="text-gray-700 text-sm">
+                      <strong>Equipos que avanzan:</strong>{" "}
+                      {tournament.groupsStageSettings.teamsAdvancingPerGroup}
+                    </Typography>
+                    <Typography className="text-gray-700 text-sm">
+                      <strong>Partidos por equipo:</strong>{" "}
+                      {tournament.groupsStageSettings.matchesPerTeamInGroup}
+                    </Typography>
+                  </Box>
+                )}
             </Box>
           </Box>
         ) : open ? (
@@ -87,7 +142,7 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
         {SportRulesComponent && tournament?.customRules && (
           <Box className="mt-6">
             <Typography variant="h6" color="primary" gutterBottom>
-              Reglas del Torneo de {tournament.sport?.name}
+              Reglas del Torneo
             </Typography>
             <SportRulesComponent rules={tournament.customRules} />
           </Box>

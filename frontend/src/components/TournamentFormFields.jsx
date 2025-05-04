@@ -6,6 +6,10 @@ import {
   MenuItem,
   FormHelperText,
   Box,
+  FormControlLabel,
+  Switch,
+  Collapse,
+  Typography,
 } from "@mui/material";
 import FormTextField from "./FormTextFields";
 
@@ -18,6 +22,8 @@ const TournamentFormFields = ({
   handleBlur,
   handleSportChange,
 }) => {
+  const showGroupSettings = values.format === "group-stage";
+
   return (
     <Box className="flex flex-col md:flex-row gap-6">
       <Box className="flex flex-col gap-4 w-full md:w-1/2">
@@ -47,6 +53,16 @@ const TournamentFormFields = ({
             <FormHelperText>{errors.sport}</FormHelperText>
           )}
         </FormControl>
+        <FormControlLabel
+          control={
+            <Switch
+              name="isOlympiad"
+              checked={values.isOlympiad}
+              onChange={handleChange}
+            />
+          }
+          label="Es Olimpiada"
+        />
         <FormTextField
           name="registrationStart"
           label="Inicio de Inscripción"
@@ -54,8 +70,14 @@ const TournamentFormFields = ({
           InputLabelProps={{ shrink: true }}
         />
         <FormTextField
-          name="registrationEnd"
-          label="Fin de Inscripción"
+          name="registrationTeamEnd"
+          label="Fin de Inscripción de Equipos"
+          type="date"
+          InputLabelProps={{ shrink: true }}
+        />
+        <FormTextField
+          name="registrationPlayerEnd"
+          label="Fin de Inscripción de Jugadores"
           type="date"
           InputLabelProps={{ shrink: true }}
         />
@@ -83,6 +105,37 @@ const TournamentFormFields = ({
             <FormHelperText>{errors.format}</FormHelperText>
           )}
         </FormControl>
+        <Collapse in={showGroupSettings}>
+          <Box p={2}>
+            <Typography variant="subtitle2" gutterBottom>
+              Configuración de Fase de Grupos
+            </Typography>
+            <FormTextField
+              name="groupsStageSettings.teamsPerGroup"
+              label="Equipos por grupo"
+              type="number"
+              sx={{ mb: 2 }}
+            />
+            <FormTextField
+              name="groupsStageSettings.teamsAdvancingPerGroup"
+              label="Equipos que avanzan por grupo"
+              type="number"
+              sx={{ mb: 2 }}
+            />
+            <FormTextField
+              name="groupsStageSettings.matchesPerTeamInGroup"
+              label="Partidos por equipo"
+              type="number"
+              sx={{ mb: 2 }}
+            />
+          </Box>
+        </Collapse>
+        <FormTextField
+          name="bestOfMatches"
+          label="Mejor de (partidos)"
+          type="number"
+          InputLabelProps={{ shrink: true }}
+        />
         <FormTextField
           name="startDate"
           label="Inicio del Torneo"

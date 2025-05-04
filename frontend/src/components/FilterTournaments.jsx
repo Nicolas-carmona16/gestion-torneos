@@ -15,15 +15,15 @@ const FilterTournaments = ({
   setSelectedSport,
   sports,
   registrationStart,
-  registrationEnd,
+  registrationTeamEnd,
   setRegistrationStart,
-  setRegistrationEnd,
+  setRegistrationTeamEnd,
 }) => {
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedSport("");
     setRegistrationStart("");
-    setRegistrationEnd("");
+    setRegistrationTeamEnd("");
   };
 
   return (
@@ -65,10 +65,10 @@ const FilterTournaments = ({
         />
 
         <TextField
-          label="Fecha fin registro"
+          label="Fecha fin registro de equipos"
           type="date"
-          value={registrationEnd}
-          onChange={(e) => setRegistrationEnd(e.target.value)}
+          value={registrationTeamEnd}
+          onChange={(e) => setRegistrationTeamEnd(e.target.value)}
           InputLabelProps={{ shrink: true }}
           fullWidth
           sx={{ flex: 1 }}
