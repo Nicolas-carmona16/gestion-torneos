@@ -263,7 +263,7 @@ const ManageTournaments = () => {
           display="flex"
           justifyContent="center"
           flexGrow={1}
-          marginLeft={20}
+          marginLeft={user?.role === "admin" ? 20 : 0}
         >
           <Typography variant="h4" color="primary" fontWeight="bold">
             Inscripciones
