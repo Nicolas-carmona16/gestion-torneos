@@ -178,3 +178,17 @@ export const validationTeamRegisterSchema = Yup.object().shape({
     })
   ),
 });
+
+export const validationNewPlayerSchema = Yup.object().shape({
+  fullName: Yup.string().required("El nombre completo es obligatorio"),
+  idNumber: Yup.string()
+    .required("La cédula es obligatoria")
+    .matches(/^\d+$/, "La cédula solo debe contener números"),
+  email: Yup.string()
+    .required("El correo es obligatorio")
+    .matches(
+      /^[a-zA-Z0-9._-]+@udea\.edu\.co$/,
+      "Debe ser un correo institucional"
+    ),
+  eps: Yup.string().required("La EPS es obligatoria"),
+});
