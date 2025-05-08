@@ -8,8 +8,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/authService";
-import FormTextField from "./FormTextFields";
+import { loginUser } from "../../services/authService";
+import FormTextField from "../FormTextFields";
 
 /**
  * @module LoginForm

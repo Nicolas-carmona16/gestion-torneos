@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTournament } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
-import TournamentForm from "../components/TournamentForm";
+import TournamentForm from "../components/Tournaments_Inscriptions/TournamentForm";
 
 const CreateTournamentPage = () => {
   const [sports, setSports] = useState([]);

@@ -16,13 +16,13 @@ import {
   Switch,
   Collapse,
 } from "@mui/material";
-import { tournamentEditValidationSchema } from "../utils/validationSchema";
+import { tournamentEditValidationSchema } from "../../utils/validationSchema";
 import { useState, useEffect } from "react";
-import BasketballRules from "./sportsRules/BasketballRules";
-import FutsalRules from "./sportsRules/FutsalRules";
-import SoccerRules from "./sportsRules/SoccerRules";
-import VolleyballRules from "./sportsRules/VolleyballRules";
-import { getSportRules } from "../services/sportService";
+import BasketballRules from "../sportsRules/BasketballRules";
+import FutsalRules from "../sportsRules/FutsalRules";
+import SoccerRules from "../sportsRules/SoccerRules";
+import VolleyballRules from "../sportsRules/VolleyballRules";
+import { getSportRules } from "../../services/sportService";
 
 const EditTournamentDialog = ({
   open,

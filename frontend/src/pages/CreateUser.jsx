@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { createUser } from "../services/authService";
 import { getAllSports } from "../services/sportService";
 import { getAllTournaments } from "../services/tournamentService";
-import UserForm from "../components/UserForm";
+import UserForm from "../components/Users/UserForm";
 
 const CreateUserPage = () => {
   const [sports, setSports] = useState([]);

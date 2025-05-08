@@ -13,8 +13,8 @@ import {
   Typography,
   Autocomplete,
 } from "@mui/material";
-import { roleMapping } from "../utils/roleUtils";
-import { validationUserSchema } from "../utils/validationSchema";
+import { roleMapping } from "../../utils/roleUtils";
+import { validationUserSchema } from "../../utils/validationSchema";
 
 const UserForm = ({ sports, tournaments, onSubmit }) => {
   const roles = Object.entries(roleMapping).map(([value, label]) => ({

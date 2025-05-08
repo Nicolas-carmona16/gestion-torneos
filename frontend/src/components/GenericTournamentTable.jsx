@@ -9,12 +9,16 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { Groups } from "@mui/icons-material";
 import { formatDate } from "../utils/formatDate";
 import { statusMapping } from "../utils/tournamentStatusMapping";
 import { useNavigate } from "react-router-dom";
 
-const TournamentTableTeam = ({ tournaments }) => {
+const GenericTournamentTable = ({
+  tournaments,
+  actionIcon,
+  actionTooltip,
+  actionRoute,
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -35,7 +39,7 @@ const TournamentTableTeam = ({ tournaments }) => {
               <strong style={{ marginRight: "3px" }}>Estado</strong>
             </TableCell>
             <TableCell>
-              <strong>Equipos</strong>
+              <strong>{actionTooltip}</strong>
             </TableCell>
           </TableRow>
         </TableHead>
@@ -49,12 +53,12 @@ const TournamentTableTeam = ({ tournaments }) => {
               </TableCell>
               <TableCell>{statusMapping(t.status)}</TableCell>
               <TableCell>
-                <Tooltip title="Equipos">
+                <Tooltip title={actionTooltip}>
                   <IconButton
-                    onClick={() => navigate(`/torneo/${t._id}/equipos`)}
+                    onClick={() => navigate(`/torneo/${t._id}${actionRoute}`)}
                     color="primary"
                   >
-                    <Groups />
+                    {actionIcon}
                   </IconButton>
                 </Tooltip>
               </TableCell>
@@ -66,4 +70,4 @@ const TournamentTableTeam = ({ tournaments }) => {
   );
 };
 
-export default TournamentTableTeam;
+export default GenericTournamentTable;

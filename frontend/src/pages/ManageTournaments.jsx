@@ -17,11 +17,11 @@ import {
 } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
 import { getUser } from "../services/authService";
-import TournamentTableInscription from "../components/TournamentTableInscription";
-import TournamentModal from "../components/TournamentModal";
+import TournamentTableInscription from "../components/Tournaments_Inscriptions/TournamentTableInscription";
+import TournamentModal from "../components/Tournaments_Inscriptions/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
-import EditTournamentDialog from "../components/EditTournamentDialog";
+import EditTournamentDialog from "../components/Tournaments_Inscriptions/EditTournamentDialog";
 import { calculateTournamentStatus } from "../utils/tournamentStatusMapping";
 
 const ITEMS_PER_PAGE = 10;

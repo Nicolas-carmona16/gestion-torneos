@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useFormik } from "formik";
-import { validationTeamRegisterSchema } from "../utils/validationSchema";
+import { validationTeamRegisterSchema } from "../../utils/validationSchema";
 import {
   Box,
   Typography,
@@ -17,7 +17,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { registerTeam } from "../services/teamService";
+import { registerTeam } from "../../services/teamService";
 
 const TeamRegistrationForm = ({ tournament, isFull, onSuccess, onCancel }) => {
   const [submitting, setSubmitting] = useState(false);

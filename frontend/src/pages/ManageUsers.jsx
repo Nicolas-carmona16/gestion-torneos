@@ -15,9 +15,9 @@ import {
   Alert,
   Button,
 } from "@mui/material";
-import FilterManageUsers from "../components/FilterManageUsers";
-import UserTable from "../components/UserTable";
-import EditUserDialog from "../components/EditUserDialog";
+import FilterManageUsers from "../components/Users/FilterManageUsers";
+import UserTable from "../components/Users/UserTable";
+import EditUserDialog from "../components/Users/EditUserDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import { useNavigate } from "react-router-dom";
 

@@ -8,13 +8,13 @@ import {
   CircularProgress,
 } from "@mui/material";
 import TournamentFormFields from "./TournamentFormFields";
-import { tournamentValidationSchema } from "../utils/validationSchema";
-import { getSportRules } from "../services/sportService";
+import { tournamentValidationSchema } from "../../utils/validationSchema";
+import { getSportRules } from "../../services/sportService";
 
-import BasketballRules from "./sportsRules/BasketballRules";
-import SoccerRules from "./sportsRules/SoccerRules";
-import VolleyballRules from "./sportsRules/VolleyballRules";
-import FutsalRules from "./sportsRules/FutsalRules";
+import BasketballRules from "../sportsRules/BasketballRules";
+import SoccerRules from "../sportsRules/SoccerRules";
+import VolleyballRules from "../sportsRules/VolleyballRules";
+import FutsalRules from "../sportsRules/FutsalRules";
 
 const rulesComponents = {
   Baloncesto: BasketballRules,

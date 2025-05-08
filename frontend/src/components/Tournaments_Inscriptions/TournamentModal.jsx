@@ -10,14 +10,14 @@ import {
   Chip,
   Tooltip,
 } from "@mui/material";
-import { formatDate } from "../utils/formatDate";
-import BasketballRules from "./sportsRules/BasketballRules";
-import SoccerRules from "./sportsRules/SoccerRules";
-import VolleyballRules from "./sportsRules/VolleyballRules";
-import FutsalRules from "./sportsRules/FutsalRules";
+import { formatDate } from "../../utils/formatDate";
+import BasketballRules from "../sportsRules/BasketballRules";
+import SoccerRules from "../sportsRules/SoccerRules";
+import VolleyballRules from "../sportsRules/VolleyballRules";
+import FutsalRules from "../sportsRules/FutsalRules";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getTeamsByTournament } from "../services/teamService";
+import { getTeamsByTournament } from "../../services/teamService";
 
 const rulesComponents = {
   Baloncesto: BasketballRules,

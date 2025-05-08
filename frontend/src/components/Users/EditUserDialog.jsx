@@ -16,8 +16,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { getAllSports } from "../services/sportService";
-import { getAllTournaments } from "../services/tournamentService";
+import { getAllSports } from "../../services/sportService";
+import { getAllTournaments } from "../../services/tournamentService";
 
 /**
  * @module EditUserDialog

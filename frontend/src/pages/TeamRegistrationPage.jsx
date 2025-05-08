@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, CircularProgress, Typography, Alert } from "@mui/material";
 import { getTournamentById } from "../services/tournamentService";
-import TeamRegistrationForm from "../components/TeamRegistrationForm";
+import TeamRegistrationForm from "../components/TeamsComponents/TeamRegistrationForm";
 import { getTeamsByTournament } from "../services/teamService";
 
 const TeamRegistrationPage = () => {
