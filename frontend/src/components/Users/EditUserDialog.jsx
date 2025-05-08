@@ -84,7 +84,13 @@ const EditUserDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="sm"
+      disableRestoreFocus
+    >
       <DialogTitle color="primary" sx={{ fontWeight: "bold" }}>
         Editar Usuario
       </DialogTitle>

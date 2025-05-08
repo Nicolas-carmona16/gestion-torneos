@@ -1,10 +1,11 @@
-import { Container, Typography, Alert } from "@mui/material";
+import { Container, Typography, Alert, Box, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUser } from "../services/authService";
 import { getAllSports } from "../services/sportService";
 import { getAllTournaments } from "../services/tournamentService";
 import UserForm from "../components/Users/UserForm";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const CreateUserPage = () => {
   const [sports, setSports] = useState([]);
@@ -42,6 +43,10 @@ const CreateUserPage = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate("/gestion-usuarios");
+  };
+
   return (
     <Container
       sx={{
@@ -55,15 +60,16 @@ const CreateUserPage = () => {
         maxWidth: "none",
       }}
     >
-      <Typography
-        variant="h4"
-        align="center"
-        gutterBottom
-        color="#026937"
-        fontWeight="bold"
-      >
-        Crear Usuario
-      </Typography>
+      <Box display="flex" alignItems="center" mb={2}>
+        <IconButton onClick={handleBack} sx={{ mr: 1 }} color="primary">
+          <ArrowBackIcon />
+        </IconButton>
+        <Box flexGrow={1} display="flex" justifyContent="center">
+          <Typography variant="h4" color="#026937" fontWeight="bold">
+            Crear Usuario
+          </Typography>
+        </Box>
+      </Box>
 
       {successMessage && (
         <Alert severity="success" sx={{ mb: 2 }}>
