@@ -17,7 +17,7 @@ import {
 } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
 import { getUser } from "../services/authService";
-import TournamentTable from "../components/TournamentTable";
+import TournamentTableInscription from "../components/TournamentTableInscription";
 import TournamentModal from "../components/TournamentModal";
 import FilterTournaments from "../components/FilterTournaments";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
@@ -291,6 +291,7 @@ const ManageTournaments = () => {
         registrationTeamEnd={registrationTeamEnd}
         setRegistrationStart={setRegistrationStart}
         setRegistrationTeamEnd={setRegistrationTeamEnd}
+        showDateFilters={true}
       />
 
       {filteredTournaments.length === 0 ? (
@@ -299,7 +300,7 @@ const ManageTournaments = () => {
         </Typography>
       ) : (
         <>
-          <TournamentTable
+          <TournamentTableInscription
             tournaments={paginatedTournaments}
             onViewDetails={handleOpenModal}
             onDeleteTournament={handleDeleteTournamentClick}
@@ -322,6 +323,7 @@ const ManageTournaments = () => {
         loading={detailLoading}
         tournament={selectedTournament}
         onClose={handleCloseModal}
+        currentUser={user}
       />
 
       <ConfirmDeleteDialog

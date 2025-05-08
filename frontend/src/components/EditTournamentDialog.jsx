@@ -158,7 +158,13 @@ const EditTournamentDialog = ({
   ];
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      disableRestoreFocus
+    >
       <DialogTitle color="primary" sx={{ fontWeight: "bold" }}>
         Editar Torneo
       </DialogTitle>

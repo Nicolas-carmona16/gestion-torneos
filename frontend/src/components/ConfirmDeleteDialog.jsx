@@ -34,7 +34,7 @@ const ConfirmDeleteDialog = ({
   confirmButtonColor = "primary",
 }) => {
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={open} onClose={handleClose} disableRestoreFocus>
       <DialogTitle color="primary" sx={{ fontWeight: "bold" }}>
         Confirmar Eliminación
       </DialogTitle>

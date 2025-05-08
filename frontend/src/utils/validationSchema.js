@@ -20,14 +20,15 @@ export const validationUserSchema = Yup.object({
   firstName: Yup.string().required("El nombre es obligatorio"),
   lastName: Yup.string().required("El apellido es obligatorio"),
   email: Yup.string()
-    .matches(/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,4}$/, "Correo inválido")
-    .required("El email es obligatorio"),
+    .matches(
+      /^[a-zA-Z0-9._-]+@udea\.edu\.co$/,
+      "Debe ser un correo institucional de la UdeA"
+    )
+    .required("El correo es obligatorio"),
   password: Yup.string()
     .min(6, "Debe tener al menos 6 caracteres")
     .required("La contraseña es obligatoria"),
-  sports: Yup.array()
-    .min(1, "Selecciona al menos un deporte")
-    .required("Los deportes son obligatorios"),
+  sports: Yup.array(),
   tournaments: Yup.array().of(Yup.string()),
 });
 
@@ -152,4 +153,28 @@ export const tournamentEditValidationSchema = Yup.object({
         : schema;
     })
     .required("Máximo de jugadores requerido"),
+});
+
+export const validationTeamRegisterSchema = Yup.object().shape({
+  name: Yup.string().required("El nombre del equipo es obligatorio"),
+  tournamentId: Yup.string().required(),
+  captainExtra: Yup.object().shape({
+    idNumber: Yup.string().required("La cédula del capitán es obligatoria"),
+    eps: Yup.string().required("La EPS del capitán es obligatoria"),
+  }),
+  players: Yup.array().of(
+    Yup.object().shape({
+      fullName: Yup.string().required("El nombre completo es obligatorio"),
+      idNumber: Yup.string()
+        .required("La cédula es obligatoria")
+        .matches(/^\d+$/, "La cédula solo debe contener números"),
+      email: Yup.string()
+        .matches(
+          /^[a-zA-Z0-9._-]+@udea\.edu\.co$/,
+          "Debe ser un correo institucional"
+        )
+        .required("El correo es obligatorio"),
+      eps: Yup.string().required("La EPS es obligatoria"),
+    })
+  ),
 });

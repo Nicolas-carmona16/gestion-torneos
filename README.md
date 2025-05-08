@@ -79,4 +79,7 @@ npm run doc
 - Personalización de reglas y criterios de desempate
 
 
-testing...
+## Mockups
+El diseño de la plataforma se ha creado en Figma.
+
+[Mockups](https://www.figma.com/design/iDyVqd6UUIrcRCnywL4vKY/Proyecto-integrador?node-id=0-1&t=II796OV5qUHOfXS7-1)

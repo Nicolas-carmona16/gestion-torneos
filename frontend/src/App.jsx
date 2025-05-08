@@ -23,6 +23,9 @@ import ManageUsers from "./pages/ManageUsers";
 import ManageTournaments from "./pages/ManageTournaments";
 import CreateTournament from "./pages/CreateTournament";
 import CreateUser from "./pages/CreateUser";
+import TeamRegistrationPage from "./pages/TeamRegistrationPage";
+import ManageTeams from "./pages/ManageTeams";
+import TournamentTeamsPage from "./pages/TournamentTeamsPage";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -84,12 +87,25 @@ const App = () => {
               element={<Login setIsAuthenticated={setIsAuthenticated} />}
             />
             <Route path="/inscripciones" element={<ManageTournaments />} />
+            <Route path="/equipos" element={<ManageTeams />} />
+            <Route path="/torneo/:tournamentId/equipos" element={<TournamentTeamsPage />} />
             {/* Ruta protegida */}
             <Route
               path="/perfil"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/torneo/:tournamentId/registro"
+              element={
+                <ProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  allowedRoles={["captain"]}
+                >
+                  <TeamRegistrationPage />
                 </ProtectedRoute>
               }
             />

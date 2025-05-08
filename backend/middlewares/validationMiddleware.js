@@ -15,7 +15,10 @@ import mongoose from "mongoose";
 const validateRegister = [
   check("firstName").notEmpty().withMessage("First name is required"),
   check("lastName").notEmpty().withMessage("Last name is required"),
-  check("email").isEmail().withMessage("Invalid email"),
+  check("email")
+    .isEmail()
+    .matches(/^[a-zA-Z0-9._-]+@udea\.edu\.co$/)
+    .withMessage("Email must be a valid UdeA institutional email"),
   check("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
@@ -61,7 +64,11 @@ const validateUpdateUser = [
     .notEmpty()
     .withMessage("First name is required"),
   check("lastName").optional().notEmpty().withMessage("Last name is required"),
-  check("email").optional().isEmail().withMessage("Invalid email"),
+  check("email")
+    .optional()
+    .isEmail()
+    .matches(/^[a-zA-Z0-9._-]+@udea\.edu\.co$/)
+    .withMessage("Email must be a valid UdeA institutional email"),
   check("role")
     .optional()
     .isIn(["admin", "captain", "assistant"])
@@ -97,7 +104,10 @@ const validateUpdateUser = [
 const validateAdminCreate = [
   check("firstName").notEmpty().withMessage("First name is required"),
   check("lastName").notEmpty().withMessage("Last name is required"),
-  check("email").isEmail().withMessage("Invalid email"),
+  check("email")
+    .isEmail()
+    .matches(/^[a-zA-Z0-9._-]+@udea\.edu\.co$/)
+    .withMessage("Email must be a valid UdeA institutional email"),
   check("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
