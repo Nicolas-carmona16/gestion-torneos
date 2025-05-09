@@ -4,23 +4,34 @@ import { Box, CircularProgress, Typography, Alert } from "@mui/material";
 import { getTournamentById } from "../services/tournamentService";
 import TeamRegistrationForm from "../components/TeamsComponents/TeamRegistrationForm";
 import { getTeamsByTournament } from "../services/teamService";
+import { getUser } from "../services/authService";
 
 const TeamRegistrationPage = () => {
   const { tournamentId } = useParams();
   const navigate = useNavigate();
   const [tournament, setTournament] = useState(null);
+  const [existingTeams, setExistingTeams] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFull, setIsFull] = useState(false);
 
   useEffect(() => {
-    const fetchTournamentData = async () => {
+    const fetchData = async () => {
       try {
-        const tournamentData = await getTournamentById(tournamentId);
-        const teamsData = await getTeamsByTournament(tournamentId);
-        const tournamentIsFull =
-          teamsData.teams.length >= tournamentData.maxTeams;
-        setIsFull(tournamentIsFull);
+        setLoading(true);
+
+        const [tournamentData, teamsData, userData] = await Promise.all([
+          getTournamentById(tournamentId),
+          getTeamsByTournament(tournamentId),
+          getUser(),
+        ]);
+
+        setTournament(tournamentData);
+        setExistingTeams(teamsData.teams);
+        setCurrentUser(userData);
+
+        setIsFull(teamsData.teams.length >= tournamentData.maxTeams);
 
         const currentDate = new Date();
         const registrationOpen =
@@ -32,8 +43,6 @@ const TeamRegistrationPage = () => {
             "El período de registro para este torneo está cerrado"
           );
         }
-
-        setTournament(tournamentData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -41,7 +50,7 @@ const TeamRegistrationPage = () => {
       }
     };
 
-    fetchTournamentData();
+    fetchData();
   }, [tournamentId]);
 
   const handleSuccess = () => {
@@ -80,6 +89,8 @@ const TeamRegistrationPage = () => {
     <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
       <TeamRegistrationForm
         tournament={tournament}
+        existingTeams={existingTeams}
+        currentUser={currentUser}
         isFull={isFull}
         onSuccess={handleSuccess}
         onCancel={() => navigate("/inscripciones")}
