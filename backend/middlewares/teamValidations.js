@@ -2,6 +2,21 @@ import { check, body } from "express-validator";
 import validateFields from "./validateFields.js";
 import mongoose from "mongoose";
 
+const validCareers = [
+  "Bioingeniería",
+  "Ingeniería Ambiental",
+  "Ingeniería Civil",
+  "Ingeniería Eléctrica",
+  "Ingeniería Electrónica",
+  "Ingeniería Industrial",
+  "Ingeniería de Materiales",
+  "Ingeniería Mecánica",
+  "Ingeniería Química",
+  "Ingeniería Sanitaria",
+  "Ingeniería de Sistemas",
+  "Ingeniería de Telecomunicaciones",
+];
+
 export const validateRegisterTeam = [
   check("name").notEmpty().withMessage("Name is required"),
   check("tournamentId")
@@ -36,6 +51,10 @@ export const validateRegisterTeam = [
           throw new Error("All players must have a valid institutional email");
         }
 
+        if (!player.career || !validCareers.includes(player.career)) {
+          throw new Error(`Career must be one of: ${validCareers.join(", ")}`);
+        }
+
         if (uniqueEmails.has(player.email)) {
           throw new Error(`Email ${player.email} is duplicated`);
         }
@@ -59,6 +78,12 @@ export const validateRegisterTeam = [
   body("captainExtra.eps")
     .notEmpty()
     .withMessage("EPS of the captain is required"),
+
+  body("captainExtra.career")
+    .notEmpty()
+    .withMessage("Career of the captain is required")
+    .isIn(validCareers)
+    .withMessage(`Career must be one of: ${validCareers.join(", ")}`),
 
   validateFields,
 ];
@@ -95,6 +120,10 @@ export const validateAddPlayers = [
           !/^[a-zA-Z0-9._-]+@udea\.edu\.co$/.test(player.email)
         ) {
           throw new Error("Institutional email is required and must be valid");
+        }
+
+        if (!player.career || !validCareers.includes(player.career)) {
+          throw new Error(`Career must be one of: ${validCareers.join(", ")}`);
         }
 
         if (uniqueEmails.has(player.email)) {

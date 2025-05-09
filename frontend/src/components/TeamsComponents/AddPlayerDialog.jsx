@@ -6,10 +6,30 @@ import {
   Button,
   Grid,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
 } from "@mui/material";
 import { Formik, Form, Field } from "formik";
 import { TextField } from "@mui/material";
 import { validationNewPlayerSchema } from "../../utils/validationSchema";
+
+const careerOptions = [
+  "Bioingeniería",
+  "Ingeniería Ambiental",
+  "Ingeniería Civil",
+  "Ingeniería Eléctrica",
+  "Ingeniería Electrónica",
+  "Ingeniería Industrial",
+  "Ingeniería de Materiales",
+  "Ingeniería Mecánica",
+  "Ingeniería Química",
+  "Ingeniería Sanitaria",
+  "Ingeniería de Sistemas",
+  "Ingeniería de Telecomunicaciones",
+];
 
 const AddPlayerDialog = ({
   open,
@@ -35,6 +55,7 @@ const AddPlayerDialog = ({
           idNumber: "",
           email: "",
           eps: "",
+          career: "",
         }}
         validationSchema={validationNewPlayerSchema}
         onSubmit={async (values, { setSubmitting }) => {
@@ -81,7 +102,14 @@ const AddPlayerDialog = ({
           }
         }}
       >
-        {({ isSubmitting, errors, touched }) => (
+        {({
+          isSubmitting,
+          errors,
+          touched,
+          values,
+          handleChange,
+          handleBlur,
+        }) => (
           <Form>
             <DialogTitle>Agregar nuevo jugador</DialogTitle>
             <DialogContent dividers>
@@ -126,6 +154,29 @@ const AddPlayerDialog = ({
                     error={touched.eps && Boolean(errors.eps)}
                     helperText={touched.eps && errors.eps}
                   />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth sx={{ minWidth: 222 }}>
+                    <InputLabel id="career-label">Carrera</InputLabel>
+                    <Select
+                      labelId="career-label"
+                      name="career"
+                      value={values.career}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      label="Carrera"
+                      error={touched.career && Boolean(errors.career)}
+                    >
+                      {careerOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {touched.career && errors.career && (
+                      <FormHelperText error>{errors.career}</FormHelperText>
+                    )}
+                  </FormControl>
                 </Grid>
               </Grid>
             </DialogContent>

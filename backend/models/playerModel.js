@@ -12,6 +12,7 @@ import mongoose from "mongoose";
  * @property {String} idNumber - The unique identification number of the player.
  * @property {String} email - The email address of the player, must be unique.
  * @property {String} eps - The EPS (Entidad Promotora de Salud) of the player.
+ * @property {String} career - The academic career of the player.
  *
  * @example
  * const newPlayer = new Player({
@@ -19,8 +20,24 @@ import mongoose from "mongoose";
  *  idNumber: "123456789",
  *  email: "johndoe@example.com",
  *  eps: "EPS Example",
+ *  career: "Ingeniería de Sistemas"
  * });
  */
+
+const careerEnum = [
+  "Bioingeniería",
+  "Ingeniería Ambiental",
+  "Ingeniería Civil",
+  "Ingeniería Eléctrica",
+  "Ingeniería Electrónica",
+  "Ingeniería Industrial",
+  "Ingeniería de Materiales",
+  "Ingeniería Mecánica",
+  "Ingeniería Química",
+  "Ingeniería Sanitaria",
+  "Ingeniería de Sistemas",
+  "Ingeniería de Telecomunicaciones",
+];
 
 const playerSchema = new mongoose.Schema(
   {
@@ -45,6 +62,12 @@ const playerSchema = new mongoose.Schema(
     eps: {
       type: String,
       required: true,
+      trim: true,
+    },
+    career: {
+      type: String,
+      required: true,
+      enum: careerEnum,
       trim: true,
     },
   },

@@ -13,11 +13,31 @@ import {
   Alert,
   Stack,
   Tooltip,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { registerTeam } from "../../services/teamService";
+
+const careerOptions = [
+  "Bioingeniería",
+  "Ingeniería Ambiental",
+  "Ingeniería Civil",
+  "Ingeniería Eléctrica",
+  "Ingeniería Electrónica",
+  "Ingeniería Industrial",
+  "Ingeniería de Materiales",
+  "Ingeniería Mecánica",
+  "Ingeniería Química",
+  "Ingeniería Sanitaria",
+  "Ingeniería de Sistemas",
+  "Ingeniería de Telecomunicaciones",
+];
 
 const TeamRegistrationForm = ({
   tournament,
@@ -39,6 +59,7 @@ const TeamRegistrationForm = ({
       captainExtra: {
         idNumber: "",
         eps: "",
+        career: "",
       },
       players: Array(Math.max(tournament.minPlayersPerTeam - 1, 1))
         .fill()
@@ -47,6 +68,7 @@ const TeamRegistrationForm = ({
           idNumber: "",
           email: "",
           eps: "",
+          career: "",
         })),
     },
     validationSchema: validationTeamRegisterSchema,
@@ -135,7 +157,7 @@ const TeamRegistrationForm = ({
     if (formik.values.players.length < tournament.maxPlayersPerTeam - 1) {
       formik.setFieldValue("players", [
         ...formik.values.players,
-        { fullName: "", idNumber: "", email: "", eps: "" },
+        { fullName: "", idNumber: "", email: "", eps: "", career: "" },
       ]);
     }
   };
@@ -249,6 +271,39 @@ const TeamRegistrationForm = ({
                   }
                   required
                 />
+              </Grid>
+              <Grid columns={{ xs: 12, md: 6 }}>
+                <FormControl
+                  fullWidth
+                  sx={{ minWidth: 222 }}
+                  error={
+                    formik.touched.captainExtra?.career &&
+                    Boolean(formik.errors.captainExtra?.career)
+                  }
+                >
+                  <InputLabel id="captain-career-label">Carrera</InputLabel>
+                  <Select
+                    labelId="captain-career-label"
+                    name="captainExtra.career"
+                    value={formik.values.captainExtra.career}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    label="Carrera"
+                    disabled={userAlreadyRegistered}
+                  >
+                    {careerOptions.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.captainExtra?.career &&
+                    formik.errors.captainExtra?.career && (
+                      <FormHelperText error>
+                        {formik.errors.captainExtra.career}
+                      </FormHelperText>
+                    )}
+                </FormControl>
               </Grid>
             </Grid>
 
@@ -383,6 +438,41 @@ const TeamRegistrationForm = ({
                       }
                       required
                     />
+                  </Grid>
+                  <Grid sx={{ xs: 12, md: 4 }}>
+                    <FormControl
+                      fullWidth
+                      sx={{ minWidth: 222 }}
+                      error={
+                        formik.touched.players?.[index]?.career &&
+                        Boolean(formik.errors.players?.[index]?.career)
+                      }
+                    >
+                      <InputLabel id={`player-${index}-career-label`}>
+                        Carrera
+                      </InputLabel>
+                      <Select
+                        labelId={`player-${index}-career-label`}
+                        name={`players[${index}].career`}
+                        value={formik.values.players[index].career}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        label="Carrera"
+                        disabled={userAlreadyRegistered}
+                      >
+                        {careerOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formik.touched.players?.[index]?.career &&
+                        formik.errors.players?.[index]?.career && (
+                          <FormHelperText error>
+                            {formik.errors.players[index].career}
+                          </FormHelperText>
+                        )}
+                    </FormControl>
                   </Grid>
                 </Grid>
               </Box>

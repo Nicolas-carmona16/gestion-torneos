@@ -63,6 +63,15 @@ const PlayerList = ({
                       component="span"
                       variant="body2"
                       color="text.secondary"
+                      display="block"
+                    >
+                      Carrera: {player.career}
+                    </Typography>
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      color="text.secondary"
+                      display="block"
                     >
                       Correo: {player.email}
                     </Typography>

@@ -161,6 +161,25 @@ export const validationTeamRegisterSchema = Yup.object().shape({
   captainExtra: Yup.object().shape({
     idNumber: Yup.string().required("La cédula del capitán es obligatoria"),
     eps: Yup.string().required("La EPS del capitán es obligatoria"),
+    career: Yup.string()
+      .required("La carrera es obligatorio")
+      .oneOf(
+        [
+          "Bioingeniería",
+          "Ingeniería Ambiental",
+          "Ingeniería Civil",
+          "Ingeniería Eléctrica",
+          "Ingeniería Electrónica",
+          "Ingeniería Industrial",
+          "Ingeniería de Materiales",
+          "Ingeniería Mecánica",
+          "Ingeniería Química",
+          "Ingeniería Sanitaria",
+          "Ingeniería de Sistemas",
+          "Ingeniería de Telecomunicaciones",
+        ],
+        "Selecciona una carrera válida"
+      ),
   }),
   players: Yup.array().of(
     Yup.object().shape({
@@ -175,6 +194,25 @@ export const validationTeamRegisterSchema = Yup.object().shape({
         )
         .required("El correo es obligatorio"),
       eps: Yup.string().required("La EPS es obligatoria"),
+      career: Yup.string()
+        .required("La carrera es obligatorio")
+        .oneOf(
+          [
+            "Bioingeniería",
+            "Ingeniería Ambiental",
+            "Ingeniería Civil",
+            "Ingeniería Eléctrica",
+            "Ingeniería Electrónica",
+            "Ingeniería Industrial",
+            "Ingeniería de Materiales",
+            "Ingeniería Mecánica",
+            "Ingeniería Química",
+            "Ingeniería Sanitaria",
+            "Ingeniería de Sistemas",
+            "Ingeniería de Telecomunicaciones",
+          ],
+          "Selecciona una carrera válida"
+        ),
     })
   ),
 });
@@ -191,4 +229,23 @@ export const validationNewPlayerSchema = Yup.object().shape({
       "Debe ser un correo institucional"
     ),
   eps: Yup.string().required("La EPS es obligatoria"),
+  career: Yup.string()
+    .required("La carrera es obligatorio")
+    .oneOf(
+      [
+        "Bioingeniería",
+        "Ingeniería Ambiental",
+        "Ingeniería Civil",
+        "Ingeniería Eléctrica",
+        "Ingeniería Electrónica",
+        "Ingeniería Industrial",
+        "Ingeniería de Materiales",
+        "Ingeniería Mecánica",
+        "Ingeniería Química",
+        "Ingeniería Sanitaria",
+        "Ingeniería de Sistemas",
+        "Ingeniería de Telecomunicaciones",
+      ],
+      "Selecciona una carrera válida"
+    ),
 });

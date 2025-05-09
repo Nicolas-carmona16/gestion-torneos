@@ -39,7 +39,13 @@ export const registerTeam = async (req, res) => {
         idNumber: captainExtra.idNumber,
         email: captainUser.email,
         eps: captainExtra.eps,
+        career: captainExtra.career,
       });
+    } else {
+      captainPlayer.fullName = fullName;
+      captainPlayer.eps = captainExtra.eps;
+      captainPlayer.career = captainExtra.career;
+      await captainPlayer.save();
     }
 
     const alreadyCaptainInTeam = existingTeams.some((team) =>
@@ -64,7 +70,13 @@ export const registerTeam = async (req, res) => {
           idNumber: p.idNumber,
           email: p.email,
           eps: p.eps,
+          career: p.career,
         });
+      } else {
+        existingPlayer.fullName = p.fullName;
+        existingPlayer.eps = p.eps;
+        existingPlayer.career = p.career;
+        await existingPlayer.save();
       }
 
       const alreadyInTeam = existingTeams.some((team) =>
@@ -194,6 +206,7 @@ export const addPlayersToTeam = async (req, res) => {
           idNumber: p.idNumber,
           email: p.email,
           eps: p.eps,
+          career: p.career,
         });
       }
 
@@ -206,6 +219,11 @@ export const addPlayersToTeam = async (req, res) => {
         return res.status(400).json({
           message: `Player ${p.fullName} is already in another team in this tournament`,
         });
+      } else {
+        player.fullName = p.fullName;
+        player.eps = p.eps;
+        player.career = p.career;
+        await player.save();
       }
 
       if (team.players.some((pl) => pl._id.equals(player._id))) {
