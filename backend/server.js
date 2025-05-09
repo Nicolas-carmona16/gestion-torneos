@@ -12,6 +12,7 @@ import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";
 import sportRoutes from "./routes/sportRoutes.js";
 import tournamentRoutes from "./routes/tournamentRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/sports", sportRoutes);
 app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/teams", teamRoutes);
 
 // Middleware for handling errors
 app.use(notFound);

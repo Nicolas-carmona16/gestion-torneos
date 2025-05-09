@@ -6,7 +6,7 @@ import {
   MenuItem,
   Box,
 } from "@mui/material";
-import { roleMapping } from "../utils/roleUtils";
+import { roleMapping } from "../../utils/roleUtils";
 
 /**
  * @module FilterManageUsers

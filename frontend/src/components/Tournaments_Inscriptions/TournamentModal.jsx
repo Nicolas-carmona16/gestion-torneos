@@ -10,11 +10,14 @@ import {
   Chip,
   Tooltip,
 } from "@mui/material";
-import { formatDate } from "../utils/formatDate";
-import BasketballRules from "./sportsRules/BasketballRules";
-import SoccerRules from "./sportsRules/SoccerRules";
-import VolleyballRules from "./sportsRules/VolleyballRules";
-import FutsalRules from "./sportsRules/FutsalRules";
+import { formatDate } from "../../utils/formatDate";
+import BasketballRules from "../sportsRules/BasketballRules";
+import SoccerRules from "../sportsRules/SoccerRules";
+import VolleyballRules from "../sportsRules/VolleyballRules";
+import FutsalRules from "../sportsRules/FutsalRules";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getTeamsByTournament } from "../../services/teamService";
 
 const rulesComponents = {
   Baloncesto: BasketballRules,
@@ -28,11 +31,75 @@ const formatMapping = {
   "group-stage": "Fase de Grupos",
 };
 
-const TournamentModal = ({ open, loading, tournament, onClose }) => {
+const TournamentModal = ({
+  open,
+  loading,
+  tournament,
+  onClose,
+  currentUser,
+}) => {
+  const navigate = useNavigate();
+  const [isFull, setIsFull] = useState(false);
+  const [teamsLoading, setTeamsLoading] = useState(false);
   const SportRulesComponent = rulesComponents[tournament?.sport?.name] || null;
 
+  useEffect(() => {
+    const fetchTeams = async () => {
+      if (!tournament?._id || !tournament?.maxTeams) return;
+
+      setTeamsLoading(true);
+      try {
+        const teamsData = await getTeamsByTournament(tournament._id);
+        setIsFull(teamsData.teams.length >= tournament.maxTeams);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      } finally {
+        setTeamsLoading(false);
+      }
+    };
+
+    if (open && tournament) {
+      fetchTeams();
+    }
+  }, [tournament, open]);
+
+  const isRegistrationOpen = () => {
+    if (!tournament) return false;
+
+    const currentDate = new Date();
+    return (
+      currentDate >= new Date(tournament.registrationStart) &&
+      currentDate <= new Date(tournament.registrationTeamEnd)
+    );
+  };
+
+  const isUserCaptain = () => {
+    return currentUser?.role === "captain";
+  };
+
+  const isTournamentAvailableForUser = () => {
+    if (!currentUser || !tournament || !currentUser.tournaments) return false;
+    const currentTournamentId = tournament._id?.toString();
+    const userTournamentIds = currentUser.tournaments.map((t) => {
+      return t?._id?.toString() || t?.toString();
+    });
+
+    return userTournamentIds.includes(currentTournamentId);
+  };
+
+  const handleRegisterClick = () => {
+    onClose();
+    navigate(`/torneo/${tournament._id}/registro`);
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      disableRestoreFocus
+    >
       <DialogTitle color="primary" fontWeight="bold">
         Detalles del Torneo
         {tournament?.isOlympiad && (
@@ -153,13 +220,40 @@ const TournamentModal = ({ open, loading, tournament, onClose }) => {
         <Button onClick={onClose} variant="outlined">
           Cerrar
         </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => console.log("Redirigir a inscripción")}
-        >
-          Inscribirse
-        </Button>
+        {isRegistrationOpen() &&
+          isUserCaptain() &&
+          isTournamentAvailableForUser() && (
+            <Tooltip
+              title={
+                <Typography sx={{ fontSize: "14px" }}>
+                  {isFull
+                    ? "Este torneo ya ha alcanzado el número máximo de equipos permitidos"
+                    : ""}
+                </Typography>
+              }
+              arrow
+              disableHoverListener={!isFull}
+            >
+              <span>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleRegisterClick}
+                  disabled={teamsLoading || isFull}
+                  sx={{
+                    "&:disabled": {
+                      backgroundColor: isFull
+                        ? "rgba(0, 0, 0, 0.12)"
+                        : undefined,
+                      color: isFull ? "rgba(0, 0, 0, 0.26)" : undefined,
+                    },
+                  }}
+                >
+                  {teamsLoading ? "Cargando..." : "Inscribirse"}
+                </Button>
+              </span>
+            </Tooltip>
+          )}
       </DialogActions>
     </Dialog>
   );

@@ -16,8 +16,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { getAllSports } from "../services/sportService";
-import { getAllTournaments } from "../services/tournamentService";
+import { getAllSports } from "../../services/sportService";
+import { getAllTournaments } from "../../services/tournamentService";
 
 /**
  * @module EditUserDialog
@@ -84,7 +84,13 @@ const EditUserDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="sm"
+      disableRestoreFocus
+    >
       <DialogTitle color="primary" sx={{ fontWeight: "bold" }}>
         Editar Usuario
       </DialogTitle>

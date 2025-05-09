@@ -11,12 +11,12 @@ import {
   Typography,
 } from "@mui/material";
 import { HowToReg } from "@mui/icons-material";
-import { formatDate } from "../utils/formatDate";
-import { statusMapping } from "../utils/tournamentStatusMapping";
+import { formatDate } from "../../utils/formatDate";
+import { statusMapping } from "../../utils/tournamentStatusMapping";
 import InfoOutlineIcon from "@mui/icons-material/InfoOutline";
 import { Edit, Delete } from "@mui/icons-material";
 
-const TournamentTable = ({
+const TournamentTableInscription = ({
   tournaments,
   onViewDetails,
   onDeleteTournament,
@@ -125,4 +125,4 @@ const TournamentTable = ({
   </TableContainer>
 );
 
-export default TournamentTable;
+export default TournamentTableInscription;

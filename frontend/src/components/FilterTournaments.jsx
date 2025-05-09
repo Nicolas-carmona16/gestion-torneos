@@ -18,12 +18,15 @@ const FilterTournaments = ({
   registrationTeamEnd,
   setRegistrationStart,
   setRegistrationTeamEnd,
+  showDateFilters = false,
 }) => {
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedSport("");
-    setRegistrationStart("");
-    setRegistrationTeamEnd("");
+    if (showDateFilters) {
+      setRegistrationStart("");
+      setRegistrationTeamEnd("");
+    }
   };
 
   return (
@@ -53,27 +56,29 @@ const FilterTournaments = ({
           </Select>
         </FormControl>
       </Box>
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-        <TextField
-          label="Fecha inicio registro"
-          type="date"
-          value={registrationStart}
-          onChange={(e) => setRegistrationStart(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-          sx={{ flex: 1 }}
-        />
+      {showDateFilters && (
+        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+          <TextField
+            label="Fecha inicio registro"
+            type="date"
+            value={registrationStart}
+            onChange={(e) => setRegistrationStart(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            sx={{ flex: 1 }}
+          />
 
-        <TextField
-          label="Fecha fin registro de equipos"
-          type="date"
-          value={registrationTeamEnd}
-          onChange={(e) => setRegistrationTeamEnd(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-          sx={{ flex: 1 }}
-        />
-      </Box>
+          <TextField
+            label="Fecha fin registro de equipos"
+            type="date"
+            value={registrationTeamEnd}
+            onChange={(e) => setRegistrationTeamEnd(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            sx={{ flex: 1 }}
+          />
+        </Box>
+      )}
       <Button
         variant="outlined"
         color="secondary"

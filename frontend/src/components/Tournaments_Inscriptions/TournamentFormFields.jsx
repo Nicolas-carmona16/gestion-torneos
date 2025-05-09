@@ -11,7 +11,7 @@ import {
   Collapse,
   Typography,
 } from "@mui/material";
-import FormTextField from "./FormTextFields";
+import FormTextField from "../FormTextFields";
 
 const TournamentFormFields = ({
   sports,
