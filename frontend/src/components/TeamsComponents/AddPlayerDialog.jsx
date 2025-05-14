@@ -53,7 +53,7 @@ const AddPlayerDialog = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="xl"
+      maxWidth="sm"
       fullWidth
       disableRestoreFocus
     >

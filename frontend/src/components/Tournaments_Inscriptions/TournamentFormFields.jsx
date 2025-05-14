@@ -39,6 +39,7 @@ const TournamentFormFields = ({
           <Select
             labelId="sport-label"
             name="sport"
+            label="Deporte"
             value={values.sport}
             onChange={(e) => handleSportChange(e, handleChange)}
             onBlur={handleBlur}
@@ -94,6 +95,7 @@ const TournamentFormFields = ({
           <Select
             labelId="format-label"
             name="format"
+            label="Formato"
             value={values.format}
             onChange={handleChange}
             onBlur={handleBlur}
