@@ -2,15 +2,55 @@ import Team from "../models/teamModel.js";
 import Player from "../models/playerModel.js";
 import Tournament from "../models/tournamentModel.js";
 import mongoose from "mongoose";
+import { supabase } from "../config/supabase.js";
+
+// Helper function to upload EPS documents to Supabase
+async function uploadEPSToSupabase(file, fileName) {
+  // Validate file type
+  if (file.mimetype !== "application/pdf") {
+    throw new Error("Only PDF files are allowed for EPS documents");
+  }
+
+  const filePath = `eps_documents/${fileName}.pdf`;
+
+  const { data, error } = await supabase.storage
+    .from("eps-documents")
+    .upload(filePath, file.buffer, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Failed to upload EPS document: ${error.message}`);
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("eps-documents").getPublicUrl(data.path);
+
+  return publicUrl;
+}
 
 export const registerTeam = async (req, res) => {
   try {
     const { name, tournamentId, players, captainExtra } = req.body;
     const captainUser = req.user;
 
+    // Get uploaded files
+    const captainEPSFile = req.files?.captainEPS?.[0];
+    const playersEPSFiles = req.files?.playersEPS || [];
+
+    // Validate PDF files
+    if (!captainEPSFile || playersEPSFiles.length !== players.length) {
+      return res
+        .status(400)
+        .json({ message: "EPS documents are required for all players" });
+    }
+
     const tournament = await Tournament.findById(tournamentId);
-    if (!tournament)
+    if (!tournament) {
       return res.status(404).json({ message: "Tournament not found" });
+    }
 
     if (tournament.status !== "registration open") {
       return res.status(400).json({ message: "Out of dates for registration" });
@@ -27,8 +67,16 @@ export const registerTeam = async (req, res) => {
     }
 
     const playerIds = [];
-
     const fullName = `${captainUser.firstName} ${captainUser.lastName}`;
+    const timestamp = Date.now();
+
+    // Upload captain's EPS document
+    const captainEPSUrl = await uploadEPSToSupabase(
+      captainEPSFile,
+      `captain_${captainExtra.idNumber}_${timestamp}`
+    );
+
+    // Create or update captain with EPS document
     let captainPlayer = await Player.findOne({
       $or: [{ idNumber: captainExtra.idNumber }, { email: captainUser.email }],
     });
@@ -38,12 +86,18 @@ export const registerTeam = async (req, res) => {
         fullName,
         idNumber: captainExtra.idNumber,
         email: captainUser.email,
-        eps: captainExtra.eps,
+        eps: {
+          url: captainEPSUrl,
+          fileName: `captain_${captainExtra.idNumber}_${timestamp}.pdf`,
+        },
         career: captainExtra.career,
       });
     } else {
       captainPlayer.fullName = fullName;
-      captainPlayer.eps = captainExtra.eps;
+      captainPlayer.eps = {
+        url: captainEPSUrl,
+        fileName: `captain_${captainUser.idNumber}_${timestamp}.pdf`,
+      };
       captainPlayer.career = captainExtra.career;
       await captainPlayer.save();
     }
@@ -59,7 +113,17 @@ export const registerTeam = async (req, res) => {
 
     playerIds.push(captainPlayer._id);
 
-    for (const p of players) {
+    // Process each player with their EPS document
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      const playerEPSFile = playersEPSFiles[i];
+
+      // Upload player's EPS document
+      const playerEPSUrl = await uploadEPSToSupabase(
+        playerEPSFile,
+        `player_${p.idNumber}_${timestamp}`
+      );
+
       let existingPlayer = await Player.findOne({
         $or: [{ idNumber: p.idNumber }, { email: p.email }],
       });
@@ -69,12 +133,18 @@ export const registerTeam = async (req, res) => {
           fullName: p.fullName,
           idNumber: p.idNumber,
           email: p.email,
-          eps: p.eps,
+          eps: {
+            url: playerEPSUrl,
+            fileName: `player_${p.idNumber}_${timestamp}.pdf`,
+          },
           career: p.career,
         });
       } else {
         existingPlayer.fullName = p.fullName;
-        existingPlayer.eps = p.eps;
+        existingPlayer.eps = {
+          url: playerEPSUrl,
+          fileName: `player_${p.idNumber}_${timestamp}.pdf`,
+        };
         existingPlayer.career = p.career;
         await existingPlayer.save();
       }
@@ -115,7 +185,10 @@ export const registerTeam = async (req, res) => {
     });
   } catch (error) {
     console.error("Error registering team:", error);
-    res.status(500).json({ message: "Error registering team" });
+    res.status(500).json({
+      message: "Error registering team",
+      error: error.message,
+    });
   }
 };
 
@@ -165,10 +238,20 @@ export const addPlayersToTeam = async (req, res) => {
   try {
     const { teamId, newPlayers } = req.body;
     const currentDate = new Date();
+    const playerEPSFile = req.file; // Single EPS file for the new player
+
+    // Validate PDF file
+    if (!playerEPSFile || playerEPSFile.mimetype !== "application/pdf") {
+      return res.status(400).json({
+        message: "A valid EPS PDF document is required for the new player",
+      });
+    }
 
     const team = await Team.findById(teamId).populate("tournament players");
 
-    if (!team) return res.status(404).json({ message: "Team not found" });
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
 
     if (
       req.user.role === "captain" &&
@@ -195,43 +278,62 @@ export const addPlayersToTeam = async (req, res) => {
 
     const playerIdsToAdd = [];
 
-    for (const p of newPlayers) {
-      let player = await Player.findOne({
-        $or: [{ idNumber: p.idNumber }, { email: p.email }],
+    // Since we're only adding one player (but newPlayers is an array)
+    const newPlayer = newPlayers[0];
+
+    // Upload player's EPS document to Supabase
+    // upload with timespamp to avoid overwriting
+    const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+    const playerEPSUrl = await uploadEPSToSupabase(
+      playerEPSFile,
+      `player_${newPlayer.idNumber}_${timestamp}`
+    );
+
+    let player = await Player.findOne({
+      $or: [{ idNumber: newPlayer.idNumber }, { email: newPlayer.email }],
+    });
+
+    if (!player) {
+      player = await Player.create({
+        fullName: newPlayer.fullName,
+        idNumber: newPlayer.idNumber,
+        email: newPlayer.email,
+        eps: {
+          url: playerEPSUrl,
+          fileName: `player_${newPlayer.idNumber}.pdf`,
+        },
+        career: newPlayer.career,
       });
-
-      if (!player) {
-        player = await Player.create({
-          fullName: p.fullName,
-          idNumber: p.idNumber,
-          email: p.email,
-          eps: p.eps,
-          career: p.career,
-        });
-      }
-
-      const alreadyInOtherTeam = existingTeams.some(
-        (t) =>
-          t._id.toString() !== teamId &&
-          t.players.some((playerInTeam) => playerInTeam._id.equals(player._id))
-      );
-      if (alreadyInOtherTeam) {
-        return res.status(400).json({
-          message: `Player ${p.fullName} is already in another team in this tournament`,
-        });
-      } else {
-        player.fullName = p.fullName;
-        player.eps = p.eps;
-        player.career = p.career;
-        await player.save();
-      }
-
-      if (team.players.some((pl) => pl._id.equals(player._id))) {
-        continue;
-      }
-
-      playerIdsToAdd.push(player._id);
+    } else {
+      // Update existing player with new EPS document
+      player.fullName = newPlayer.fullName;
+      player.eps = {
+        url: playerEPSUrl,
+        fileName: `player_${newPlayer.idNumber}.pdf`,
+      };
+      player.career = newPlayer.career;
+      await player.save();
     }
+
+    const alreadyInOtherTeam = existingTeams.some(
+      (t) =>
+        t._id.toString() !== teamId &&
+        t.players.some((playerInTeam) => playerInTeam._id.equals(player._id))
+    );
+
+    if (alreadyInOtherTeam) {
+      return res.status(400).json({
+        message: `Player ${newPlayer.fullName} is already in another team in this tournament`,
+      });
+    }
+
+    if (team.players.some((pl) => pl._id.equals(player._id))) {
+      return res.status(400).json({
+        message: `Player ${newPlayer.fullName} is already in this team`,
+      });
+    }
+
+    playerIdsToAdd.push(player._id);
 
     const totalAfterAdd = team.players.length + playerIdsToAdd.length;
     if (totalAfterAdd > team.tournament.maxPlayersPerTeam) {
@@ -243,10 +345,21 @@ export const addPlayersToTeam = async (req, res) => {
     team.players.push(...playerIdsToAdd);
     await team.save();
 
-    res.status(200).json({ message: "Players added to team", team });
+    res.status(200).json({
+      message: "Player added to team successfully",
+      team,
+      playerDetails: {
+        id: player._id,
+        fullName: player.fullName,
+        epsDocument: player.eps.url,
+      },
+    });
   } catch (error) {
-    console.error("Error adding players:", error);
-    res.status(500).json({ message: "Error adding players to team" });
+    console.error("Error adding player:", error);
+    res.status(500).json({
+      message: "Error adding player to team",
+      error: error.message,
+    });
   }
 };
 

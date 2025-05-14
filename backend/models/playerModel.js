@@ -60,9 +60,11 @@ const playerSchema = new mongoose.Schema(
       lowercase: true,
     },
     eps: {
-      type: String,
+      type: {
+        url: String,
+        fileName: String,
+      },
       required: true,
-      trim: true,
     },
     career: {
       type: String,

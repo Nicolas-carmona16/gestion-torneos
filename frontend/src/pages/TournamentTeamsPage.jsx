@@ -253,12 +253,20 @@ const TournamentTeamsPage = () => {
       <AddPlayerDialog
         open={openAddPlayerDialog}
         onClose={handleCloseAddPlayerDialog}
-        onSubmit={async (values) => {
-          await addPlayersToTeam(selectedTeam._id, [values]);
-          const updatedTeam = await getTeamById(selectedTeam._id);
-          setSelectedTeam(updatedTeam.team);
-          const updatedTeamsData = await getTeamsByTournament(tournamentId);
-          setTeams(updatedTeamsData.teams);
+        onSubmit={async (values, epsFile) => {
+          try {
+            await addPlayersToTeam(selectedTeam._id, values, epsFile);
+            const updatedTeam = await getTeamById(selectedTeam._id);
+            setSelectedTeam(updatedTeam.team);
+            const updatedTeamsData = await getTeamsByTournament(tournamentId);
+            setTeams(updatedTeamsData.teams);
+            showSnackbar("Jugador agregado exitosamente", "success");
+          } catch (error) {
+            showSnackbar(
+              error.response?.data?.message || "Error al agregar jugador",
+              "error"
+            );
+          }
         }}
         tournament={tournament}
         selectedTeam={selectedTeam}

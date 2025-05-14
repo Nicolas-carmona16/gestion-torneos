@@ -1,9 +1,33 @@
 import { api } from "./api";
 
-export const registerTeam = async (teamData) => {
+export const registerTeam = async (teamData, files) => {
   try {
-    const response = await api.post("/teams/register", teamData, {
+    const formData = new FormData();
+    formData.append("name", teamData.name);
+    formData.append("tournamentId", teamData.tournamentId);
+    formData.append("captainExtra[idNumber]", teamData.captainExtra.idNumber);
+    formData.append("captainExtra[career]", teamData.captainExtra.career);
+    formData.append("captainExtra[eps]", "EPS del capitán");
+    if (files.captainEPS) {
+      formData.append("captainEPS", files.captainEPS);
+    }
+
+    teamData.players.forEach((player, index) => {
+      formData.append(`players[${index}][fullName]`, player.fullName);
+      formData.append(`players[${index}][idNumber]`, player.idNumber);
+      formData.append(`players[${index}][email]`, player.email);
+      formData.append(`players[${index}][career]`, player.career);
+
+      if (files.playersEPS && files.playersEPS[index]) {
+        formData.append("playersEPS", files.playersEPS[index]);
+      }
+    });
+
+    const response = await api.post("/teams/register", formData, {
       withCredentials: true,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
     return response.data;
   } catch (error) {
@@ -50,13 +74,25 @@ export const removePlayerFromTeam = async (teamId, playerId) => {
   }
 };
 
-export const addPlayersToTeam = async (teamId, newPlayers) => {
+export const addPlayersToTeam = async (teamId, newPlayers, epsFile) => {
   try {
-    const response = await api.post(
-      "/teams/add-players",
-      { teamId, newPlayers },
-      { withCredentials: true }
-    );
+    const formData = new FormData();
+    formData.append("teamId", teamId);
+    formData.append("newPlayers[0][fullName]", newPlayers.fullName);
+    formData.append("newPlayers[0][idNumber]", newPlayers.idNumber);
+    formData.append("newPlayers[0][email]", newPlayers.email);
+    formData.append("newPlayers[0][career]", newPlayers.career);
+
+    if (epsFile) {
+      formData.append("playerEPS", epsFile);
+    }
+
+    const response = await api.post("/teams/add-players", formData, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error adding players:", error);

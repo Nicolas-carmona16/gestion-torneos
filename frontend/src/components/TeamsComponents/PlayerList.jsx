@@ -7,8 +7,9 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  Link,
 } from "@mui/material";
-import { Person, Close } from "@mui/icons-material";
+import { Person, Close, PictureAsPdf } from "@mui/icons-material";
 
 const PlayerList = ({
   players,
@@ -85,14 +86,28 @@ const PlayerList = ({
                         >
                           Cédula: {player.idNumber}
                         </Typography>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="text.secondary"
-                          display="block"
-                        >
-                          EPS: {player.eps}
-                        </Typography>
+                        {player.eps && (
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="text.secondary"
+                            display="block"
+                          >
+                            EPS:{" "}
+                            <Link
+                              href={player.eps.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <PictureAsPdf fontSize="small" sx={{ mr: 0.5 }} />
+                              {player.eps.fileName || "Documento EPS"}
+                            </Link>
+                          </Typography>
+                        )}
                       </>
                     )}
                   </>
