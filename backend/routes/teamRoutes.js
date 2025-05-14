@@ -11,11 +11,16 @@ import {
   validateRegisterTeam,
   validateAddPlayers,
 } from "../middlewares/teamValidations.js";
+import {
+  uploadMultipleEPS,
+  uploadSingleEPS,
+} from "../middlewares/uploadEPS.js";
 
 const router = express.Router();
 
 router.post(
   "/register",
+  uploadMultipleEPS,
   validateRegisterTeam,
   protect,
   authorizeRoles("captain"),
@@ -29,6 +34,7 @@ router.post(
 );
 router.post(
   "/add-players",
+  uploadSingleEPS,
   validateAddPlayers,
   protect,
   authorizeRoles("captain", "admin"),

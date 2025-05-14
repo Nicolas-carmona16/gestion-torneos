@@ -51,6 +51,8 @@ const TeamRegistrationForm = ({
   const [error, setError] = useState(null);
   const [userAlreadyRegistered, setUserAlreadyRegistered] = useState(false);
   const [playerErrors, setPlayerErrors] = useState({});
+  const [captainEPSFile, setCaptainEPSFile] = useState(null);
+  const [playersEPSFiles, setPlayersEPSFiles] = useState([]);
 
   const formik = useFormik({
     initialValues: {
@@ -58,7 +60,6 @@ const TeamRegistrationForm = ({
       tournamentId: tournament._id,
       captainExtra: {
         idNumber: "",
-        eps: "",
         career: "",
       },
       players: Array(Math.max(tournament.minPlayersPerTeam - 1, 1))
@@ -67,7 +68,6 @@ const TeamRegistrationForm = ({
           fullName: "",
           idNumber: "",
           email: "",
-          eps: "",
           career: "",
         })),
     },
@@ -75,6 +75,27 @@ const TeamRegistrationForm = ({
     onSubmit: async (values) => {
       if (userAlreadyRegistered) {
         setError("Ya estás registrado en otro equipo de este torneo");
+        return;
+      }
+
+      if (!captainEPSFile) {
+        setError("Debes subir el documento EPS del capitán");
+        return;
+      }
+
+      if (
+        playersEPSFiles.length !== values.players.length ||
+        playersEPSFiles.some((file) => !file)
+      ) {
+        setError("Debes subir documentos EPS para todos los jugadores");
+        return;
+      }
+
+      if (
+        captainEPSFile.type !== "application/pdf" ||
+        playersEPSFiles.some((file) => file.type !== "application/pdf")
+      ) {
+        setError("Todos los documentos EPS deben ser archivos PDF");
         return;
       }
 
@@ -94,10 +115,17 @@ const TeamRegistrationForm = ({
       setError(null);
 
       try {
-        const response = await registerTeam(values);
+        const response = await registerTeam(values, {
+          captainEPS: captainEPSFile,
+          playersEPS: playersEPSFiles,
+        });
         onSuccess(response.team._id);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al registrar el equipo");
+        const errorMsg =
+          err.response?.data?.message ||
+          err.message ||
+          "Error al registrar el equipo";
+        setError(errorMsg);
       } finally {
         setSubmitting(false);
       }
@@ -153,12 +181,23 @@ const TeamRegistrationForm = ({
     validatePlayers();
   }, [validatePlayers]);
 
+  const handleCaptainEPSChange = (event) => {
+    setCaptainEPSFile(event.target.files[0]);
+  };
+
+  const handlePlayerEPSChange = (index, event) => {
+    const newFiles = [...playersEPSFiles];
+    newFiles[index] = event.target.files[0];
+    setPlayersEPSFiles(newFiles);
+  };
+
   const addPlayer = () => {
     if (formik.values.players.length < tournament.maxPlayersPerTeam - 1) {
       formik.setFieldValue("players", [
         ...formik.values.players,
-        { fullName: "", idNumber: "", email: "", eps: "", career: "" },
+        { fullName: "", idNumber: "", email: "", career: "" },
       ]);
+      setPlayersEPSFiles([...playersEPSFiles, null]);
     }
   };
 
@@ -167,6 +206,10 @@ const TeamRegistrationForm = ({
       const updatedPlayers = [...formik.values.players];
       updatedPlayers.splice(index, 1);
       formik.setFieldValue("players", updatedPlayers);
+
+      const updatedFiles = [...playersEPSFiles];
+      updatedFiles.splice(index, 1);
+      setPlayersEPSFiles(updatedFiles);
 
       setPlayerErrors((prev) => {
         const newErrors = { ...prev };
@@ -254,23 +297,24 @@ const TeamRegistrationForm = ({
                 />
               </Grid>
               <Grid columns={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  label="EPS"
-                  name="captainExtra.eps"
-                  value={formik.values.captainExtra.eps}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.captainExtra?.eps &&
-                    Boolean(formik.errors.captainExtra?.eps)
-                  }
-                  helperText={
-                    formik.touched.captainExtra?.eps &&
-                    formik.errors.captainExtra?.eps
-                  }
+                <input
+                  accept="application/pdf"
+                  style={{ display: "none" }}
+                  id="captain-eps-upload"
+                  type="file"
+                  onChange={handleCaptainEPSChange}
                   required
                 />
+                <label htmlFor="captain-eps-upload">
+                  <Button variant="outlined" component="span" fullWidth>
+                    {captainEPSFile ? captainEPSFile.name : "Subir EPS (PDF)"}
+                  </Button>
+                </label>
+                {captainEPSFile && (
+                  <Typography variant="caption" color="textSecondary">
+                    Archivo seleccionado: {captainEPSFile.name}
+                  </Typography>
+                )}
               </Grid>
               <Grid columns={{ xs: 12, md: 6 }}>
                 <FormControl
@@ -421,23 +465,26 @@ const TeamRegistrationForm = ({
                     />
                   </Grid>
                   <Grid columns={{ xs: 12, md: 4 }}>
-                    <TextField
-                      fullWidth
-                      label="EPS"
-                      name={`players[${index}].eps`}
-                      value={player.eps}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={
-                        formik.touched.players?.[index]?.eps &&
-                        Boolean(formik.errors.players?.[index]?.eps)
-                      }
-                      helperText={
-                        formik.touched.players?.[index]?.eps &&
-                        formik.errors.players?.[index]?.eps
-                      }
+                    <input
+                      accept="application/pdf"
+                      style={{ display: "none" }}
+                      id={`player-${index}-eps-upload`}
+                      type="file"
+                      onChange={(e) => handlePlayerEPSChange(index, e)}
                       required
                     />
+                    <label htmlFor={`player-${index}-eps-upload`}>
+                      <Button variant="outlined" component="span" fullWidth>
+                        {playersEPSFiles[index]
+                          ? playersEPSFiles[index].name
+                          : "Subir EPS (PDF)"}
+                      </Button>
+                    </label>
+                    {playersEPSFiles[index] && (
+                      <Typography variant="caption" color="textSecondary">
+                        Archivo seleccionado: {playersEPSFiles[index].name}
+                      </Typography>
+                    )}
                   </Grid>
                   <Grid sx={{ xs: 12, md: 4 }}>
                     <FormControl

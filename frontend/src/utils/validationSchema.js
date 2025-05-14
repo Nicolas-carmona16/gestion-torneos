@@ -160,7 +160,6 @@ export const validationTeamRegisterSchema = Yup.object().shape({
   tournamentId: Yup.string().required(),
   captainExtra: Yup.object().shape({
     idNumber: Yup.string().required("La cédula del capitán es obligatoria"),
-    eps: Yup.string().required("La EPS del capitán es obligatoria"),
     career: Yup.string()
       .required("La carrera es obligatorio")
       .oneOf(
@@ -193,7 +192,6 @@ export const validationTeamRegisterSchema = Yup.object().shape({
           "Debe ser un correo institucional"
         )
         .required("El correo es obligatorio"),
-      eps: Yup.string().required("La EPS es obligatoria"),
       career: Yup.string()
         .required("La carrera es obligatorio")
         .oneOf(
@@ -228,7 +226,6 @@ export const validationNewPlayerSchema = Yup.object().shape({
       /^[a-zA-Z0-9._-]+@udea\.edu\.co$/,
       "Debe ser un correo institucional"
     ),
-  eps: Yup.string().required("La EPS es obligatoria"),
   career: Yup.string()
     .required("La carrera es obligatorio")
     .oneOf(

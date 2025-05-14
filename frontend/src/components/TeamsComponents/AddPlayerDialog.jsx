@@ -11,7 +11,9 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  Typography,
 } from "@mui/material";
+import { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import { TextField } from "@mui/material";
 import { validationNewPlayerSchema } from "../../utils/validationSchema";
@@ -41,11 +43,17 @@ const AddPlayerDialog = ({
   showSnackbar,
   isPlayerRegisteredInTournament,
 }) => {
+  const [epsFile, setEpsFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    setEpsFile(event.target.files[0]);
+  };
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="xl"
       fullWidth
       disableRestoreFocus
     >
@@ -54,7 +62,6 @@ const AddPlayerDialog = ({
           fullName: "",
           idNumber: "",
           email: "",
-          eps: "",
           career: "",
         }}
         validationSchema={validationNewPlayerSchema}
@@ -87,7 +94,17 @@ const AddPlayerDialog = ({
               return;
             }
 
-            await onSubmit(values);
+            if (!epsFile) {
+              showSnackbar("Debes subir el documento EPS del jugador", "error");
+              return;
+            }
+
+            if (epsFile.type !== "application/pdf") {
+              showSnackbar("El documento EPS debe ser un archivo PDF", "error");
+              return;
+            }
+
+            await onSubmit(values, epsFile);
 
             showSnackbar("Jugador agregado correctamente");
             onClose();
@@ -145,17 +162,26 @@ const AddPlayerDialog = ({
                     helperText={touched.email && errors.email}
                   />
                 </Grid>
-                <Grid sx={{ xs: 12, sm: 6 }}>
-                  <Field
-                    as={TextField}
-                    fullWidth
-                    label="EPS"
-                    name="eps"
-                    error={touched.eps && Boolean(errors.eps)}
-                    helperText={touched.eps && errors.eps}
+                <Grid sx={{ xs: 12 }}>
+                  <input
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    id="eps-upload"
+                    type="file"
+                    onChange={handleFileChange}
                   />
+                  <label htmlFor="eps-upload">
+                    <Button variant="outlined" component="span" fullWidth>
+                      {epsFile ? epsFile.name : "Subir EPS (PDF)"}
+                    </Button>
+                  </label>
+                  {epsFile && (
+                    <Typography variant="caption" color="textSecondary">
+                      Archivo seleccionado: {epsFile.name}
+                    </Typography>
+                  )}
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth sx={{ minWidth: 222 }}>
                     <InputLabel id="career-label">Carrera</InputLabel>
                     <Select
