@@ -4,9 +4,7 @@ import Tournament from "../models/tournamentModel.js";
 import mongoose from "mongoose";
 import { supabase } from "../config/supabase.js";
 
-// Helper function to upload EPS documents to Supabase
 async function uploadEPSToSupabase(file, fileName) {
-  // Validate file type
   if (file.mimetype !== "application/pdf") {
     throw new Error("Only PDF files are allowed for EPS documents");
   }
@@ -36,11 +34,9 @@ export const registerTeam = async (req, res) => {
     const { name, tournamentId, players, captainExtra } = req.body;
     const captainUser = req.user;
 
-    // Get uploaded files
     const captainEPSFile = req.files?.captainEPS?.[0];
     const playersEPSFiles = req.files?.playersEPS || [];
 
-    // Validate PDF files
     if (!captainEPSFile || playersEPSFiles.length !== players.length) {
       return res
         .status(400)
@@ -70,13 +66,11 @@ export const registerTeam = async (req, res) => {
     const fullName = `${captainUser.firstName} ${captainUser.lastName}`;
     const timestamp = Date.now();
 
-    // Upload captain's EPS document
     const captainEPSUrl = await uploadEPSToSupabase(
       captainEPSFile,
       `captain_${captainExtra.idNumber}_${timestamp}`
     );
 
-    // Create or update captain with EPS document
     let captainPlayer = await Player.findOne({
       $or: [{ idNumber: captainExtra.idNumber }, { email: captainUser.email }],
     });
@@ -113,12 +107,10 @@ export const registerTeam = async (req, res) => {
 
     playerIds.push(captainPlayer._id);
 
-    // Process each player with their EPS document
     for (let i = 0; i < players.length; i++) {
       const p = players[i];
       const playerEPSFile = playersEPSFiles[i];
 
-      // Upload player's EPS document
       const playerEPSUrl = await uploadEPSToSupabase(
         playerEPSFile,
         `player_${p.idNumber}_${timestamp}`
@@ -238,9 +230,8 @@ export const addPlayersToTeam = async (req, res) => {
   try {
     const { teamId, newPlayers } = req.body;
     const currentDate = new Date();
-    const playerEPSFile = req.file; // Single EPS file for the new player
+    const playerEPSFile = req.file;
 
-    // Validate PDF file
     if (!playerEPSFile || playerEPSFile.mimetype !== "application/pdf") {
       return res.status(400).json({
         message: "A valid EPS PDF document is required for the new player",
@@ -278,11 +269,8 @@ export const addPlayersToTeam = async (req, res) => {
 
     const playerIdsToAdd = [];
 
-    // Since we're only adding one player (but newPlayers is an array)
     const newPlayer = newPlayers[0];
 
-    // Upload player's EPS document to Supabase
-    // upload with timespamp to avoid overwriting
     const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
     const playerEPSUrl = await uploadEPSToSupabase(
       playerEPSFile,
@@ -305,7 +293,6 @@ export const addPlayersToTeam = async (req, res) => {
         career: newPlayer.career,
       });
     } else {
-      // Update existing player with new EPS document
       player.fullName = newPlayer.fullName;
       player.eps = {
         url: playerEPSUrl,
