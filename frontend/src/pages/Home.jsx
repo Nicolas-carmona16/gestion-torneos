@@ -30,7 +30,7 @@ const Home = () => {
           {[
             { text: "Inscripciones", path: "/inscripciones" },
             { text: "Equipos", path: "/equipos" },
-            { text: "Cuadros", path: "/cuadros" },
+            { text: "Cuadros", path: "/emparejamientos" },
             { text: "Programación", path: "/programacion" },
             { text: "Reglamento", path: "/reglamento" },
             { text: "Resoluciones", path: "/resoluciones" },
