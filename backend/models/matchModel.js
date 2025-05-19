@@ -34,12 +34,20 @@ const matchSchema = new mongoose.Schema(
     team1: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
-      required: true,
+      required: function () {
+        return !["pending", "walkover"].includes(this.status);
+      },
     },
     team2: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
-      required: true,
+      required: function () {
+        return (
+          !["pending", "walkover"].includes(this.status) &&
+          this.round !== "final" &&
+          this.status !== "walkover"
+        );
+      },
     },
     date: {
       type: Date,
@@ -68,7 +76,15 @@ const matchSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["scheduled", "in-progress", "completed", "postponed", "cancelled"],
+      enum: [
+        "scheduled",
+        "pending",
+        "in-progress",
+        "completed",
+        "postponed",
+        "cancelled",
+        "walkover",
+      ],
       default: "scheduled",
     },
     matchday: {
@@ -92,6 +108,25 @@ const matchSchema = new mongoose.Schema(
         },
       },
     ],
+    bracketId: {
+      type: String,
+      required: function () {
+        return this.round !== "group";
+      },
+    },
+    seriesWinner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Team",
+      default: null,
+    },
+    seriesScore: {
+      type: String,
+      default: null,
+    },
+    nextMatchBracketId: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );
