@@ -126,7 +126,7 @@ export const getGroupStandings = async (req, res) => {
     const matches = await Match.find({
       tournament: tournamentId,
       round: "group",
-    });
+    }).populate("team1 team2", "name"); // Populate para los equipos
 
     // Agrupar partidos por grupo
     const matchesByGroup = {};
@@ -141,6 +141,19 @@ export const getGroupStandings = async (req, res) => {
     const standings = {};
     for (const [group, groupMatches] of Object.entries(matchesByGroup)) {
       standings[group] = calculateGroupStandings(groupMatches, tournament);
+    }
+
+    // Populate los nombres de los equipos en los standings
+    for (const group of Object.keys(standings)) {
+      for (const standing of standings[group]) {
+        if (typeof standing.team === "string") {
+          const team = await Team.findById(standing.team).select("name");
+          standing.team = team || {
+            _id: standing.team,
+            name: "Equipo eliminado",
+          };
+        }
+      }
     }
 
     res.status(200).json(standings);

@@ -1,7 +1,7 @@
 import { Handshake } from "@mui/icons-material";
 import ManageTablePage from "../components/ManageTablePage";
 
-const PairingPage = () => (
+const ManagePairings = () => (
   <ManageTablePage
     title="Emparejamientos"
     actionIcon={<Handshake />}
@@ -10,4 +10,4 @@ const PairingPage = () => (
   />
 );
 
-export default PairingPage;
+export default ManagePairings;

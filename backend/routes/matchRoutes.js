@@ -11,13 +11,14 @@ import {
   addSeriesGameResult,
   getBracket,
 } from "../controllers/matchController.js";
+import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/:tournamentId/groups", createGroupStage);
+router.post("/:tournamentId/groups", protect, authorizeRoles("admin"), createGroupStage);
 router.get("/:tournamentId/matches", getTournamentMatches);
 router.get("/:tournamentId/standings", getGroupStandings);
-router.put("/:matchId", updateMatch);
+router.put("/:matchId", protect, authorizeRoles("admin", "assistant"), updateMatch);
 router.get("/:tournamentId/matchdays", getMatchesByMatchday);
 router.get("/:tournamentId/matchdays/:matchday", getSingleMatchday);
 router.post("/:tournamentId/elimination", createEliminationBracket);
