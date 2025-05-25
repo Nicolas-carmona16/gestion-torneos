@@ -1,10 +1,168 @@
+import React, { useMemo } from "react";
 import {
   Box,
   Typography,
   Paper,
   Button,
   CircularProgress,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  Handle,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+
+// Componente personalizado para los nodos de match
+const MatchNode = ({ data }) => {
+  const { match } = data;
+
+  const getWinnerStyle = (teamId) => {
+    if (!match.seriesWinner) return {};
+    return match.seriesWinner._id === teamId
+      ? {
+          fontWeight: "bold",
+          color: "#2e7d32",
+          backgroundColor: "#e8f5e9",
+        }
+      : {
+          opacity: 0.6,
+        };
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "completed":
+        return "#4caf50";
+      case "in-progress":
+        return "#ff9800";
+      case "postponed":
+      case "cancelled":
+        return "#f44336";
+      case "walkover":
+        return "#2196f3";
+      default:
+        return "#9e9e9e";
+    }
+  };
+
+  const translateStatus = (status) => {
+    switch (status) {
+      case "scheduled":
+        return "Programado";
+      case "pending":
+        return "Pendiente";
+      case "in-progress":
+        return "En progreso";
+      case "completed":
+        return "Completado";
+      case "postponed":
+        return "Aplazado";
+      case "cancelled":
+        return "Cancelado";
+      case "walkover":
+        return "Walkover";
+      default:
+        return status;
+    }
+  };
+
+  return (
+    <>
+      <Handle type="source" position="right" id="right" />
+      <Handle type="target" position="left" id="left" />
+      <TableContainer
+        component={Paper}
+        sx={{
+          border: `2px solid ${getStatusColor(match.status)}`,
+          borderRadius: 2,
+          width: 450,
+        }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell align="center">
+                <strong>Equipo</strong>
+              </TableCell>
+              {match.seriesMatches?.map((_, index) => (
+                <TableCell key={index} align="center">
+                  <strong>Juego {index + 1}</strong>
+                </TableCell>
+              ))}
+              <TableCell align="center">
+                <strong>Resultado Global</strong>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell
+                align="center"
+                sx={{ ...getWinnerStyle(match.team1?._id) }}
+              >
+                {match.team1?.name || "Por definir"}
+              </TableCell>
+              {match.seriesMatches?.map((game) => (
+                <TableCell key={game._id} align="center">
+                  {game.scoreTeam1 ?? "-"}
+                </TableCell>
+              ))}
+              <TableCell align="center">
+                {match.status === "completed" || match.status === "in-progress"
+                  ? match.scoreTeam1
+                  : "Pendiente"}
+              </TableCell>
+            </TableRow>
+
+            <TableRow>
+              <TableCell
+                align="center"
+                sx={{ ...getWinnerStyle(match.team2?._id) }}
+              >
+                {match.team2?.name || "Por definir"}
+              </TableCell>
+              {match.seriesMatches?.map((game) => (
+                <TableCell key={game._id} align="center">
+                  {game.scoreTeam2 ?? "-"}
+                </TableCell>
+              ))}
+              <TableCell align="center">
+                {match.status === "completed" || match.status === "in-progress"
+                  ? match.scoreTeam2
+                  : "Pendiente"}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+
+        <Typography
+          variant="caption"
+          textAlign="center"
+          display="block"
+          mt={1}
+          sx={{ color: getStatusColor(match.status) }}
+        >
+          {translateStatus(match.status)}
+        </Typography>
+      </TableContainer>
+    </>
+  );
+};
+
+const nodeTypes = {
+  match: MatchNode,
+};
 
 const EliminationStage = ({
   user,
@@ -13,6 +171,102 @@ const EliminationStage = ({
   generationError,
   bracket,
 }) => {
+  const { nodes, edges } = useMemo(() => {
+    if (!bracket || Object.keys(bracket).length === 0) {
+      return { nodes: [], edges: [] };
+    }
+
+    const nodes = [];
+    const edges = [];
+    const roundOrder = [
+      "round-of-32",
+      "round-of-16",
+      "quarter-finals",
+      "semi-finals",
+      "final",
+    ];
+
+    const existingRounds = roundOrder.filter((round) => bracket[round]);
+    let nodeId = 0;
+    const bracketIdMap = {}; // Mapeo de bracketId a nodeId
+
+    // Primera pasada: crear todos los nodos
+    existingRounds.forEach((round, roundIndex) => {
+      const matches = bracket[round] || [];
+      const roundX = roundIndex * 500;
+      const verticalSpacing = 250;
+
+      // Calcular posición vertical centrada
+      const totalHeight = (matches.length - 1) * verticalSpacing;
+      const startY = -totalHeight / 2;
+
+      matches.forEach((match, matchIndex) => {
+        const id = `node-${nodeId++}`;
+        const y = startY + matchIndex * verticalSpacing;
+
+        nodes.push({
+          id,
+          type: "match",
+          position: { x: roundX, y },
+          data: { match, round },
+          style: { width: 450 },
+          draggable: false,
+          selectable: false,
+          connectable: false,
+        });
+
+        // Mapear bracketId a nodeId si existe
+        if (match.bracketId) {
+          bracketIdMap[match.bracketId] = id;
+        }
+      });
+    });
+
+    // Segunda pasada: crear las conexiones
+    existingRounds.forEach((round, roundIndex) => {
+      if (roundIndex === 0) return; // La primera ronda no tiene predecesores
+
+      const matches = bracket[round] || [];
+      const prevRound = existingRounds[roundIndex - 1];
+      const prevMatches = bracket[prevRound] || [];
+
+      matches.forEach((match) => {
+        // Encontrar todos los matches de la ronda anterior que apuntan a este match
+        const sources = prevMatches.filter(
+          (prevMatch) => prevMatch.nextMatchBracketId === match.bracketId
+        );
+
+        sources.forEach((sourceMatch) => {
+          const sourceId = bracketIdMap[sourceMatch.bracketId];
+          const targetId = bracketIdMap[match.bracketId];
+
+          if (sourceId && targetId) {
+            edges.push({
+              id: `edge-${sourceId}-${targetId}`,
+              source: sourceId,
+              target: targetId,
+              sourceHandle: "right", // Debe coincidir con el ID del Handle de origen
+              targetHandle: "left", // Debe coincidir con el ID del Handle de destino
+              type: "smoothstep",
+              animated: true,
+              style: { stroke: "#999", strokeWidth: 2 },
+            });
+          }
+        });
+      });
+    });
+
+    return { nodes, edges };
+  }, [bracket]);
+
+  const [flowNodes, setNodes, onNodesChange] = useNodesState(nodes);
+  const [flowEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+
+  React.useEffect(() => {
+    setNodes(nodes);
+    setEdges(edges);
+  }, [nodes, edges, setNodes, setEdges]);
+
   if (!bracket || Object.keys(bracket).length === 0) {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
@@ -52,172 +306,32 @@ const EliminationStage = ({
     );
   }
 
-  const getWinnerStyle = (match, teamId) => {
-    if (!match.seriesWinner) return {};
-    return match.seriesWinner._id === teamId
-      ? {
-          fontWeight: "bold",
-          color: "success.main",
-        }
-      : {};
-  };
-
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case "completed":
-        return { color: "success.main", fontWeight: "bold" };
-      case "in-progress":
-        return { color: "warning.main", fontWeight: "bold" };
-      case "postponed":
-      case "cancelled":
-        return { color: "error.main", fontStyle: "italic" };
-      case "walkover":
-        return { color: "info.main", fontStyle: "italic" };
-      default:
-        return { color: "text.secondary" };
-    }
-  };
-
-  const translateStatus = (status) => {
-    switch (status) {
-      case "scheduled":
-        return "Programado";
-      case "pending":
-        return "Pendiente";
-      case "in-progress":
-        return "En progreso";
-      case "completed":
-        return "Completado";
-      case "postponed":
-        return "Aplazado";
-      case "cancelled":
-        return "Cancelado";
-      case "walkover":
-        return "Walkover";
-      default:
-        return status;
-    }
-  };
-
   return (
-    <Box>
-      {Object.entries(bracket).map(([round, matches]) => (
-        <Box key={round} mb={4}>
-          <Typography variant="h6" gutterBottom>
-            {round === "final"
-              ? "Final"
-              : round === "semi-finals"
-              ? "Semifinales"
-              : round === "quarter-finals"
-              ? "Cuartos de Final"
-              : round === "round-of-16"
-              ? "Octavos de Final"
-              : round === "round-of-32"
-              ? "Dieciseisavos de Final"
-              : `Ronda ${round}`}
-          </Typography>
-
-          <Box display="flex" flexDirection="column" gap={2}>
-            {matches.map((match) => (
-              <Paper key={match._id} elevation={3} sx={{ p: 2 }}>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Typography sx={getWinnerStyle(match, match.team1?._id)}>
-                    {match.team1?.name || "Por definir"}
-                  </Typography>
-                  <Typography>vs</Typography>
-                  <Typography sx={getWinnerStyle(match, match.team2?._id)}>
-                    {match.team2?.name || "Por definir"}
-                  </Typography>
-                </Box>
-
-                {match.status === "walkover" && match.winner && (
-                  <Typography textAlign="center" color="info.main">
-                    Ganador por walkover: {match.winner.name}
-                  </Typography>
-                )}
-
-                {(match.status === "completed" ||
-                  match.status === "in-progress") && (
-                  <>
-                    {match.scoreTeam1 !== null && match.scoreTeam2 !== null && (
-                      <Typography textAlign="center" mt={1}>
-                        Resultado Global: {match.scoreTeam1} -{" "}
-                        {match.scoreTeam2}
-                      </Typography>
-                    )}
-                    {match.seriesWinner && (
-                      <Typography
-                        textAlign="center"
-                        fontWeight="bold"
-                        color="success.main"
-                      >
-                        Ganador de la serie: {match.seriesWinner.name}
-                      </Typography>
-                    )}
-                  </>
-                )}
-
-                {(match.status === "cancelled" ||
-                  match.status === "postponed") && (
-                  <Typography textAlign="center" fontStyle="italic">
-                    {match.status === "cancelled"
-                      ? "Este partido ha sido cancelado"
-                      : "Este partido ha sido aplazado"}
-                  </Typography>
-                )}
-
-                {match.isBestOfSeries && match.seriesMatches?.length > 0 && (
-                  <Box mt={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Partidos de la serie:
-                    </Typography>
-                    <Box display="flex" flexDirection="column" gap={1}>
-                      {match.seriesMatches.map((game, index) => (
-                        <Box
-                          key={game._id}
-                          display="flex"
-                          justifyContent="space-between"
-                        >
-                          <Typography variant="body2">
-                            Partido {index + 1}:
-                          </Typography>
-                          <Typography variant="body2">
-                            {game.scoreTeam1 ?? "-"} - {game.scoreTeam2 ?? "-"}
-                            {game.winner && (
-                              <Typography
-                                component="span"
-                                ml={1}
-                                color="success.main"
-                              >
-                                (Ganador:{" "}
-                                {game.winner === match.team1?._id
-                                  ? match.team1?.name
-                                  : match.team2?.name}
-                                )
-                              </Typography>
-                            )}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                    <Typography
-                      mt={1}
-                      textAlign="center"
-                      sx={getStatusStyle(match.status)}
-                    >
-                      {translateStatus(match.status)}
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            ))}
-          </Box>
-        </Box>
-      ))}
+    <Box sx={{ height: "80vh", width: "100%" }}>
+      <Paper elevation={3} sx={{ height: "calc(100% - 60px)", p: 1 }}>
+        <ReactFlow
+          nodes={flowNodes}
+          edges={flowEdges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{
+            padding: 0.5,
+            includeHiddenNodes: true,
+          }}
+          minZoom={0.1}
+          maxZoom={1.5}
+          nodesDraggable={false}
+          elementsSelectable={false}
+          connectionMode="strict"
+          defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+        >
+          <Background color="#f5f5f5" gap={20} />
+          <Controls />
+          <MiniMap nodeColor="#e0e0e0" nodeStrokeWidth={3} zoomable pannable />
+        </ReactFlow>
+      </Paper>
     </Box>
   );
 };
