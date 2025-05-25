@@ -90,7 +90,6 @@ const TournamentMatches = () => {
 
   const handleUpdateMatch = async () => {
     try {
-      // Filtrar solo los campos que han cambiado y no están vacíos
       const updateData = Object.fromEntries(
         Object.entries(editFormData).filter(
           ([key, value]) => value !== "" && value !== editingMatch[key]
@@ -100,7 +99,6 @@ const TournamentMatches = () => {
       if (Object.keys(updateData).length > 0) {
         await updateMatchResult(editingMatch._id, updateData);
 
-        // Actualizar el estado local
         const updatedMatchesByMatchday = { ...matchesByMatchday };
         Object.keys(updatedMatchesByMatchday).forEach((matchday) => {
           updatedMatchesByMatchday[matchday] = updatedMatchesByMatchday[
@@ -110,7 +108,6 @@ const TournamentMatches = () => {
               return {
                 ...match,
                 ...updateData,
-                // Actualizar winner y status solo si se modificaron los scores
                 ...(updateData.scoreTeam1 !== undefined &&
                 updateData.scoreTeam2 !== undefined
                   ? {
