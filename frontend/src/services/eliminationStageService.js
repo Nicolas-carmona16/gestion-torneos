@@ -15,3 +15,15 @@ export const createEliminationBracket = async (tournamentId) => {
     throw error;
   }
 };
+
+export const getEliminationBracket = async (tournamentId) => {
+  try {
+    const response = await api.get(`/matches/${tournamentId}/bracket`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error obteniendo bracket:", error);
+    throw error;
+  }
+};
