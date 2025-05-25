@@ -16,6 +16,7 @@ import {
   getGroupStandings,
   createGroupStage,
 } from "../services/groupStageService";
+import { createEliminationBracket } from "../services/eliminationStageService";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getUser } from "../services/authService";
@@ -29,6 +30,7 @@ const TournamentPairings = () => {
   const [generatingGroups, setGeneratingGroups] = useState(false);
   const [generationError, setGenerationError] = useState(null);
   const [user, setUser] = useState(null);
+  const [generatingBracket, setGeneratingBracket] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,6 +71,22 @@ const TournamentPairings = () => {
       );
     } finally {
       setGeneratingGroups(false);
+    }
+  };
+
+  const handleGenerateBracket = async () => {
+    try {
+      setGeneratingBracket(true);
+      setGenerationError(null);
+      await createEliminationBracket(tournamentId);
+      // Aquí podrías agregar lógica para refrescar los matches si los vas a mostrar
+    } catch (error) {
+      console.error("Error generating bracket:", error);
+      setGenerationError(
+        error.response?.data?.error || "Error al generar el bracket"
+      );
+    } finally {
+      setGeneratingBracket(false);
     }
   };
 
@@ -121,7 +139,12 @@ const TournamentPairings = () => {
           user={user}
         />
       ) : (
-        <EliminationStageView />
+        <EliminationStageView
+          user={user}
+          onGenerateBracket={handleGenerateBracket}
+          generatingBracket={generatingBracket}
+          generationError={generationError}
+        />
       )}
     </Box>
   );
@@ -246,15 +269,39 @@ const GroupStageView = ({
   );
 };
 
-const EliminationStageView = () => (
-  <Box>
-    <Typography variant="h5" gutterBottom>
-      Fase de Eliminación Directa
-    </Typography>
-    <Typography>
-      Este torneo sigue un formato de eliminación directa. Los emparejamientos
-      se generarán automáticamente.
-    </Typography>
+const EliminationStageView = ({
+  user,
+  onGenerateBracket,
+  generatingBracket,
+  generationError,
+}) => (
+  <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+    <Typography>Aún no se han generado los emparejamientos para este torneo</Typography>
+
+    {!user?.role || user.role !== "admin" ? null : (
+      <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={onGenerateBracket}
+          disabled={generatingBracket}
+        >
+          {generatingBracket ? (
+            <>
+              <CircularProgress size={24} color="inherit" />
+              <Box ml={2}>Generando bracket...</Box>
+            </>
+          ) : (
+            "Generar Bracket"
+          )}
+        </Button>
+        {generationError && (
+          <Typography color="error" mt={2}>
+            {generationError}
+          </Typography>
+        )}
+      </Box>
+    )}
   </Box>
 );
 
