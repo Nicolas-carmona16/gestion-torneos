@@ -307,8 +307,15 @@ const EliminationStage = ({
   }
 
   return (
-    <Box sx={{ height: "80vh", width: "100%" }}>
-      <Paper elevation={3} sx={{ height: "calc(100% - 60px)", p: 1 }}>
+    <Box sx={{ height: "80vh", width: "100%", background: "#f5f5f5" }}>
+      <Paper
+        elevation={3}
+        sx={{
+          height: "calc(100% - 60px)",
+          p: 1,
+          background: "transparent",
+        }}
+      >
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}
@@ -327,7 +334,7 @@ const EliminationStage = ({
           connectionMode="strict"
           defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
         >
-          <Background color="#f5f5f5" gap={20} />
+          <Background color="#026937" gap={20} />
           <Controls />
           <MiniMap nodeColor="#e0e0e0" nodeStrokeWidth={3} zoomable pannable />
         </ReactFlow>
