@@ -26,6 +26,10 @@ import CreateUser from "./pages/CreateUser";
 import TeamRegistrationPage from "./pages/TeamRegistrationPage";
 import ManageTeams from "./pages/ManageTeams";
 import TournamentTeamsPage from "./pages/TournamentTeamsPage";
+import ManagePairings from "./pages/ManagePairings";
+import TournamentPairings from "./pages/TournamentPairings";
+import ManageMatches from "./pages/ManageMatches";
+import TournamentMatches from "./pages/TournamentMatches";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -88,7 +92,20 @@ const App = () => {
             />
             <Route path="/inscripciones" element={<ManageTournaments />} />
             <Route path="/equipos" element={<ManageTeams />} />
-            <Route path="/torneo/:tournamentId/equipos" element={<TournamentTeamsPage />} />
+            <Route
+              path="/torneo/:tournamentId/equipos"
+              element={<TournamentTeamsPage />}
+            />
+            <Route path="/emparejamientos" element={<ManagePairings />} />
+            <Route
+              path="/torneo/:tournamentId/emparejamientos"
+              element={<TournamentPairings />}
+            />
+            <Route path="/programacion" element={<ManageMatches />} />
+            <Route
+              path="/torneo/:tournamentId/partidos"
+              element={<TournamentMatches />}
+            />
             {/* Ruta protegida */}
             <Route
               path="/perfil"
