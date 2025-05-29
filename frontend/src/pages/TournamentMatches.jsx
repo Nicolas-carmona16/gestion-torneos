@@ -10,28 +10,11 @@ import {
 } from "../services/eliminationStageService";
 import { getUser } from "../services/authService";
 import { getTournamentById } from "../services/tournamentService";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-  CircularProgress,
-  Box,
-  Paper,
-  Chip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Tabs,
-  Tab,
-} from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DescriptionWithToggle from "../components/matches/DescriptionWithToggle";
-import { formatDate, formatTimeTo12h } from "../utils/formatDate";
-import EliminationStage from "../components/pairings/EliminationStage";
+import { Paper, Typography, CircularProgress, Box } from "@mui/material";
+import GroupStageMatches from "../components/matches/GroupStageMatches";
+import EliminationStageMatches from "../components/matches/EliminationStageMatches";
+import EditMatchDialog from "../components/matches/EditMatchDialog";
+import SeriesGameDialog from "../components/matches/SeriesGameDialog";
 
 const TournamentMatches = () => {
   const { tournamentId } = useParams();
@@ -49,7 +32,6 @@ const TournamentMatches = () => {
   });
   const [user, setUser] = useState(null);
   const [tournament, setTournament] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
   const [editingSeriesGame, setEditingSeriesGame] = useState(null);
   const [seriesGameFormData, setSeriesGameFormData] = useState({
     scoreTeam1: "",
@@ -223,293 +205,12 @@ const TournamentMatches = () => {
     }
   };
 
-  const renderSeriesGames = (match) => {
-    const canAddMoreGames =
-      match.status !== "completed" &&
-      (!match.tournament?.bestOfMatches ||
-        match.seriesMatches?.length < match.tournament.bestOfMatches);
-
-    return (
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          <strong>Partidos de la serie:</strong>
-        </Typography>
-        {match.seriesMatches?.map((game, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              mb: 1,
-              p: 1,
-              backgroundColor: "#f5f5f5",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="body2">
-              Juego {index + 1}: {game.scoreTeam1 ?? "-"} -{" "}
-              {game.scoreTeam2 ?? "-"}
-            </Typography>
-          </Box>
-        ))}
-        {(user?.role === "admin" || user?.role === "assistant") &&
-          canAddMoreGames && (
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ mt: 1 }}
-              onClick={() => handleAddSeriesGameClick(match)}
-            >
-              Agregar Juego
-            </Button>
-          )}
-      </Box>
-    );
-  };
-
-  const renderEditDialogs = () => {
-    if (editingSeriesGame !== null && editingMatch) {
-      return (
-        <Dialog
-          open={true}
-          onClose={() => {
-            setEditingMatch(null);
-            setEditingSeriesGame(null);
-          }}
-          fullWidth
-        >
-          <DialogTitle>
-            {editingSeriesGame >= 0
-              ? `Editar Juego ${editingSeriesGame + 1}`
-              : "Agregar Nuevo Juego"}
-          </DialogTitle>
-          <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
-            >
-              <TextField
-                label={`Goles ${editingMatch.team1?.name || "Equipo 1"}`}
-                type="number"
-                name="scoreTeam1"
-                value={seriesGameFormData.scoreTeam1}
-                onChange={(e) =>
-                  setSeriesGameFormData({
-                    ...seriesGameFormData,
-                    scoreTeam1: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-              <TextField
-                label={`Goles ${editingMatch.team2?.name || "Equipo 2"}`}
-                type="number"
-                name="scoreTeam2"
-                value={seriesGameFormData.scoreTeam2}
-                onChange={(e) =>
-                  setSeriesGameFormData({
-                    ...seriesGameFormData,
-                    scoreTeam2: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => {
-                setEditingMatch(null);
-                setEditingSeriesGame(null);
-              }}
-              color="error"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpdateSeriesGame}
-              color="primary"
-              variant="contained"
-            >
-              Guardar
-            </Button>
-          </DialogActions>
-        </Dialog>
-      );
-    }
-
-    if (
-      editingMatch &&
-      (user?.role === "admin" || user?.role === "assistant")
-    ) {
-      return (
-        <Dialog
-          open={true}
-          onClose={() => setEditingMatch(null)}
-          fullWidth
-          disableRestoreFocus
-        >
-          <DialogTitle>
-            {`Actualizar: ${editingMatch.team1?.name || "Por definir"} vs ${
-              editingMatch.team2?.name || "Por definir"
-            }`}
-          </DialogTitle>
-          <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
-            >
-              {tournament.format === "group-stage" && (
-                <>
-                  <TextField
-                    label={`Goles ${editingMatch.team1?.name || "Equipo 1"}`}
-                    type="number"
-                    name="scoreTeam1"
-                    value={editFormData.scoreTeam1}
-                    onChange={handleEditFormChange}
-                    fullWidth
-                  />
-                  <TextField
-                    label={`Goles ${editingMatch.team2?.name || "Equipo 2"}`}
-                    type="number"
-                    name="scoreTeam2"
-                    value={editFormData.scoreTeam2}
-                    onChange={handleEditFormChange}
-                    fullWidth
-                  />
-                </>
-              )}
-              <TextField
-                label="Fecha"
-                type="date"
-                name="date"
-                value={editFormData.date}
-                onChange={handleEditFormChange}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                label="Hora"
-                type="time"
-                name="time"
-                value={editFormData.time}
-                onChange={handleEditFormChange}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                label="Descripción"
-                name="description"
-                value={editFormData.description}
-                onChange={handleEditFormChange}
-                multiline
-                rows={4}
-                fullWidth
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setEditingMatch(null)} color="error">
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpdateMatch}
-              color="primary"
-              variant="contained"
-            >
-              Guardar
-            </Button>
-          </DialogActions>
-        </Dialog>
-      );
-    }
-
-    return null;
-  };
-
-  const renderMatchItem = (match, isElimination = false) => (
-    <Box
-      key={match._id}
-      sx={{
-        mb: 2,
-        p: 2,
-        borderBottom: "1px solid #eee",
-        "&:last-child": { borderBottom: "none" },
-        position: "relative",
-      }}
-    >
-      {(user?.role === "admin" || user?.role === "assistant") && (
-        <Button
-          size="small"
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-          }}
-          onClick={() => handleEditClick(match)}
-        >
-          Actualizar
-        </Button>
-      )}
-
-      <Typography variant="h6" gutterBottom>
-        {match.team1?.name || "Por definir"} vs{" "}
-        {match.team2?.name || "Por definir"}
-      </Typography>
-
-      <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-        {!isElimination && (
-          <Typography variant="body2">
-            <strong>Grupo:</strong> {match.group}
-          </Typography>
-        )}
-        <Typography variant="body2">
-          <strong>Estado:</strong> {translateStatus(match.status)}
-        </Typography>
-        <Typography variant="body2">
-          <strong>Fecha:</strong>{" "}
-          {match.date ? formatDate(match.date) : "Por definir"}
-        </Typography>
-        <Typography variant="body2">
-          <strong>Hora:</strong>{" "}
-          {match.time ? formatTimeTo12h(match.time) : "Por definir"}
-        </Typography>
-        <DescriptionWithToggle description={match.description} />
-        {match.status === "completed" && (
-          <Box
-            sx={{
-              position: "relative",
-              top: "-15px",
-              px: 2,
-              py: 1,
-              bgcolor: "#e0f7fa",
-              borderRadius: 2,
-              border: "1px solid #b2ebf2",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: "bold", color: "#00796b" }}
-            >
-              Resultado: {match.scoreTeam1} - {match.scoreTeam2}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {isElimination && match.seriesMatches && renderSeriesGames(match)}
-    </Box>
-  );
-
   const matchdaysArray = Object.entries(matchesByMatchday).map(
     ([matchdayNumber, matches]) => ({
       matchday: matchdayNumber,
       matches,
     })
   );
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
 
   if (loading) {
     return (
@@ -548,157 +249,48 @@ const TournamentMatches = () => {
       </Typography>
 
       {tournament.format === "group-stage" ? (
-        <>
-          {matchdaysArray.length === 0 ? (
-            <Typography>No hay jornadas programadas</Typography>
-          ) : (
-            matchdaysArray.map(({ matchday, matches }) => (
-              <Accordion
-                key={matchday}
-                sx={{
-                  mb: 2,
-                  borderRadius: 2,
-                  boxShadow: 2,
-                  "&:before": {
-                    display: "none",
-                  },
-                }}
-              >
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  sx={{
-                    bgcolor: "#f5f5f5",
-                    borderRadius: "8px 8px 0 0",
-                    "& .MuiTypography-root": { fontWeight: "bold" },
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Typography fontWeight="bold">
-                      Jornada {matchday}
-                    </Typography>
-                    <Chip
-                      label={`${matches.length} partidos`}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {matches.map((match) => renderMatchItem(match, false))}
-                </AccordionDetails>
-              </Accordion>
-            ))
-          )}
-        </>
+        <GroupStageMatches
+          matchdaysArray={matchdaysArray}
+          user={user}
+          onEditClick={handleEditClick}
+        />
       ) : (
-        <Box sx={{ width: "100%" }}>
-          <Tabs value={activeTab} onChange={handleTabChange} centered>
-            <Tab label="Vista por Rondas" />
-            <Tab label="Vista de Bracket" />
-          </Tabs>
-
-          {activeTab === 0 ? (
-            <>
-              {bracket && Object.keys(bracket).length > 0 ? (
-                Object.entries(bracket).map(([roundName, matches]) => (
-                  <Accordion
-                    key={roundName}
-                    sx={{
-                      mb: 2,
-                      borderRadius: 2,
-                      boxShadow: 2,
-                      "&:before": {
-                        display: "none",
-                      },
-                    }}
-                  >
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      sx={{
-                        bgcolor: "#f5f5f5",
-                        borderRadius: "8px 8px 0 0",
-                        "& .MuiTypography-root": { fontWeight: "bold" },
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                      >
-                        <Typography fontWeight="bold">
-                          {translateRoundName(roundName)}
-                        </Typography>
-                        <Chip
-                          label={`${matches.length} partidos`}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </Box>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      {matches.map((match) => renderMatchItem(match, true))}
-                    </AccordionDetails>
-                  </Accordion>
-                ))
-              ) : (
-                <Typography sx={{ mt: 2 }}>
-                  No hay partidos programados
-                </Typography>
-              )}
-            </>
-          ) : (
-            <EliminationStage
-              user={user}
-              bracket={bracket}
-              generatingBracket={false}
-              generationError={null}
-              onGenerateBracket={() => {}}
-            />
-          )}
-        </Box>
+        <EliminationStageMatches
+          bracket={bracket}
+          user={user}
+          onEditClick={handleEditClick}
+          onAddSeriesGame={handleAddSeriesGameClick}
+        />
       )}
 
-      {renderEditDialogs()}
+      <EditMatchDialog
+        open={editingMatch !== null && editingSeriesGame === null}
+        onClose={() => setEditingMatch(null)}
+        match={editingMatch}
+        tournamentFormat={tournament?.format}
+        formData={editFormData}
+        onFormChange={handleEditFormChange}
+        onSubmit={handleUpdateMatch}
+      />
+
+      <SeriesGameDialog
+        open={editingSeriesGame !== null}
+        onClose={() => {
+          setEditingMatch(null);
+          setEditingSeriesGame(null);
+        }}
+        match={editingMatch}
+        formData={seriesGameFormData}
+        onFormChange={(e) =>
+          setSeriesGameFormData({
+            ...seriesGameFormData,
+            [e.target.name]: e.target.value,
+          })
+        }
+        onSubmit={handleUpdateSeriesGame}
+      />
     </Paper>
   );
-};
-
-const translateRoundName = (roundName) => {
-  switch (roundName) {
-    case "round-of-32":
-      return "Dieciseisavos de Final";
-    case "round-of-16":
-      return "Octavos de Final";
-    case "quarter-finals":
-      return "Cuartos de Final";
-    case "semi-finals":
-      return "Semifinales";
-    case "final":
-      return "Final";
-    default:
-      return roundName;
-  }
-};
-
-const translateStatus = (status) => {
-  switch (status) {
-    case "scheduled":
-      return "Programado";
-    case "pending":
-      return "Pendiente";
-    case "in-progress":
-      return "En progreso";
-    case "completed":
-      return "Completado";
-    case "postponed":
-      return "Aplazado";
-    case "cancelled":
-      return "Cancelado";
-    case "walkover":
-      return "Walkover";
-    default:
-      return status;
-  }
 };
 
 export default TournamentMatches;
