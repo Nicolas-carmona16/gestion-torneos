@@ -2,14 +2,6 @@ import {
   Box,
   CircularProgress,
   Typography,
-  Paper,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Chip,
-  Button,
 } from "@mui/material";
 import { getTournamentById } from "../services/tournamentService";
 import {

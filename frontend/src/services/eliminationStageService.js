@@ -27,3 +27,23 @@ export const getEliminationBracket = async (tournamentId) => {
     throw error;
   }
 };
+
+export const addSeriesGameResult = async (
+  matchId,
+  { scoreTeam1, scoreTeam2 }
+) => {
+  try {
+    const response = await api.post(
+      `/matches/${matchId}/series`,
+      {
+        scoreTeam1,
+        scoreTeam2,
+      },
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error adding series game result:", error);
+    throw error;
+  }
+};
