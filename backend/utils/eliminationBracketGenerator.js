@@ -25,22 +25,26 @@ export const generateEliminationBracket = async (tournament, teams) => {
   const matches = [];
   let numTeams = teams.length;
 
-  // Determinar la ronda inicial basada en el número de equipos
-  const initialRound = getRoundByTeamCount(numTeams);
-
   // Shuffle aleatorio justo
   const shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
+
+  // Calcular el número total de rondas necesarias
+  const totalRounds = Math.ceil(Math.log2(numTeams));
+
+  // Determinar la ronda inicial basada en el número de equipos
+  const initialRound = getRoundByStage(totalRounds - 1);
 
   // Generar primera ronda
   let bracketId = 1;
   const firstRoundMatches = [];
+  const nextRoundConnections = {};
 
   for (let i = 0; i < shuffledTeams.length; i += 2) {
     const matchData = {
       tournament: tournament._id,
       round: initialRound,
       status: "scheduled",
-      bracketId: `M${bracketId++}`,
+      bracketId: `M${bracketId}`,
       isBestOfSeries: tournament.bestOfMatches > 1,
     };
 
@@ -55,13 +59,19 @@ export const generateEliminationBracket = async (tournament, teams) => {
       // Si no hay segundo equipo, el primero avanza automáticamente
       matchData.status = "walkover";
       matchData.winner = shuffledTeams[i]._id;
+      // Registrar el avance automático para la siguiente ronda
+      const nextMatchId = `M${
+        Math.ceil(bracketId / 2) + Math.ceil(shuffledTeams.length / 2)
+      }`;
+      if (!nextRoundConnections[nextMatchId]) {
+        nextRoundConnections[nextMatchId] = [];
+      }
+      nextRoundConnections[nextMatchId].push(shuffledTeams[i]._id);
     }
 
     firstRoundMatches.push(matchData);
+    bracketId++;
   }
-
-  // Calcular el número total de rondas necesarias
-  const totalRounds = Math.ceil(Math.log2(numTeams));
 
   // Generar estructura completa del bracket
   let currentRoundMatches = firstRoundMatches;
@@ -71,18 +81,36 @@ export const generateEliminationBracket = async (tournament, teams) => {
     const nextRoundNumber = currentRoundNumber + 1;
     const nextRoundName = getRoundByStage(totalRounds - nextRoundNumber);
     const nextRoundMatches = [];
+    const matchesInNextRound = Math.ceil(currentRoundMatches.length / 2);
 
     // Crear partidos para la siguiente ronda
-    for (let i = 0; i < Math.ceil(currentRoundMatches.length / 2); i++) {
+    for (let i = 0; i < matchesInNextRound; i++) {
+      const nextMatchId = `M${bracketId}`;
       const matchData = {
         tournament: tournament._id,
         round: nextRoundName,
-        status: "pending", // Estado inicial para partidos sin equipos definidos
-        bracketId: `M${bracketId++}`,
+        status: "pending",
+        bracketId: nextMatchId,
         isBestOfSeries: tournament.bestOfMatches > 1,
       };
 
+      // Verificar si hay equipos que avanzan automáticamente a este partido
+      if (
+        nextRoundConnections[nextMatchId] &&
+        nextRoundConnections[nextMatchId].length > 0
+      ) {
+        const advancingTeams = nextRoundConnections[nextMatchId];
+        if (advancingTeams.length >= 1) {
+          matchData.team1 = advancingTeams[0];
+          if (advancingTeams.length >= 2) {
+            matchData.team2 = advancingTeams[1];
+          }
+          // Si solo hay un equipo, el status sigue como pending hasta que se defina el otro
+        }
+      }
+
       nextRoundMatches.push(matchData);
+      bracketId++;
     }
 
     // Asignar nextMatchBracketId a los partidos de la ronda actual

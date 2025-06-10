@@ -194,7 +194,7 @@ const EliminationStage = ({
     existingRounds.forEach((round, roundIndex) => {
       const matches = bracket[round] || [];
       const roundX = roundIndex * 500;
-      const verticalSpacing = 250;
+      const verticalSpacing = 350;
 
       // Calcular posición vertical centrada
       const totalHeight = (matches.length - 1) * verticalSpacing;
