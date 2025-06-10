@@ -4,17 +4,6 @@
  * @description Generador de brackets de eliminación directa
  */
 
-import Match from "../models/matchModel.js";
-
-// Niveles de bracket
-const ROUNDS = {
-  1: "final",
-  2: "semi-finals",
-  4: "quarter-finals",
-  8: "round-of-16",
-  16: "round-of-32",
-};
-
 /**
  * Genera el bracket de eliminación directa
  * @param {Object} tournament - Torneo
@@ -25,16 +14,12 @@ export const generateEliminationBracket = async (tournament, teams) => {
   const matches = [];
   let numTeams = teams.length;
 
-  // Shuffle aleatorio justo
   const shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
 
-  // Calcular el número total de rondas necesarias
   const totalRounds = Math.ceil(Math.log2(numTeams));
 
-  // Determinar la ronda inicial basada en el número de equipos
   const initialRound = getRoundByStage(totalRounds - 1);
 
-  // Generar primera ronda
   let bracketId = 1;
   const firstRoundMatches = [];
   const nextRoundConnections = {};
@@ -48,7 +33,6 @@ export const generateEliminationBracket = async (tournament, teams) => {
       isBestOfSeries: tournament.bestOfMatches > 1,
     };
 
-    // Asignar equipos si existen
     if (shuffledTeams[i]) {
       matchData.team1 = shuffledTeams[i]._id;
     }
@@ -56,10 +40,8 @@ export const generateEliminationBracket = async (tournament, teams) => {
     if (shuffledTeams[i + 1]) {
       matchData.team2 = shuffledTeams[i + 1]._id;
     } else {
-      // Si no hay segundo equipo, el primero avanza automáticamente
       matchData.status = "walkover";
       matchData.winner = shuffledTeams[i]._id;
-      // Registrar el avance automático para la siguiente ronda
       const nextMatchId = `M${
         Math.ceil(bracketId / 2) + Math.ceil(shuffledTeams.length / 2)
       }`;
@@ -73,7 +55,6 @@ export const generateEliminationBracket = async (tournament, teams) => {
     bracketId++;
   }
 
-  // Generar estructura completa del bracket
   let currentRoundMatches = firstRoundMatches;
   let currentRoundNumber = 1;
 
@@ -83,7 +64,6 @@ export const generateEliminationBracket = async (tournament, teams) => {
     const nextRoundMatches = [];
     const matchesInNextRound = Math.ceil(currentRoundMatches.length / 2);
 
-    // Crear partidos para la siguiente ronda
     for (let i = 0; i < matchesInNextRound; i++) {
       const nextMatchId = `M${bracketId}`;
       const matchData = {
@@ -94,7 +74,6 @@ export const generateEliminationBracket = async (tournament, teams) => {
         isBestOfSeries: tournament.bestOfMatches > 1,
       };
 
-      // Verificar si hay equipos que avanzan automáticamente a este partido
       if (
         nextRoundConnections[nextMatchId] &&
         nextRoundConnections[nextMatchId].length > 0
@@ -105,7 +84,6 @@ export const generateEliminationBracket = async (tournament, teams) => {
           if (advancingTeams.length >= 2) {
             matchData.team2 = advancingTeams[1];
           }
-          // Si solo hay un equipo, el status sigue como pending hasta que se defina el otro
         }
       }
 
@@ -113,7 +91,6 @@ export const generateEliminationBracket = async (tournament, teams) => {
       bracketId++;
     }
 
-    // Asignar nextMatchBracketId a los partidos de la ronda actual
     currentRoundMatches.forEach((match, index) => {
       const nextMatchIndex = Math.floor(index / 2);
       if (nextRoundMatches[nextMatchIndex]) {
@@ -126,25 +103,11 @@ export const generateEliminationBracket = async (tournament, teams) => {
     currentRoundNumber++;
   }
 
-  // Agregar los partidos de la última ronda
   matches.push(...currentRoundMatches);
 
   return matches;
 };
 
-// Helper para determinar la ronda por cantidad de equipos
-function getRoundByTeamCount(count) {
-  const rounds = {
-    2: "final",
-    4: "semi-finals",
-    8: "quarter-finals",
-    16: "round-of-16",
-    32: "round-of-32",
-  };
-  return rounds[count] || "qualifying-round";
-}
-
-// Helper para determinar el nombre de la ronda por etapa
 function getRoundByStage(stage) {
   const stages = {
     0: "final",
