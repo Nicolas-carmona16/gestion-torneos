@@ -64,9 +64,9 @@ const TournamentForm = ({ sports, onSubmit }) => {
         sport: "",
         format: "",
         groupsStageSettings: {
-          teamsPerGroup: "",
-          teamsAdvancingPerGroup: "",
-          matchesPerTeamInGroup: 1,
+          teamsPerGroup: 4,
+          teamsAdvancingPerGroup: 2,
+          matchesPerTeamInGroup: "single",
         },
         bestOfMatches: 1,
         registrationStart: "",

@@ -56,7 +56,7 @@ const ManageTournaments = () => {
     groupsStageSettings: {
       teamsPerGroup: "",
       teamsAdvancingPerGroup: "",
-      matchesPerTeamInGroup: 1,
+      matchesPerTeamInGroup: "single",
     },
     bestOfMatches: 1,
     registrationStart: "",

@@ -104,9 +104,9 @@ export const validateTournamentInput = (data) => {
 
       if (
         matchesPerTeamInGroup &&
-        (isNaN(matchesPerTeamInGroup) || matchesPerTeamInGroup < 1)
+        !["single", "double"].includes(matchesPerTeamInGroup)
       ) {
-        errors.push("matchesPerTeamInGroup must be a positive number");
+        errors.push("matchesPerTeamInGroup must be either 'single' or 'double'");
       }
     }
   }

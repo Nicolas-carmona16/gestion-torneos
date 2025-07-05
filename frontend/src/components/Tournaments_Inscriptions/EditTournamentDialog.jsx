@@ -286,22 +286,24 @@ const EditTournamentDialog = ({
               inputProps={{ min: 1 }}
             />
 
-            <TextField
-              label="Partidos por equipo"
-              type="number"
-              fullWidth
-              margin="dense"
-              value={
-                updatedData.groupsStageSettings?.matchesPerTeamInGroup || 1
-              }
-              onChange={(e) =>
-                handleGroupSettingsChange(
-                  "matchesPerTeamInGroup",
-                  e.target.value
-                )
-              }
-              inputProps={{ min: 1 }}
-            />
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Tipo de enfrentamientos</InputLabel>
+              <Select
+                value={
+                  updatedData.groupsStageSettings?.matchesPerTeamInGroup || "single"
+                }
+                onChange={(e) =>
+                  handleGroupSettingsChange(
+                    "matchesPerTeamInGroup",
+                    e.target.value
+                  )
+                }
+                label="Tipo de enfrentamientos"
+              >
+                <MenuItem value="single">Solo ida</MenuItem>
+                <MenuItem value="double">Ida y vuelta</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
         </Collapse>
 

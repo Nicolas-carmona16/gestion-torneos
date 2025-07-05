@@ -55,6 +55,22 @@ export const tournamentValidationSchema = Yup.object({
   format: Yup.string()
     .oneOf(["group-stage", "elimination"])
     .required("Selecciona un formato"),
+  groupsStageSettings: Yup.object().when("format", {
+    is: "group-stage",
+    then: (schema) =>
+      schema.shape({
+        teamsPerGroup: Yup.number()
+          .min(2, "Mínimo 2 equipos por grupo")
+          .required("Equipos por grupo es requerido"),
+        teamsAdvancingPerGroup: Yup.number()
+          .min(1, "Mínimo 1 equipo que avance")
+          .required("Equipos que avanzan es requerido"),
+        matchesPerTeamInGroup: Yup.string()
+          .oneOf(["single", "double"], "Debe ser 'Solo ida' o 'Ida y vuelta'")
+          .required("Tipo de enfrentamientos es requerido"),
+      }),
+    otherwise: (schema) => schema.optional(),
+  }),
   bestOfMatches: Yup.number()
     .transform((value, originalValue) =>
       originalValue === "" ? undefined : value
@@ -104,6 +120,26 @@ export const tournamentEditValidationSchema = Yup.object({
     .nullable()
     .oneOf(["group-stage", "elimination"], "Formato inválido")
     .required("Selecciona un formato"),
+  groupsStageSettings: Yup.object().when("format", {
+    is: "group-stage",
+    then: (schema) =>
+      schema.shape({
+        teamsPerGroup: Yup.number()
+          .typeError("Debe ser un número")
+          .transform((value) => (isNaN(value) ? undefined : value))
+          .min(2, "Mínimo 2 equipos por grupo")
+          .required("Equipos por grupo es requerido"),
+        teamsAdvancingPerGroup: Yup.number()
+          .typeError("Debe ser un número")
+          .transform((value) => (isNaN(value) ? undefined : value))
+          .min(1, "Mínimo 1 equipo que avance")
+          .required("Equipos que avanzan es requerido"),
+        matchesPerTeamInGroup: Yup.string()
+          .oneOf(["single", "double"], "Debe ser 'Solo ida' o 'Ida y vuelta'")
+          .required("Tipo de enfrentamientos es requerido"),
+      }),
+    otherwise: (schema) => schema.optional(),
+  }),
   bestOfMatches: Yup.number()
     .transform((value, originalValue) =>
       originalValue === "" ? undefined : value
