@@ -551,3 +551,170 @@ export const getBracket = async (req, res) => {
     });
   }
 };
+
+/**
+ * Agrega goleadores a un partido
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const addScorers = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const { scorers } = req.body;
+
+    const match = await Match.findById(matchId)
+      .populate("tournament", "sport")
+      .populate("team1", "name")
+      .populate("team2", "name");
+
+    if (!match) {
+      return res.status(404).json({ error: "Partido no encontrado" });
+    }
+
+    // Verificar que el partido sea de fútbol o fútbol sala
+    const tournament = await Tournament.findById(match.tournament)
+      .populate("sport", "name");
+    
+    if (!["Fútbol", "Fútbol Sala"].includes(tournament.sport.name)) {
+      return res.status(400).json({ 
+        error: "Los goleadores solo se pueden registrar en partidos de fútbol y fútbol sala" 
+      });
+    }
+
+    // Validar que el partido esté completado
+    if (match.status !== "completed") {
+      return res.status(400).json({ 
+        error: "Solo se pueden agregar goleadores a partidos completados" 
+      });
+    }
+
+    // Validar que los goleadores pertenezcan a los equipos del partido
+    const validTeamIds = [match.team1._id.toString(), match.team2._id.toString()];
+    
+    for (const scorer of scorers) {
+      if (!validTeamIds.includes(scorer.teamId.toString())) {
+        return res.status(400).json({ 
+          error: `El jugador ${scorer.playerId} no pertenece a ninguno de los equipos del partido` 
+        });
+      }
+    }
+
+    // Validar que el total de goles coincida con el resultado del partido
+    const totalGoals = scorers.reduce((sum, scorer) => sum + scorer.goals, 0);
+    const matchTotalGoals = (match.scoreTeam1 || 0) + (match.scoreTeam2 || 0);
+
+    if (totalGoals !== matchTotalGoals) {
+      return res.status(400).json({ 
+        error: `El total de goles (${totalGoals}) debe coincidir con el resultado del partido (${matchTotalGoals})` 
+      });
+    }
+
+    // Limpiar goleadores existentes y agregar los nuevos
+    match.scorers = scorers;
+    await match.save();
+
+    // Populate para mejor respuesta
+    const populatedMatch = await Match.findById(matchId)
+      .populate("team1", "name")
+      .populate("team2", "name")
+      .populate("scorers.playerId", "fullName")
+      .populate("scorers.teamId", "name");
+
+    res.status(200).json(populatedMatch);
+  } catch (error) {
+    console.error("Error adding scorers:", error);
+    res.status(500).json({
+      error: "Error al agregar goleadores",
+      details: error.message,
+    });
+  }
+};
+
+/**
+ * Obtiene la tabla de goleadores de un torneo
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const getTournamentScorers = async (req, res) => {
+  try {
+    const { tournamentId } = req.params;
+
+    const tournament = await Tournament.findById(tournamentId)
+      .populate("sport", "name");
+
+    if (!tournament) {
+      return res.status(404).json({ error: "Torneo no encontrado" });
+    }
+
+    // Verificar que el torneo sea de fútbol o fútbol sala
+    if (!["Fútbol", "Fútbol Sala"].includes(tournament.sport.name)) {
+      return res.status(400).json({ 
+        error: "La tabla de goleadores solo está disponible para torneos de fútbol y fútbol sala" 
+      });
+    }
+
+    // Obtener todos los partidos completados del torneo con goleadores
+    const matches = await Match.find({
+      tournament: tournamentId,
+      status: "completed",
+      scorers: { $exists: true, $ne: [] }
+    })
+    .populate("scorers.playerId", "fullName")
+    .populate("scorers.teamId", "name");
+
+    // Calcular estadísticas de goleadores
+    const scorersStats = {};
+    
+    matches.forEach(match => {
+      match.scorers.forEach(scorer => {
+        const playerId = scorer.playerId._id.toString();
+        const playerName = scorer.playerId.fullName;
+        const teamName = scorer.teamId.name;
+        
+        if (!scorersStats[playerId]) {
+          scorersStats[playerId] = {
+            player: {
+              _id: scorer.playerId._id,
+              fullName: playerName
+            },
+            team: {
+              _id: scorer.teamId._id,
+              name: teamName
+            },
+            totalGoals: 0,
+            matches: 0
+          };
+        }
+        
+        scorersStats[playerId].totalGoals += scorer.goals;
+        scorersStats[playerId].matches += 1;
+      });
+    });
+
+    // Convertir a array y ordenar por goles
+    const scorersTable = Object.values(scorersStats)
+      .sort((a, b) => {
+        // Primero por total de goles (descendente)
+        if (b.totalGoals !== a.totalGoals) {
+          return b.totalGoals - a.totalGoals;
+        }
+        // En caso de empate, por nombre del jugador
+        return a.player.fullName.localeCompare(b.player.fullName);
+      });
+
+    res.status(200).json({
+      tournament: {
+        _id: tournament._id,
+        name: tournament.name,
+        sport: tournament.sport.name
+      },
+      scorers: scorersTable
+    });
+  } catch (error) {
+    console.error("Error getting tournament scorers:", error);
+    res.status(500).json({
+      error: "Error al obtener la tabla de goleadores",
+      details: error.message,
+    });
+  }
+};

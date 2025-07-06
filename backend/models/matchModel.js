@@ -127,6 +127,30 @@ const matchSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Campo para goleadores (solo para fútbol y fútbol sala)
+    scorers: [
+      {
+        playerId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Player",
+          required: true,
+        },
+        teamId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Team",
+          required: true,
+        },
+        goals: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+        matchDate: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
