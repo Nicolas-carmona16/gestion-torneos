@@ -92,7 +92,9 @@ export const getTournamentMatches = async (req, res) => {
     const matches = await Match.find({ tournament: tournamentId })
       .populate("team1", "name")
       .populate("team2", "name")
-      .populate("winner", "name");
+      .populate("winner", "name")
+      .populate("scorers.playerId", "fullName firstName lastName")
+      .populate("scorers.teamId", "name");
 
     res.status(200).json(matches);
   } catch (error) {
@@ -201,7 +203,15 @@ export const updateMatch = async (req, res) => {
       await match.save();
     }
 
-    res.status(200).json(match);
+    // Populate para mejor respuesta
+    const populatedMatch = await Match.findById(matchId)
+      .populate("team1", "name")
+      .populate("team2", "name")
+      .populate("winner", "name")
+      .populate("scorers.playerId", "fullName firstName lastName")
+      .populate("scorers.teamId", "name");
+
+    res.status(200).json(populatedMatch);
   } catch (error) {
     res.status(500).json({
       error: "Error al actualizar el partido",
@@ -220,6 +230,16 @@ export const getMatchesByMatchday = async (req, res) => {
     })
       .populate("team1", "name")
       .populate("team2", "name")
+      .populate("scorers.playerId", "fullName firstName lastName")
+      .populate("scorers.teamId", "name")
+      .populate({
+        path: "tournament",
+        select: "name sport",
+        populate: {
+          path: "sport",
+          select: "name"
+        }
+      })
       .sort("matchday");
 
     // Agrupar por jornada
@@ -250,7 +270,17 @@ export const getSingleMatchday = async (req, res) => {
       matchday: parseInt(matchday),
     })
       .populate("team1", "name")
-      .populate("team2", "name");
+      .populate("team2", "name")
+      .populate("scorers.playerId", "fullName firstName lastName")
+      .populate("scorers.teamId", "name")
+      .populate({
+        path: "tournament",
+        select: "name sport",
+        populate: {
+          path: "sport",
+          select: "name"
+        }
+      });
 
     res.status(200).json(matches);
   } catch (error) {
@@ -532,6 +562,16 @@ export const getBracket = async (req, res) => {
       .populate("team2", "name")
       .populate("winner", "name")
       .populate("seriesWinner", "name")
+      .populate("scorers.playerId", "fullName firstName lastName")
+      .populate("scorers.teamId", "name")
+      .populate({
+        path: "tournament",
+        select: "name sport",
+        populate: {
+          path: "sport",
+          select: "name"
+        }
+      })
       .sort("bracketId");
 
     // Organizar por rondas
@@ -714,6 +754,38 @@ export const getTournamentScorers = async (req, res) => {
     console.error("Error getting tournament scorers:", error);
     res.status(500).json({
       error: "Error al obtener la tabla de goleadores",
+      details: error.message,
+    });
+  }
+};
+
+export const getMatchById = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+
+    const match = await Match.findById(matchId)
+      .populate("team1", "name")
+      .populate("team2", "name")
+      .populate("winner", "name")
+      .populate("scorers.playerId", "fullName firstName lastName")
+      .populate("scorers.teamId", "name")
+      .populate({
+        path: "tournament",
+        select: "name sport",
+        populate: {
+          path: "sport",
+          select: "name"
+        }
+      });
+
+    if (!match) {
+      return res.status(404).json({ error: "Partido no encontrado" });
+    }
+
+    res.status(200).json(match);
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al obtener el partido",
       details: error.message,
     });
   }

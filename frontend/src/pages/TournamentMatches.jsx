@@ -15,6 +15,7 @@ import GroupStageMatches from "../components/matches/GroupStageMatches";
 import EliminationStageMatches from "../components/matches/EliminationStageMatches";
 import EditMatchDialog from "../components/matches/EditMatchDialog";
 import SeriesGameDialog from "../components/matches/SeriesGameDialog";
+import { getTournamentScorers } from "../services/scorersService";
 
 const TournamentMatches = () => {
   const { tournamentId } = useParams();
@@ -37,6 +38,7 @@ const TournamentMatches = () => {
     scoreTeam1: "",
     scoreTeam2: "",
   });
+  const [scorersData, setScorersData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,8 +52,12 @@ const TournamentMatches = () => {
         setUser(userData);
 
         if (tournamentData.format === "group-stage") {
-          const matchesData = await getMatchesByMatchday(tournamentId);
+          const [matchesData, scorers] = await Promise.all([
+            getMatchesByMatchday(tournamentId),
+            getTournamentScorers(tournamentId),
+          ]);
           setMatchesByMatchday(matchesData);
+          setScorersData(scorers);
         } else if (tournamentData.format === "elimination") {
           const bracketData = await getEliminationBracket(tournamentId);
           setBracket(bracketData || {});
@@ -253,6 +259,7 @@ const TournamentMatches = () => {
           matchdaysArray={matchdaysArray}
           user={user}
           onEditClick={handleEditClick}
+          scorersData={scorersData}
         />
       ) : (
         <EliminationStageMatches

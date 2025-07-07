@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Box, Typography, Button, Chip } from "@mui/material";
 import DescriptionWithToggle from "./DescriptionWithToggle";
 import { formatDate, formatTimeTo12h } from "../../utils/formatDate";
 import { translateStatus } from "../../utils/translations";
+import { isScorersSupported } from "../../services/scorersService";
+import AddScorersModal from "./AddScorersModal";
 
 const MatchItem = ({
   match,
@@ -9,7 +12,26 @@ const MatchItem = ({
   onEditClick,
   onAddSeriesGame,
   isElimination,
+  fetchMatchDetails,
 }) => {
+  // Verificar si el partido es de fútbol o fútbol sala
+  const isFootballOrFutsal = isScorersSupported(match?.tournament?.sport?.name);
+
+  // Verificar si es fase de grupos
+  const isGroupStage = !isElimination;
+
+  // Verificar si el partido está completado
+  const isCompleted = match.status === "completed";
+
+  // Verificar si el usuario tiene permisos
+  const hasPermission = user?.role === "admin" || user?.role === "assistant";
+
+  // Validación completa para mostrar el botón de goleadores
+  const canAddScorers =
+    isFootballOrFutsal && isGroupStage && isCompleted && hasPermission;
+
+  const [openScorersModal, setOpenScorersModal] = useState(false);
+
   const renderSeriesGames = () => {
     const canAddMoreGames =
       match.status !== "completed" &&
@@ -55,6 +77,93 @@ const MatchItem = ({
     );
   };
 
+  const renderScorers = () => {
+    if (!match.scorers || match.scorers.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          mt: 2,
+          p: 2,
+          backgroundColor: "#f8f8f8",
+          borderRadius: 1,
+          border: "1px solid #eee",
+          width: "100%", // Esto asegura que ocupe todo el ancho disponible
+        }}
+      >
+        <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+          Goles del partido:
+        </Typography>
+
+        <Box sx={{ display: "flex", gap: 4, width: "100%" }}>
+          {/* Equipo 1 */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {" "}
+            {/* minWidth: 0 evita overflow */}
+            <Typography variant="body1" fontWeight="medium" color="primary">
+              {match.team1.name}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0 }}>
+              {match.scorers
+                .filter(
+                  (s) =>
+                    s.teamId === match.team1._id ||
+                    (typeof s.teamId === "object" &&
+                      s.teamId._id === match.team1._id)
+                )
+                .map((scorer, index) => {
+                  const playerName =
+                    scorer.playerId?.fullName ||
+                    (scorer.playerId?.firstName && scorer.playerId?.lastName
+                      ? `${scorer.playerId.firstName} ${scorer.playerId.lastName}`
+                      : "Jugador desconocido");
+                  return (
+                    <Box component="li" key={index} sx={{ py: 0.5 }}>
+                      <Typography variant="body2" noWrap={false}>
+                        <strong>{playerName}</strong>: {scorer.goals} gol
+                        {scorer.goals !== 1 ? "es" : ""}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+            </Box>
+          </Box>
+
+          {/* Equipo 2 */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body1" fontWeight="medium" color="primary">
+              {match.team2.name}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0 }}>
+              {match.scorers
+                .filter(
+                  (s) =>
+                    s.teamId === match.team2._id ||
+                    (typeof s.teamId === "object" &&
+                      s.teamId._id === match.team2._id)
+                )
+                .map((scorer, index) => {
+                  const playerName =
+                    scorer.playerId?.fullName ||
+                    (scorer.playerId?.firstName && scorer.playerId?.lastName
+                      ? `${scorer.playerId.firstName} ${scorer.playerId.lastName}`
+                      : "Jugador desconocido");
+                  return (
+                    <Box component="li" key={index} sx={{ py: 0.5 }}>
+                      <Typography variant="body2" noWrap={false}>
+                        <strong>{playerName}</strong>: {scorer.goals} gol
+                        {scorer.goals !== 1 ? "es" : ""}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -66,17 +175,31 @@ const MatchItem = ({
       }}
     >
       {(user?.role === "admin" || user?.role === "assistant") && (
-        <Button
-          size="small"
+        <Box
           sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
             position: "absolute",
             right: 8,
             top: 8,
           }}
-          onClick={() => onEditClick(match)}
         >
-          Actualizar
-        </Button>
+          <Button size="small" onClick={() => onEditClick(match)}>
+            Actualizar
+          </Button>
+
+          {canAddScorers && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="success"
+              onClick={() => setOpenScorersModal(true)}
+            >
+              Agregar Goleadores
+            </Button>
+          )}
+        </Box>
       )}
 
       <Typography variant="h6" gutterBottom>
@@ -122,9 +245,18 @@ const MatchItem = ({
             </Typography>
           </Box>
         )}
+
+        {renderScorers()}
       </Box>
 
       {isElimination && match.seriesMatches && renderSeriesGames()}
+
+      <AddScorersModal
+        open={openScorersModal}
+        onClose={() => setOpenScorersModal(false)}
+        match={match}
+        fetchMatchDetails={fetchMatchDetails}
+      />
     </Box>
   );
 };
