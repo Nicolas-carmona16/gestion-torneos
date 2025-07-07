@@ -27,6 +27,7 @@ const EliminationStageMatches = ({
   onEditClick,
   onAddSeriesGame,
   scorersData,
+  refreshScorersData,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -93,6 +94,7 @@ const EliminationStageMatches = ({
                   onEditClick={onEditClick}
                   onAddSeriesGame={onAddSeriesGame}
                   isElimination={true}
+                  refreshScorersData={refreshScorersData}
                 />
               ))}
             </AccordionDetails>

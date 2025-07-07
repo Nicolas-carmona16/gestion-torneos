@@ -32,7 +32,7 @@ const style = {
   overflowY: "auto",
 };
 
-const AddScorersModal = ({ open, onClose, match }) => {
+const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScorersData }) => {
   const [team1Players, setTeam1Players] = useState([]);
   const [team2Players, setTeam2Players] = useState([]);
   const [scorers, setScorers] = useState([]);
@@ -144,6 +144,14 @@ const AddScorersModal = ({ open, onClose, match }) => {
       }));
 
       await addScorersToMatch(match._id, scorersToSend);
+
+      // Refrescar tabla de goleadores y partido si corresponde
+      if (typeof refreshScorersData === 'function') {
+        await refreshScorersData();
+      }
+      if (typeof fetchMatchDetails === 'function') {
+        await fetchMatchDetails();
+      }
 
       setSuccess("Goleadores agregados correctamente");
       setTimeout(() => {

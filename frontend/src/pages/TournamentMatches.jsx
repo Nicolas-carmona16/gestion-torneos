@@ -222,6 +222,15 @@ const TournamentMatches = () => {
     })
   );
 
+  const refreshScorersData = async () => {
+    try {
+      const scorers = await getTournamentScorers(tournamentId);
+      setScorersData(scorers);
+    } catch (err) {
+      console.error("Error al refrescar la tabla de goleadores:", err);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -264,6 +273,7 @@ const TournamentMatches = () => {
           user={user}
           onEditClick={handleEditClick}
           scorersData={scorersData}
+          refreshScorersData={refreshScorersData}
         />
       ) : (
         <EliminationStageMatches
@@ -272,6 +282,7 @@ const TournamentMatches = () => {
           onEditClick={handleEditClick}
           onAddSeriesGame={handleAddSeriesGameClick}
           scorersData={scorersData}
+          refreshScorersData={refreshScorersData}
         />
       )}
 

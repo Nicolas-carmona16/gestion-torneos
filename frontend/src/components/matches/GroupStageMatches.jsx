@@ -24,6 +24,7 @@ const GroupStageMatches = ({
   user,
   onEditClick,
   scorersData,
+  refreshScorersData,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -93,6 +94,7 @@ const GroupStageMatches = ({
                   user={user}
                   onEditClick={onEditClick}
                   isElimination={false}
+                  refreshScorersData={refreshScorersData}
                 />
               ))}
             </AccordionDetails>

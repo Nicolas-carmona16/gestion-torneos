@@ -13,6 +13,7 @@ const MatchItem = ({
   onAddSeriesGame,
   isElimination,
   fetchMatchDetails,
+  refreshScorersData,
 }) => {
   // Verificar si el partido es de fútbol o fútbol sala
   const isFootballOrFutsal = isScorersSupported(match?.tournament?.sport?.name);
@@ -253,6 +254,7 @@ const MatchItem = ({
         onClose={() => setOpenScorersModal(false)}
         match={match}
         fetchMatchDetails={fetchMatchDetails}
+        refreshScorersData={refreshScorersData}
       />
     </Box>
   );
