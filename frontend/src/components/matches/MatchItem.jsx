@@ -17,9 +17,6 @@ const MatchItem = ({
   // Verificar si el partido es de fútbol o fútbol sala
   const isFootballOrFutsal = isScorersSupported(match?.tournament?.sport?.name);
 
-  // Verificar si es fase de grupos
-  const isGroupStage = !isElimination;
-
   // Verificar si el partido está completado
   const isCompleted = match.status === "completed";
 
@@ -28,7 +25,7 @@ const MatchItem = ({
 
   // Validación completa para mostrar el botón de goleadores
   const canAddScorers =
-    isFootballOrFutsal && isGroupStage && isCompleted && hasPermission;
+    isFootballOrFutsal && isCompleted && hasPermission;
 
   const [openScorersModal, setOpenScorersModal] = useState(false);
 

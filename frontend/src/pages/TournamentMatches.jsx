@@ -59,8 +59,12 @@ const TournamentMatches = () => {
           setMatchesByMatchday(matchesData);
           setScorersData(scorers);
         } else if (tournamentData.format === "elimination") {
-          const bracketData = await getEliminationBracket(tournamentId);
+          const [bracketData, scorers] = await Promise.all([
+            getEliminationBracket(tournamentId),
+            getTournamentScorers(tournamentId),
+          ]);
           setBracket(bracketData || {});
+          setScorersData(scorers);
         }
       } catch (err) {
         setError("Error al cargar los datos del torneo");
@@ -267,6 +271,7 @@ const TournamentMatches = () => {
           user={user}
           onEditClick={handleEditClick}
           onAddSeriesGame={handleAddSeriesGameClick}
+          scorersData={scorersData}
         />
       )}
 
