@@ -48,7 +48,6 @@ const EliminationStageMatches = ({
     <Box sx={{ width: "100%" }}>
       <Tabs value={activeTab} onChange={handleTabChange} centered>
         <Tab label="Vista por Rondas" />
-        <Tab label="Vista de Bracket" />
         <Tab label="Goleadores" />
       </Tabs>
 
@@ -100,14 +99,6 @@ const EliminationStageMatches = ({
             </AccordionDetails>
           </Accordion>
         ))
-      ) : activeTab === 1 ? (
-        <EliminationStage
-          user={user}
-          bracket={bracket}
-          generatingBracket={false}
-          generationError={null}
-          onGenerateBracket={() => {}}
-        />
       ) : (
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
