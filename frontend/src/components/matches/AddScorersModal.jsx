@@ -86,15 +86,6 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
     (parseInt(match?.scoreTeam1) || 0) + (parseInt(match?.scoreTeam2) || 0);
   const isValid = totalGoals === matchTotalGoals;
 
-  // Debug logs
-  console.log("Match scores:", {
-    scoreTeam1: match?.scoreTeam1,
-    scoreTeam2: match?.scoreTeam2,
-  });
-  console.log("Match total goals:", matchTotalGoals);
-  console.log("Scorers:", scorers);
-  console.log("Total goals from scorers:", totalGoals);
-
   const handleAddScorer = (teamId) => {
     setScorers([
       ...scorers,

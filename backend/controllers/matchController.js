@@ -621,10 +621,10 @@ export const addScorers = async (req, res) => {
       });
     }
 
-    // Validar que el partido esté completado
-    if (match.status !== "completed") {
+    // Validar que el partido esté completado o en progreso
+    if (match.status !== "completed" && match.status !== "in-progress") {
       return res.status(400).json({ 
-        error: "Solo se pueden agregar goleadores a partidos completados" 
+        error: "Solo se pueden agregar goleadores a partidos completados o en progreso" 
       });
     }
 

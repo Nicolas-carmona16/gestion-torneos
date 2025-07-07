@@ -94,22 +94,17 @@ const TournamentMatches = () => {
         throw new Error("Los scores no pueden estar vacíos");
       }
 
-      const updatedMatch = await addSeriesGameResult(editingMatch._id, {
+      await addSeriesGameResult(editingMatch._id, {
         scoreTeam1: parseInt(scoreTeam1),
         scoreTeam2: parseInt(scoreTeam2),
       });
 
-      const updatedBracket = { ...bracket };
-      Object.keys(updatedBracket).forEach((round) => {
-        updatedBracket[round] = updatedBracket[round].map((match) => {
-          if (match._id === updatedMatch._id) {
-            return updatedMatch;
-          }
-          return match;
-        });
-      });
-
-      setBracket(updatedBracket);
+      // Volver a pedir el bracket actualizado al backend
+      const freshBracket = await getEliminationBracket(tournamentId);
+      setBracket(freshBracket || {});
+      if (typeof refreshScorersData === 'function') {
+        await refreshScorersData();
+      }
       setEditingMatch(null);
       setEditingSeriesGame(null);
     } catch (error) {

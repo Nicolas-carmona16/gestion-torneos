@@ -18,15 +18,15 @@ const MatchItem = ({
   // Verificar si el partido es de fútbol o fútbol sala
   const isFootballOrFutsal = isScorersSupported(match?.tournament?.sport?.name);
 
-  // Verificar si el partido está completado
-  const isCompleted = match.status === "completed";
+  // Verificar si el partido está completado o en progreso
+  const isCompletedOrInProgress = match.status === "completed" || match.status === "in-progress";
 
   // Verificar si el usuario tiene permisos
   const hasPermission = user?.role === "admin" || user?.role === "assistant";
 
   // Validación completa para mostrar el botón de goleadores
   const canAddScorers =
-    isFootballOrFutsal && isCompleted && hasPermission;
+    isFootballOrFutsal && isCompletedOrInProgress && hasPermission;
 
   const [openScorersModal, setOpenScorersModal] = useState(false);
 
