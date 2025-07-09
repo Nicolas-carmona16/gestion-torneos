@@ -183,7 +183,7 @@ const AddPlayerDialog = ({
                 </Grid>
                 <Grid sx={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth sx={{ minWidth: 222 }}>
-                    <InputLabel id="career-label">Carrera</InputLabel>
+                    <InputLabel id="career-label">Programa</InputLabel>
                     <Select
                       labelId="career-label"
                       name="career"

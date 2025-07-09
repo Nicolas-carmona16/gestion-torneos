@@ -66,7 +66,7 @@ const PlayerList = ({
                       color="text.secondary"
                       display="block"
                     >
-                      Carrera: {player.career}
+                      Programa: {player.career}
                     </Typography>
                     <Typography
                       component="span"

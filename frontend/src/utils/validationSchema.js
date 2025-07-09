@@ -197,7 +197,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
   captainExtra: Yup.object().shape({
     idNumber: Yup.string().required("La cédula del capitán es obligatoria"),
     career: Yup.string()
-      .required("La carrera es obligatorio")
+      .required("El programa es obligatorio")
       .oneOf(
         [
           "Bioingeniería",
@@ -213,7 +213,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
           "Ingeniería de Sistemas",
           "Ingeniería de Telecomunicaciones",
         ],
-        "Selecciona una carrera válida"
+        "Seleccione un programa válido"
       ),
   }),
   players: Yup.array().of(
@@ -229,7 +229,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
         )
         .required("El correo es obligatorio"),
       career: Yup.string()
-        .required("La carrera es obligatorio")
+        .required("El programa es obligatorio")
         .oneOf(
           [
             "Bioingeniería",
@@ -245,7 +245,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
             "Ingeniería de Sistemas",
             "Ingeniería de Telecomunicaciones",
           ],
-          "Selecciona una carrera válida"
+          "Seleccione un programa válido"
         ),
     })
   ),
@@ -263,7 +263,7 @@ export const validationNewPlayerSchema = Yup.object().shape({
       "Debe ser un correo institucional"
     ),
   career: Yup.string()
-    .required("La carrera es obligatorio")
+    .required("El programa es obligatorio")
     .oneOf(
       [
         "Bioingeniería",
@@ -279,6 +279,6 @@ export const validationNewPlayerSchema = Yup.object().shape({
         "Ingeniería de Sistemas",
         "Ingeniería de Telecomunicaciones",
       ],
-      "Selecciona una carrera válida"
+      "Seleccione un programa válido"
     ),
 });
