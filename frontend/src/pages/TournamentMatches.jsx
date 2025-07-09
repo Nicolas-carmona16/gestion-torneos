@@ -15,7 +15,7 @@ import GroupStageMatches from "../components/matches/GroupStageMatches";
 import EliminationStageMatches from "../components/matches/EliminationStageMatches";
 import EditMatchDialog from "../components/matches/EditMatchDialog";
 import SeriesGameDialog from "../components/matches/SeriesGameDialog";
-import { getTournamentScorers } from "../services/scorersService";
+import { getTournamentScorers, isScorersSupported } from "../services/scorersService";
 
 const TournamentMatches = () => {
   const { tournamentId } = useParams();
@@ -51,20 +51,28 @@ const TournamentMatches = () => {
         setTournament(tournamentData);
         setUser(userData);
 
+        const supportsScorers = isScorersSupported(tournamentData.sport?.name);
+
         if (tournamentData.format === "group-stage") {
-          const [matchesData, scorers] = await Promise.all([
-            getMatchesByMatchday(tournamentId),
-            getTournamentScorers(tournamentId),
-          ]);
-          setMatchesByMatchday(matchesData);
-          setScorersData(scorers);
+          const promises = [getMatchesByMatchday(tournamentId)];
+          
+          if (supportsScorers) {
+            promises.push(getTournamentScorers(tournamentId));
+          }
+          
+          const results = await Promise.all(promises);
+          setMatchesByMatchday(results[0]);
+          setScorersData(supportsScorers ? results[1] : null);
         } else if (tournamentData.format === "elimination") {
-          const [bracketData, scorers] = await Promise.all([
-            getEliminationBracket(tournamentId),
-            getTournamentScorers(tournamentId),
-          ]);
-          setBracket(bracketData || {});
-          setScorersData(scorers);
+          const promises = [getEliminationBracket(tournamentId)];
+          
+          if (supportsScorers) {
+            promises.push(getTournamentScorers(tournamentId));
+          }
+          
+          const results = await Promise.all(promises);
+          setBracket(results[0] || {});
+          setScorersData(supportsScorers ? results[1] : null);
         }
       } catch (err) {
         setError("Error al cargar los datos del torneo");
@@ -219,8 +227,10 @@ const TournamentMatches = () => {
 
   const refreshScorersData = async () => {
     try {
-      const scorers = await getTournamentScorers(tournamentId);
-      setScorersData(scorers);
+      if (tournament && isScorersSupported(tournament.sport?.name)) {
+        const scorers = await getTournamentScorers(tournamentId);
+        setScorersData(scorers);
+      }
     } catch (err) {
       console.error("Error al refrescar la tabla de goleadores:", err);
     }
@@ -269,6 +279,7 @@ const TournamentMatches = () => {
           onEditClick={handleEditClick}
           scorersData={scorersData}
           refreshScorersData={refreshScorersData}
+          sportName={tournament.sport?.name}
         />
       ) : (
         <EliminationStageMatches
@@ -278,6 +289,7 @@ const TournamentMatches = () => {
           onAddSeriesGame={handleAddSeriesGameClick}
           scorersData={scorersData}
           refreshScorersData={refreshScorersData}
+          sportName={tournament.sport?.name}
         />
       )}
 

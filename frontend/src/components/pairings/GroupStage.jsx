@@ -10,6 +10,7 @@ import {
   Chip,
   Button,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 
 const GroupStage = ({
@@ -19,7 +20,16 @@ const GroupStage = ({
   generatingGroups,
   generationError,
   user,
+  tournament,
 }) => {
+  const showDrawsColumn =
+    tournament?.sport?.name === "Fútbol" ||
+    tournament?.sport?.name === "Fútbol Sala";
+
+  const isFootballSport =
+    tournament?.sport?.name === "Fútbol" ||
+    tournament?.sport?.name === "Fútbol Sala";
+
   if (Object.keys(standings).length === 0) {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
@@ -73,14 +83,52 @@ const GroupStage = ({
                 <TableRow>
                   <TableCell>Posición</TableCell>
                   <TableCell>Equipo</TableCell>
-                  <TableCell align="right">Pts</TableCell>
-                  <TableCell align="right">PJ</TableCell>
-                  <TableCell align="right">PG</TableCell>
-                  <TableCell align="right">PE</TableCell>
-                  <TableCell align="right">PP</TableCell>
-                  <TableCell align="right">GF</TableCell>
-                  <TableCell align="right">GC</TableCell>
-                  <TableCell align="right">DG</TableCell>
+                  <Tooltip title="Puntos">
+                    <TableCell align="right">Pts</TableCell>
+                  </Tooltip>
+                  <Tooltip title="Partidos Jugados">
+                    <TableCell align="right">PJ</TableCell>
+                  </Tooltip>
+                  <Tooltip title="Partidos Ganados">
+                    <TableCell align="right">PG</TableCell>
+                  </Tooltip>
+                  {showDrawsColumn && (
+                    <Tooltip title="Partidos Empatados">
+                      <TableCell align="right">PE</TableCell>
+                    </Tooltip>
+                  )}
+                  <Tooltip title="Partidos Perdidos">
+                    <TableCell align="right">PP</TableCell>
+                  </Tooltip>
+                  <Tooltip
+                    title={
+                      isFootballSport ? "Goles a Favor" : "Puntos Anotados"
+                    }
+                  >
+                    <TableCell align="right">
+                      {isFootballSport ? "GF" : "PA"}
+                    </TableCell>
+                  </Tooltip>
+                  <Tooltip
+                    title={
+                      isFootballSport ? "Goles en Contra" : "Puntos Recibidos"
+                    }
+                  >
+                    <TableCell align="right">
+                      {isFootballSport ? "GC" : "PR"}
+                    </TableCell>
+                  </Tooltip>
+                  <Tooltip
+                    title={
+                      isFootballSport
+                        ? "Diferencia de Goles"
+                        : "Diferencia de Puntos"
+                    }
+                  >
+                    <TableCell align="right">
+                      {isFootballSport ? "DG" : "DP"}
+                    </TableCell>
+                  </Tooltip>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -113,7 +161,9 @@ const GroupStage = ({
                     </TableCell>
                     <TableCell align="right">{team.played}</TableCell>
                     <TableCell align="right">{team.wins}</TableCell>
-                    <TableCell align="right">{team.draws}</TableCell>
+                    {showDrawsColumn && (
+                      <TableCell align="right">{team.draws}</TableCell>
+                    )}
                     <TableCell align="right">{team.losses}</TableCell>
                     <TableCell align="right">{team.goalsFor}</TableCell>
                     <TableCell align="right">{team.goalsAgainst}</TableCell>

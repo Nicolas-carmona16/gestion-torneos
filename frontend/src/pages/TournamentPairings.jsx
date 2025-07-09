@@ -139,6 +139,7 @@ const TournamentPairings = () => {
           generatingGroups={generatingGroups}
           generationError={generationError}
           user={user}
+          tournament={tournament}
         />
       ) : (
         <EliminationStage

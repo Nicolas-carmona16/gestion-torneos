@@ -18,8 +18,8 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MatchItem from "./MatchItem";
-import EliminationStage from "../pairings/EliminationStage";
 import { translateRoundName } from "../../utils/translations";
+import { isScorersSupported } from "../../services/scorersService";
 
 const EliminationStageMatches = ({
   bracket,
@@ -28,6 +28,7 @@ const EliminationStageMatches = ({
   onAddSeriesGame,
   scorersData,
   refreshScorersData,
+  sportName,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -35,7 +36,8 @@ const EliminationStageMatches = ({
     setActiveTab(newValue);
   };
 
-  // Ordenar goleadores por totalGoals (de mayor a menor) y tomar solo los primeros 10
+  const supportsScorers = isScorersSupported(sportName);
+
   const topScorers = scorersData?.scorers
     ?.sort((a, b) => b.totalGoals - a.totalGoals)
     .slice(0, 10);
@@ -46,12 +48,18 @@ const EliminationStageMatches = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Tabs value={activeTab} onChange={handleTabChange} centered>
-        <Tab label="Vista por Rondas" />
-        <Tab label="Goleadores" />
-      </Tabs>
+      {supportsScorers ? (
+        <Tabs value={activeTab} onChange={handleTabChange} centered>
+          <Tab label="Vista por Rondas" />
+          <Tab label="Goleadores" />
+        </Tabs>
+      ) : (
+        <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
+          Vista por Rondas
+        </Typography>
+      )}
 
-      {activeTab === 0 ? (
+      {(activeTab === 0 || !supportsScorers) ? (
         Object.entries(bracket).map(([roundName, matches]) => (
           <Accordion
             key={roundName}

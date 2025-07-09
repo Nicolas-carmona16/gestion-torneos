@@ -18,6 +18,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MatchItem from "./MatchItem";
 import { useState } from "react";
+import { isScorersSupported } from "../../services/scorersService";
 
 const GroupStageMatches = ({
   matchdaysArray,
@@ -25,6 +26,7 @@ const GroupStageMatches = ({
   onEditClick,
   scorersData,
   refreshScorersData,
+  sportName,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -32,7 +34,8 @@ const GroupStageMatches = ({
     setActiveTab(newValue);
   };
 
-  // Ordenar goleadores por totalGoals (de mayor a menor) y tomar solo los primeros 10
+  const supportsScorers = isScorersSupported(sportName);
+
   const topScorers = scorersData?.scorers
     ?.sort((a, b) => b.totalGoals - a.totalGoals)
     .slice(0, 10);
@@ -43,19 +46,25 @@ const GroupStageMatches = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Tabs
-        value={activeTab}
-        onChange={handleTabChange}
-        indicatorColor="primary"
-        textColor="primary"
-        centered
-        sx={{ mb: 2 }}
-      >
-        <Tab label="Jornadas" />
-        <Tab label="Goleadores" />
-      </Tabs>
+      {supportsScorers ? (
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          centered
+          sx={{ mb: 2 }}
+        >
+          <Tab label="Jornadas" />
+          <Tab label="Goleadores" />
+        </Tabs>
+      ) : (
+        <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
+          Jornadas
+        </Typography>
+      )}
 
-      {activeTab === 0 ? (
+      {(activeTab === 0 || !supportsScorers) ? (
         matchdaysArray.map(({ matchday, matches }) => (
           <Accordion
             key={matchday}
