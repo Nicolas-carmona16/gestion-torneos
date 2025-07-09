@@ -68,16 +68,16 @@ const PlayerList = ({
                     >
                       Programa: {player.career}
                     </Typography>
-                    <Typography
-                      component="span"
-                      variant="body2"
-                      color="text.secondary"
-                      display="block"
-                    >
-                      Correo: {player.email}
-                    </Typography>
                     {currentUser?.role === "admin" && (
                       <>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          Correo: {player.email}
+                        </Typography>
                         <Typography
                           component="span"
                           variant="body2"
