@@ -73,6 +73,7 @@ const GroupStage = ({
                 <TableRow>
                   <TableCell>Posición</TableCell>
                   <TableCell>Equipo</TableCell>
+                  <TableCell align="right">Pts</TableCell>
                   <TableCell align="right">PJ</TableCell>
                   <TableCell align="right">PG</TableCell>
                   <TableCell align="right">PE</TableCell>
@@ -80,7 +81,6 @@ const GroupStage = ({
                   <TableCell align="right">GF</TableCell>
                   <TableCell align="right">GC</TableCell>
                   <TableCell align="right">DG</TableCell>
-                  <TableCell align="right">Pts</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -108,6 +108,9 @@ const GroupStage = ({
                         </Typography>
                       )}
                     </TableCell>
+                    <TableCell align="right">
+                      <strong>{team.points}</strong>
+                    </TableCell>
                     <TableCell align="right">{team.played}</TableCell>
                     <TableCell align="right">{team.wins}</TableCell>
                     <TableCell align="right">{team.draws}</TableCell>
@@ -116,9 +119,6 @@ const GroupStage = ({
                     <TableCell align="right">{team.goalsAgainst}</TableCell>
                     <TableCell align="right">
                       {team.goalsFor - team.goalsAgainst}
-                    </TableCell>
-                    <TableCell align="right">
-                      <strong>{team.points}</strong>
                     </TableCell>
                   </TableRow>
                 ))}
