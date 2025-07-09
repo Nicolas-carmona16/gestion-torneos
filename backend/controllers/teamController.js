@@ -350,6 +350,48 @@ export const addPlayersToTeam = async (req, res) => {
   }
 };
 
+export const updateTeamName = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { name } = req.body;
+
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({ message: "El nombre del equipo es requerido" });
+    }
+
+    const team = await Team.findById(teamId);
+    if (!team) {
+      return res.status(404).json({ message: "Equipo no encontrado" });
+    }
+
+    const existingTeam = await Team.findOne({
+      tournament: team.tournament,
+      name: name.trim(),
+      _id: { $ne: teamId }
+    });
+
+    if (existingTeam) {
+      return res.status(400).json({ 
+        message: "Ya existe un equipo con ese nombre en este torneo" 
+      });
+    }
+
+    team.name = name.trim();
+    await team.save();
+
+    res.status(200).json({
+      message: "Nombre del equipo actualizado exitosamente",
+      team
+    });
+  } catch (error) {
+    console.error("Error updating team name:", error);
+    res.status(500).json({
+      message: "Error al actualizar el nombre del equipo",
+      error: error.message,
+    });
+  }
+};
+
 export const getTeamsByTournament = async (req, res) => {
   try {
     const { tournamentId } = req.params;

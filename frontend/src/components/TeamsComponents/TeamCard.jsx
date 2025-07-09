@@ -8,10 +8,19 @@ import {
   Button,
   Box,
   Tooltip,
+  IconButton,
 } from "@mui/material";
-import { Groups, Person, People, CalendarToday } from "@mui/icons-material";
+import {
+  Groups,
+  Person,
+  People,
+  CalendarToday,
+  Edit,
+} from "@mui/icons-material";
 
-const TeamCard = ({ team, onClick }) => {
+const TeamCard = ({ team, onClick, currentUser, onEditName }) => {
+  const isAdmin = currentUser?.role === "admin";
+
   return (
     <Card
       elevation={3}
@@ -27,9 +36,25 @@ const TeamCard = ({ team, onClick }) => {
           <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
             <Groups />
           </Avatar>
-          <Typography variant="h6" component="div">
-            {team.name}
-          </Typography>
+          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              {team.name}
+            </Typography>
+            {isAdmin && (
+              <Tooltip title="Editar nombre del equipo">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditName(team);
+                  }}
+                  sx={{ ml: 1 }}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         </Box>
 
         <Divider sx={{ my: 2 }} />

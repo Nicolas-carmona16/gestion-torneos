@@ -5,6 +5,7 @@ import {
   addPlayersToTeam,
   getTeamsByTournament,
   getTeamById,
+  updateTeamName,
 } from "../controllers/teamController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 import {
@@ -42,5 +43,6 @@ router.post(
 );
 router.get("/tournament/:tournamentId", getTeamsByTournament);
 router.get("/:teamId", getTeamById);
+router.put("/:teamId/name", protect, authorizeRoles("admin"), updateTeamName);
 
 export default router;

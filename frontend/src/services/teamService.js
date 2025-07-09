@@ -111,3 +111,19 @@ export const getTeamPlayers = async (teamId) => {
     throw error;
   }
 };
+
+export const updateTeamName = async (teamId, name) => {
+  try {
+    const response = await api.put(
+      `/teams/${teamId}/name`,
+      { name },
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating team name:", error);
+    throw error;
+  }
+};
