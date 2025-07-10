@@ -106,6 +106,29 @@ const TeamDetailsModal = ({
                 team={team}
               />
             </Box>
+
+            {currentUser?.role === "admin" && team.removedPlayers && team.removedPlayers.length > 0 && (
+              <>
+                <Divider sx={{ my: 3 }} />
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom color="error">
+                    Jugadores Eliminados ({team.removedPlayers.length})
+                  </Typography>
+                  <PlayerList
+                    players={team.removedPlayers.map(rp => ({
+                      ...rp.player,
+                      removedAt: rp.removedAt,
+                      removedBy: rp.removedBy
+                    }))}
+                    currentUser={currentUser}
+                    canModify={false}
+                    onDeletePlayer={() => {}}
+                    team={team}
+                    isRemovedPlayers={true}
+                  />
+                </Box>
+              </>
+            )}
           </Box>
         )}
       </DialogContent>

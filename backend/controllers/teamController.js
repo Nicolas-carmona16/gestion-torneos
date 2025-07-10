@@ -216,10 +216,26 @@ export const removePlayerFromTeam = async (req, res) => {
       });
     }
 
+    // Find the player to be removed
+    const playerToRemove = team.players.find((p) => p._id.equals(playerId));
+    
+    // Remove player from active players
     team.players = team.players.filter((p) => !p._id.equals(playerId));
+    
+    // Add player to removed players history
+    team.removedPlayers.push({
+      player: playerId,
+      removedAt: new Date(),
+      removedBy: req.user._id,
+    });
+    
     await team.save();
 
-    res.status(200).json({ message: "Player removed from team", team });
+    res.status(200).json({ 
+      message: "Player removed from team", 
+      team,
+      removedPlayer: playerToRemove 
+    });
   } catch (error) {
     console.error("Error removing player:", error);
     res.status(500).json({ message: "Error removing player from team" });
@@ -320,6 +336,11 @@ export const addPlayersToTeam = async (req, res) => {
       });
     }
 
+    const wasRemoved = team.removedPlayers.some((rp) => rp.player.equals(player._id));
+    if (wasRemoved) {
+      team.removedPlayers = team.removedPlayers.filter((rp) => !rp.player.equals(player._id));
+    }
+
     playerIdsToAdd.push(player._id);
 
     const totalAfterAdd = team.players.length + playerIdsToAdd.length;
@@ -333,12 +354,15 @@ export const addPlayersToTeam = async (req, res) => {
     await team.save();
 
     res.status(200).json({
-      message: "Player added to team successfully",
+      message: wasRemoved 
+        ? "Player re-added to team successfully (removed from eliminated list)" 
+        : "Player added to team successfully",
       team,
       playerDetails: {
         id: player._id,
         fullName: player.fullName,
         epsDocument: player.eps.url,
+        wasReAdded: wasRemoved,
       },
     });
   } catch (error) {
@@ -414,7 +438,15 @@ export const getTeamById = async (req, res) => {
     const team = await Team.findById(teamId)
       .populate("captain", "firstName lastName email")
       .populate("players")
-      .populate("tournament");
+      .populate("tournament")
+      .populate({
+        path: "removedPlayers.player",
+        select: "fullName idNumber email career"
+      })
+      .populate({
+        path: "removedPlayers.removedBy",
+        select: "firstName lastName"
+      });
 
     if (!team) return res.status(404).json({ message: "Team not found" });
 
