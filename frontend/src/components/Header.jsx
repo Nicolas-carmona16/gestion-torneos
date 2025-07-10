@@ -53,8 +53,13 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
       className="shadow-md"
     >
       <Toolbar
-        className="flex justify-between items-center"
-        style={{ minHeight: "100px" }}
+        style={{ 
+          minHeight: "100px",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+          gap: "16px"
+        }}
       >
         <Link to="/" className="flex items-center gap-2">
           <HomeIcon className="text-white" style={{ fontSize: "32px" }} />
@@ -62,11 +67,11 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             Torneos UdeA
           </Typography>
         </Link>
-        <Link to={"/"}>
+        <Link to={"/"} style={{ display: "flex", justifyContent: "center" }}>
           <img src={logo} alt="Logo" className="h-20" />
         </Link>
-        {!isAuthenticated ? (
-          <div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          {!isAuthenticated ? (
             <Button
               color="inherit"
               component={Link}
@@ -78,9 +83,7 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             >
               Iniciar sesión
             </Button>
-          </div>
-        ) : (
-          <div>
+          ) : (
             <Button
               color="inherit"
               onClick={handleMenuOpen}
@@ -91,24 +94,24 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             >
               <AccountCircleIcon style={{ fontSize: "40px" }} />
             </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              disableScrollLock
-            >
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  navigate("/perfil");
-                }}
-              >
-                Perfil
-              </MenuItem>
-              <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
-            </Menu>
-          </div>
-        )}
+          )}
+        </div>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          disableScrollLock
+        >
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
+              navigate("/perfil");
+            }}
+          >
+            Perfil
+          </MenuItem>
+          <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );

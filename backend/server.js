@@ -14,6 +14,7 @@ import sportRoutes from "./routes/sportRoutes.js";
 import tournamentRoutes from "./routes/tournamentRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
+import playerRoutes from "./routes/playerRoutes.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use("/api/sports", sportRoutes);
 app.use("/api/tournaments", tournamentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/matches", matchRoutes);
+app.use("/api/players", playerRoutes);
 
 // Middleware for handling errors
 app.use(notFound);

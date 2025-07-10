@@ -3,11 +3,16 @@ import {
   Typography,
   CircularProgress,
   TablePagination,
+  Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { Download } from "@mui/icons-material";
 import { getAllTournaments } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
 import { getUser } from "../services/authService";
+import { downloadPlayersExcel } from "../services/playerService";
 import FilterTournaments from "./FilterTournaments";
 import GenericTournamentTable from "./GenericTournamentTable";
 
@@ -21,11 +26,15 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
   const [sports, setSports] = useState([]);
   const [selectedSport, setSelectedSport] = useState("");
   const [page, setPage] = useState(0);
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tournamentData, sportsData] = await Promise.all([
+        const [tournamentData, sportsData, userData] = await Promise.all([
           getAllTournaments(),
           getAllSports(),
           getUser(),
@@ -33,6 +42,7 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
         setTournaments(tournamentData);
         setFilteredTournaments(tournamentData);
         setSports(sportsData);
+        setCurrentUser(userData);
       } catch (error) {
         console.error("Error al cargar datos:", error);
       } finally {
@@ -41,6 +51,18 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
     };
     fetchData();
   }, []);
+
+  const handleDownloadExcel = async () => {
+    try {
+      setDownloading(true);
+      await downloadPlayersExcel();
+      setSuccess("Excel descargado exitosamente");
+    } catch (error) {
+      setError(error.response?.data?.message || "Error al descargar el Excel");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     const filtered = tournaments.filter((tournament) => {
@@ -84,15 +106,30 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
     <Box p={3}>
       <Box
         display="flex"
-        justifyContent="space-between"
+        justifyContent="center"
         alignItems="center"
         mb={2}
+        position="relative"
       >
-        <Box display="flex" justifyContent="center" flexGrow={1} marginLeft={0}>
-          <Typography variant="h4" color="primary" fontWeight="bold">
-            {title}
-          </Typography>
-        </Box>
+        <Typography variant="h4" color="primary" fontWeight="bold">
+          {title}
+        </Typography>
+        {currentUser?.role === "admin" && title === "Equipos" && (
+          <Button
+            variant="contained"
+            startIcon={<Download />}
+            onClick={handleDownloadExcel}
+            disabled={downloading}
+            sx={{ 
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateY(-50%)"
+            }}
+          >
+            {downloading ? "Descargando..." : "Descargar Excel Jugadores"}
+          </Button>
+        )}
       </Box>
 
       <FilterTournaments
@@ -125,6 +162,34 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
           />
         </>
       )}
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError("")}
+      >
+        <Alert
+          onClose={() => setError("")}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={6000}
+        onClose={() => setSuccess("")}
+      >
+        <Alert
+          onClose={() => setSuccess("")}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
