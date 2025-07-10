@@ -8,6 +8,7 @@ import {
   getSingleMatchday,
   createEliminationBracket,
   createPlayoffBracket,
+  checkPlayoffExists,
   addSeriesGameResult,
   getBracket,
   addScorers,
@@ -24,8 +25,9 @@ router.put("/:matchId", protect, authorizeRoles("admin", "assistant"), updateMat
 router.get("/:tournamentId/matchdays", getMatchesByMatchday);
 router.get("/:tournamentId/matchdays/:matchday", getSingleMatchday);
 router.post("/:tournamentId/elimination", protect, authorizeRoles("admin"), createEliminationBracket);
-router.post("/:tournamentId/playoff", protect, authorizeRoles("admin"),createPlayoffBracket);
-router.post("/:matchId/series", protect, authorizeRoles("admin", "assistant"),addSeriesGameResult);
+router.post("/:tournamentId/playoff", protect, authorizeRoles("admin"), createPlayoffBracket);
+router.get("/:tournamentId/playoff/status", checkPlayoffExists);
+router.post("/:matchId/series", protect, authorizeRoles("admin", "assistant"), addSeriesGameResult);
 router.get("/:tournamentId/bracket", getBracket);
 
 // Rutas para goleadores

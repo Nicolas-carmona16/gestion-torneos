@@ -170,6 +170,7 @@ const EliminationStage = ({
   generatingBracket,
   generationError,
   bracket,
+  isPlayoff = false,
 }) => {
   const { nodes, edges } = useMemo(() => {
     if (!bracket || Object.keys(bracket).length === 0) {
@@ -271,7 +272,10 @@ const EliminationStage = ({
     return (
       <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
         <Typography>
-          Aún no se han generado los emparejamientos para este torneo
+          {isPlayoff 
+            ? "Aún no se ha generado la fase eliminatoria para este torneo" 
+            : "Aún no se han generado los emparejamientos para este torneo"
+          }
         </Typography>
         {!user?.role || user.role !== "admin" ? null : (
           <Box
@@ -289,10 +293,12 @@ const EliminationStage = ({
               {generatingBracket ? (
                 <>
                   <CircularProgress size={24} color="inherit" />
-                  <Box ml={2}>Generando bracket...</Box>
+                  <Box ml={2}>
+                    {isPlayoff ? "Generando fase eliminatoria..." : "Generando bracket..."}
+                  </Box>
                 </>
               ) : (
-                "Generar Bracket"
+                isPlayoff ? "Generar Fase Eliminatoria" : "Generar Bracket"
               )}
             </Button>
             {generationError && (
@@ -308,6 +314,17 @@ const EliminationStage = ({
 
   return (
     <Box sx={{ height: "80vh", width: "100%", background: "#f5f5f5" }}>
+      {isPlayoff && (
+        <Typography 
+          variant="h5" 
+          gutterBottom 
+          align="center" 
+          color="primary" 
+          sx={{ mb: 2 }}
+        >
+          Bracket de Eliminación Directa
+        </Typography>
+      )}
       <Paper
         elevation={3}
         sx={{

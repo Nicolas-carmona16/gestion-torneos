@@ -19,6 +19,9 @@ const EditMatchDialog = ({
 }) => {
   if (!match) return null;
 
+  const showGoalsFields =
+    tournamentFormat === "group-stage" && match.round === "group";
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth disableRestoreFocus>
       <DialogTitle>
@@ -28,7 +31,7 @@ const EditMatchDialog = ({
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-          {tournamentFormat === "group-stage" && (
+          {showGoalsFields && (
             <>
               <TextField
                 label={`Goles ${match.team1?.name || "Equipo 1"}`}

@@ -1,5 +1,7 @@
 export const translateRoundName = (roundName) => {
   switch (roundName) {
+    case "group":
+      return "Grupos";
     case "round-of-32":
       return "Dieciseisavos de Final";
     case "round-of-16":

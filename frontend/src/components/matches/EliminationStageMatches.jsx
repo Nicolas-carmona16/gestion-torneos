@@ -29,6 +29,7 @@ const EliminationStageMatches = ({
   scorersData,
   refreshScorersData,
   sportName,
+  isPlayoff = false,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -43,7 +44,11 @@ const EliminationStageMatches = ({
     .slice(0, 10);
 
   if (!bracket || Object.keys(bracket).length === 0) {
-    return <Typography sx={{ mt: 2 }}>No hay partidos programados</Typography>;
+    return (
+      <Typography sx={{ mt: 2 }}>
+        {isPlayoff ? "No hay partidos de eliminación directa programados" : "No hay partidos programados"}
+      </Typography>
+    );
   }
 
   return (
