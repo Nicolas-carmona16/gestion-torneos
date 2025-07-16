@@ -30,8 +30,8 @@ const Home = () => {
           {[
             { text: "Inscripciones", path: "/inscripciones" },
             { text: "Equipos", path: "/equipos" },
-            { text: "Cuadros", path: "/emparejamientos" },
             { text: "Programación", path: "/programacion" },
+            { text: "Estadísticas", path: "/emparejamientos" },
             { text: "Reglamento", path: "/reglamento" },
             { text: "Resoluciones", path: "/resoluciones" },
           ].map(({ text, path }, index) => (
