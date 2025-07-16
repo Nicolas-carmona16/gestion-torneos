@@ -30,6 +30,8 @@ import ManagePairings from "./pages/ManagePairings";
 import TournamentPairings from "./pages/TournamentPairings";
 import ManageMatches from "./pages/ManageMatches";
 import TournamentMatches from "./pages/TournamentMatches";
+import ManageReglamento from "./pages/ManageReglamento";
+import ManageResoluciones from "./pages/ManageResoluciones";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -106,6 +108,8 @@ const App = () => {
               path="/torneo/:tournamentId/partidos"
               element={<TournamentMatches />}
             />
+            <Route path="/reglamento" element={<ManageReglamento />} />
+            <Route path="/resoluciones" element={<ManageResoluciones />} />
             {/* Ruta protegida */}
             <Route
               path="/perfil"
