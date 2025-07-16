@@ -1,0 +1,107 @@
+@startuml Diagrama de Arquitectura - Sistema de Gestión de Torneos
+
+!define RECTANGLE class
+skinparam style strictuml
+skinparam defaultTextAlignment center
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+skinparam rectangle {
+    FontSize 12
+    BorderColor #444
+    BackgroundColor #F4F4F4
+}
+skinparam package {
+    BackgroundColor #E8F0FE
+    BorderColor #3367D6
+}
+skinparam actor {
+    BackgroundColor #FFF2CC
+    BorderColor #D6B656
+}
+
+' Actores (Roles de usuario)
+actor Admin as "Admin"
+actor Arbitro as "Árbitro"
+actor Capitan as "Capitán"
+actor Jugador as "Jugador"
+
+' Capa de Presentación
+package "Capa de Presentación\n(Frontend - React + Vite)" {
+  rectangle FE [
+    Frontend App\nReact 19 + Vite
+    ----
+    • Material-UI + Tailwind CSS
+    • React Router DOM 7.4.0
+    • Axios 1.8.4 / Formik 2.4.6
+    • Context API / React Hooks
+    • Yup 1.6.1 (Validación)
+  ]
+}
+
+' Capa de Lógica de Negocio
+package "Capa de Negocio\n(Backend - Node.js + Express)" {
+  rectangle BE [
+    Backend API\nNode.js + Express 4.21.2
+    ----
+    • JWT 9.0.2 (Autenticación)
+    • Controladores + Middlewares
+    • express-validator 7.2.1
+    • Rate Limiting + CORS
+    • Rutas RESTful (/api/*)
+    • bcryptjs 3.0.2 (Hashing)
+  ]
+}
+
+' Base de Datos
+package "Capa de Persistencia" {
+  rectangle DB [
+    MongoDB\nMongoose 8.12.2
+    ----
+    • 6 Modelos principales
+    • Conexión centralizada
+    • Relaciones documentales
+    • Validaciones de esquema
+  ]
+}
+
+' Servicios Externos
+package "Servicios Externos" {
+  rectangle SUPA [
+    Supabase
+    ----
+    • Funciones adicionales
+    • API REST / Claves
+    • Almacenamiento
+  ]
+}
+
+' Flujos de interacción principales
+Admin --> FE : "Gestiona torneos,\nusuarios y equipos"
+Arbitro --> FE : "Registra resultados\ny arbitra partidos"
+Capitan --> FE : "Inscribe equipos\ny gestiona jugadores"
+Jugador --> FE : "Consulta información\ndel torneo"
+
+FE --> BE : "HTTP/HTTPS\n(JSON via Axios)"
+BE --> DB : "Operaciones CRUD\n(Mongoose ODM)"
+BE --> SUPA : "Funciones externas\n(SDK / API)"
+
+' Notas informativas
+note right of FE
+**Puerto:** 5173 (Vite Dev)
+**URL:** http://localhost:5173
+end note
+
+note right of BE
+**Puerto:** 5000 (Express)
+**API Base:** /api
+**Autenticación:** JWT en cookies
+end note
+
+note right of DB
+**Base de Datos:** MongoDB
+**ODM:** Mongoose
+**Modelos:** User, Tournament, Team,
+Match, Player, Sport
+end note
+
+@enduml 
