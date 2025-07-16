@@ -8,7 +8,7 @@ El diagrama de arquitectura se encuentra en el archivo separado: **`diagrama-arq
 
 ## Detalles de la Arquitectura
 
-### 🎨 **Frontend (React + Vite)**
+### **Frontend (React + Vite)**
 - **Framework:** React 19.0.0 con Vite 6.2.0
 - **UI Library:** Material-UI (MUI) 7.0.0
 - **Styling:** Tailwind CSS 3.3.2 + Tema personalizado
@@ -18,7 +18,7 @@ El diagrama de arquitectura se encuentra en el archivo separado: **`diagrama-arq
 - **Form Handling:** Formik 2.4.6 + Yup 1.6.1
 - **Date Handling:** Day.js 1.11.13
 
-### ⚙️ **Backend (Node.js + Express)**
+### **Backend (Node.js + Express)**
 - **Runtime:** Node.js con ES Modules
 - **Framework:** Express 4.21.2
 - **Authentication:** JWT (jsonwebtoken 9.0.2)
@@ -29,23 +29,23 @@ El diagrama de arquitectura se encuentra en el archivo separado: **`diagrama-arq
 - **Excel Export:** exceljs 4.4.0
 - **Documentation:** JSDoc 4.0.4
 
-### 🗄️ **Base de Datos**
+### **Base de Datos**
 - **Database:** MongoDB con Mongoose 8.12.2
 - **ODM:** Mongoose para modelado de datos
 - **Connection:** Configuración centralizada en `config/db.js`
 
-### 🌍 **Servicios Externos**
+### **Servicios Externos**
 - **Supabase:** Para funcionalidades adicionales
 - **JWT:** Para autenticación y autorización
 
-### 🔐 **Seguridad**
+### **Seguridad**
 - **CORS:** Configurado para desarrollo local
 - **JWT Tokens:** Almacenados en cookies seguras
 - **Role-based Access:** Admin, Captain, Assistant
 - **Rate Limiting:** Protección contra ataques
 - **Input Validation:** Validación en frontend y backend
 
-### 📡 **Comunicación**
+### **Comunicación**
 - **API REST:** Endpoints RESTful
 - **HTTP/HTTPS:** Comunicación cliente-servidor
 - **JSON:** Formato de datos
