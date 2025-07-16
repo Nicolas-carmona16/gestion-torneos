@@ -15,6 +15,9 @@ import { getUser } from "../services/authService";
 import { downloadPlayersExcel } from "../services/playerService";
 import FilterTournaments from "./FilterTournaments";
 import GenericTournamentTable from "./GenericTournamentTable";
+import EnlaceDocumentoModal from "./EnlaceDocumentoModal";
+import { patchTournamentRulesUrl } from "../services/tournamentService";
+import { patchTournamentResolutionsUrl } from "../services/tournamentService";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -30,6 +33,9 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
+  const [reglamentoModalOpen, setReglamentoModalOpen] = useState(false);
+  const [selectedTournament, setSelectedTournament] = useState(null);
+  const [modalField, setModalField] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,6 +68,47 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
     } finally {
       setDownloading(false);
     }
+  };
+
+  // Handler genérico para reglamento y resoluciones
+  const handleEnlaceDocumentoClick = (tournament, field) => {
+    if (currentUser?.role === "admin") {
+      setSelectedTournament(tournament);
+      setReglamentoModalOpen(true);
+      setModalField(field);
+    } else {
+      const url = tournament[field];
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        setError(
+          field === "rulesUrl"
+            ? "Este torneo no tiene reglamento disponible."
+            : "Este torneo no tiene resolución disponible."
+        );
+      }
+    }
+  };
+
+  // Handler para cerrar el modal
+  const handleCloseReglamentoModal = () => {
+    setReglamentoModalOpen(false);
+    setSelectedTournament(null);
+    setModalField(null);
+  };
+
+  // Handler para actualizar el reglamento en la lista
+  const handleReglamentoUpdated = (newUrl) => {
+    setTournaments((prev) =>
+      prev.map((t) =>
+        t._id === selectedTournament._id ? { ...t, [modalField]: newUrl } : t
+      )
+    );
+    setFilteredTournaments((prev) =>
+      prev.map((t) =>
+        t._id === selectedTournament._id ? { ...t, [modalField]: newUrl } : t
+      )
+    );
   };
 
   useEffect(() => {
@@ -151,6 +198,14 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
             actionIcon={actionIcon}
             actionTooltip={actionTooltip}
             actionRoute={actionRoute}
+            // Unificado para reglamento y resoluciones
+            onActionClick={
+              title === "Reglamento"
+                ? (t) => handleEnlaceDocumentoClick(t, "rulesUrl")
+                : title === "Resoluciones"
+                ? (t) => handleEnlaceDocumentoClick(t, "resolutionsUrl")
+                : undefined
+            }
           />
           <TablePagination
             rowsPerPageOptions={[ITEMS_PER_PAGE]}
@@ -190,6 +245,20 @@ const ManageTablePage = ({ title, actionIcon, actionTooltip, actionRoute }) => {
           {success}
         </Alert>
       </Snackbar>
+      {/* Modal unificado para reglamento y resoluciones */}
+      {(title === "Reglamento" || title === "Resoluciones") && selectedTournament && modalField && (
+        <EnlaceDocumentoModal
+          open={reglamentoModalOpen}
+          onClose={handleCloseReglamentoModal}
+          tournament={selectedTournament}
+          onUpdated={handleReglamentoUpdated}
+          isAdmin={currentUser?.role === "admin"}
+          label={modalField === "rulesUrl" ? "Enlace al reglamento" : "Enlace a la resolución"}
+          fieldName={modalField}
+          patchService={modalField === "rulesUrl" ? patchTournamentRulesUrl : patchTournamentResolutionsUrl}
+          dialogTitle={modalField === "rulesUrl" ? "Editar reglamento" : "Editar resolución"}
+        />
+      )}
     </Box>
   );
 };

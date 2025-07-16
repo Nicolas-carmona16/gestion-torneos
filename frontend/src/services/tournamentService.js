@@ -59,3 +59,33 @@ export const updateTournament = async (id, tournamentData) => {
     throw error;
   }
 };
+
+// Actualiza o elimina el reglamento (rulesUrl) de un torneo
+export const patchTournamentRulesUrl = async (id, rulesUrl) => {
+  try {
+    const response = await api.patch(
+      `/tournaments/${id}/rules-url`,
+      { rulesUrl },
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error actualizando el reglamento:", error);
+    throw error;
+  }
+};
+
+// Actualiza o elimina el enlace de resoluciones (resolutionsUrl) de un torneo
+export const patchTournamentResolutionsUrl = async (id, resolutionsUrl) => {
+  try {
+    const response = await api.patch(
+      `/tournaments/${id}/resolutions-url`,
+      { resolutionsUrl },
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error actualizando las resoluciones:", error);
+    throw error;
+  }
+};

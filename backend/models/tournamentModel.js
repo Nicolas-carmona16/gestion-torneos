@@ -100,7 +100,7 @@ const tournamentSchema = new mongoose.Schema(
         required: function () {
           return this.format === "group-stage";
         },
-      }
+      },
     },
     bestOfMatches: {
       type: Number,
@@ -158,6 +158,14 @@ const tournamentSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    rulesUrl: {
+      type: String,
+      trim: true,
+    },
+    resolutionsUrl: {
+      type: String,
+      trim: true,
     },
   },
   { timestamps: true }
