@@ -1,0 +1,110 @@
+@startuml Diagrama Base de Datos
+skinparam class {
+    BackgroundColor #E6F3FF
+    BorderColor #0078D7
+    ArrowFontSize 12
+}
+title Diagrama NoSQL - Gestión de Torneos Deportivos
+
+class User {
+    + _id (PK)
+    + firstName
+    + lastName
+    + email
+    + password
+    + role [admin, captain, assistant]
+    + sports [ref: Sport]
+    + tournaments [ref: Tournament]
+    + timestamps
+}
+class Player {
+    + _id (PK)
+    + fullName
+    + idNumber
+    + email
+    + eps_url
+    + eps_fileName
+    + career
+    + timestamps
+}
+class Sport {
+    + _id (PK)
+    + name
+    + description
+    + defaultRules
+    + timestamps
+}
+class Tournament {
+    + _id (PK)
+    + name
+    + description
+    + sport [ref: Sport]
+    + customRules
+    + format [group-stage, elimination]
+    + groupsStageSettings
+    + bestOfMatches
+    + registrationStart
+    + registrationTeamEnd
+    + registrationPlayerEnd
+    + startDate
+    + endDate
+    + maxTeams
+    + minPlayersPerTeam
+    + maxPlayersPerTeam
+    + isOlympiad
+    + status
+    + createdBy [ref: User]
+    + rulesUrl
+    + resolutionsUrl
+    + timestamps
+}
+class Team {
+    + _id (PK)
+    + name
+    + tournament [ref: Tournament]
+    + captain [ref: User]
+    + players [ref: Player]
+    + removedPlayers_player
+    + removedPlayers_removedAt
+    + removedPlayers_removedBy
+    + timestamps
+}
+class Match {
+    + _id (PK)
+    + tournament [ref: Tournament]
+    + group
+    + round
+    + team1 [ref: Team]
+    + team2 [ref: Team]
+    + date
+    + time
+    + location
+    + description
+    + scoreTeam1
+    + scoreTeam2
+    + winner [ref: Team]
+    + status
+    + matchday
+    + isBestOfSeries
+    + seriesMatches
+    + bracketId
+    + seriesWinner [ref: Team]
+    + seriesScore
+    + nextMatchBracketId
+    + scorers_playerId
+    + scorers_teamId
+    + scorers_goals
+    + scorers_matchDate
+    + timestamps
+}
+
+User "1" --> "0..n" Tournament : Crea
+User "1" --> "0..n" Tournament : Participa
+User "1" --> "0..1" Team : Capitanía
+User "1" --> "0..n" Sport : Interés
+Player "1..n" --> "1" Team : Miembro
+Sport "1" --> "0..n" Tournament : Organiza
+Tournament "1" --> "2..n" Team : Incluye
+Tournament "1" --> "1..n" Match : Programa
+Team "2" --> "1" Match : Compite
+@enduml
