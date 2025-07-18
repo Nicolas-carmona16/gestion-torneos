@@ -21,7 +21,7 @@ skinparam actor {
 
 ' Actores (Roles de usuario)
 actor Admin as "Admin"
-actor Arbitro as "Árbitro"
+actor Arbitro as "Auxiliar"
 actor Capitan as "Capitán"
 actor Jugador as "Jugador"
 
@@ -77,7 +77,7 @@ package "Servicios Externos" {
 
 ' Flujos de interacción principales
 Admin --> FE : "Gestiona torneos,\nusuarios y equipos"
-Arbitro --> FE : "Registra resultados\ny arbitra partidos"
+Arbitro --> FE : "Registra resultados\ny estadisticas"
 Capitan --> FE : "Inscribe equipos\ny gestiona jugadores"
 Jugador --> FE : "Consulta información\ndel torneo"
 
