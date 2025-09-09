@@ -207,7 +207,8 @@ const updateTournament = asyncHandler(async (req, res) => {
   tournament.sport = selectedSport._id;
   tournament.customRules = customRules || selectedSport.defaultRules;
   tournament.format = format;
-  tournament.groupsStageSettings = format === "group-stage" ? groupsStageSettings : undefined;
+  tournament.groupsStageSettings =
+    format === "group-stage" ? groupsStageSettings : undefined;
   tournament.bestOfMatches = bestOfMatches;
   tournament.registrationStart = registrationStart;
   tournament.registrationTeamEnd = registrationTeamEnd;
@@ -254,10 +255,92 @@ const deleteTournament = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Tournament deleted successfully" });
 });
 
+/**
+ * @function patchTournamentRulesUrl
+ * @desc Update only the rulesUrl (reglamento) of a tournament
+ * @route PATCH /api/tournaments/:id/rules-url
+ * @access Private (Admin only)
+ */
+const patchTournamentRulesUrl = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { rulesUrl } = req.body;
+
+  const errors = validateObjectId(id, "tournament ID");
+  if (errors.length > 0) {
+    res.status(400);
+    throw new Error(errors.join(". "));
+  }
+
+  if (rulesUrl && typeof rulesUrl !== "string") {
+    res.status(400);
+    throw new Error("rulesUrl must be a string or empty");
+  }
+
+  if (rulesUrl && !/^https?:\/\/.+/.test(rulesUrl)) {
+    res.status(400);
+    throw new Error("rulesUrl must be a valid URL (http/https)");
+  }
+
+  const tournament = await Tournament.findById(id);
+  if (!tournament) {
+    res.status(404);
+    throw new Error("Tournament not found");
+  }
+
+  tournament.rulesUrl = rulesUrl || null;
+  await tournament.save();
+
+  res
+    .status(200)
+    .json({ message: "Reglamento actualizado", rulesUrl: tournament.rulesUrl });
+});
+
+/**
+ * @function patchTournamentResolutionsUrl
+ * @desc Update only the resolutionsUrl (resoluciones) of a tournament
+ * @route PATCH /api/tournaments/:id/resolutions-url
+ * @access Private (Admin only)
+ */
+const patchTournamentResolutionsUrl = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { resolutionsUrl } = req.body;
+
+  const errors = validateObjectId(id, "tournament ID");
+  if (errors.length > 0) {
+    res.status(400);
+    throw new Error(errors.join(". "));
+  }
+
+  if (resolutionsUrl && typeof resolutionsUrl !== "string") {
+    res.status(400);
+    throw new Error("resolutionsUrl must be a string or empty");
+  }
+
+  if (resolutionsUrl && !/^https?:\/\/.+/.test(resolutionsUrl)) {
+    res.status(400);
+    throw new Error("resolutionsUrl must be a valid URL (http/https)");
+  }
+
+  const tournament = await Tournament.findById(id);
+  if (!tournament) {
+    res.status(404);
+    throw new Error("Tournament not found");
+  }
+
+  tournament.resolutionsUrl = resolutionsUrl || null;
+  await tournament.save();
+
+  res
+    .status(200)
+    .json({ message: "Resoluciones actualizadas", resolutionsUrl: tournament.resolutionsUrl });
+});
+
 export {
   createTournament,
   getAllTournaments,
   getTournamentById,
   updateTournament,
   deleteTournament,
+  patchTournamentRulesUrl,
+  patchTournamentResolutionsUrl,
 };

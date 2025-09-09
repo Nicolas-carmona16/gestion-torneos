@@ -15,7 +15,7 @@ import mongoose from "mongoose";
  * @property {Object} groupsStageSettings - Settings for the group stage format.
  * @property {number} groupsStageSettings.teamsPerGroup - The number of teams per group.
  * @property {number} groupsStageSettings.teamsAdvancingPerGroup - The number of teams advancing from each group.
- * @property {number} groupsStageSettings.matchesPerTeamInGroup - The number of matches each team plays in the group stage.
+ * @property {string} groupsStageSettings.matchesPerTeamInGroup - The type of round-robin for group stage. Can be "single" (one-way) or "double" (two-way).
  * @property {number} bestOfMatches - The number of matches to be played in a best-of series. Defaults to 1.
  * @property {Date} registrationStart - The start date for team registrations.
  * @property {Date} registrationTeamEnd - The end date for team registrations.
@@ -38,7 +38,7 @@ import mongoose from "mongoose";
  *  groupsStageSettings: {
  *    teamsPerGroup: 4,
  *    teamsAdvancingPerGroup: 2,
- *    matchesPerTeamInGroup: 3,
+ *    matchesPerTeamInGroup: "double",
  *  },
  *  bestOfMatches: 1,
  *  registrationStart: new Date("2025-05-01"),
@@ -94,12 +94,13 @@ const tournamentSchema = new mongoose.Schema(
         },
       },
       matchesPerTeamInGroup: {
-        type: Number,
-        default: 1,
+        type: String,
+        enum: ["single", "double"],
+        default: "single",
         required: function () {
           return this.format === "group-stage";
         },
-      }
+      },
     },
     bestOfMatches: {
       type: Number,
@@ -157,6 +158,14 @@ const tournamentSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    rulesUrl: {
+      type: String,
+      trim: true,
+    },
+    resolutionsUrl: {
+      type: String,
+      trim: true,
     },
   },
   { timestamps: true }

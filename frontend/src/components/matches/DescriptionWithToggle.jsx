@@ -3,7 +3,7 @@ import { Button, Typography } from "@mui/material";
 
 const DescriptionWithToggle = ({ description }) => {
   const [expanded, setExpanded] = useState(false);
-  const maxLength = 80;
+  const maxLength = 50;
 
   const toggleExpanded = () => setExpanded((prev) => !prev);
 
@@ -21,7 +21,12 @@ const DescriptionWithToggle = ({ description }) => {
       : `${description.slice(0, maxLength)}...`;
 
   return (
-    <Typography variant="body2">
+    <Typography
+      variant="body2"
+      sx={{
+        wordBreak: "break-word",
+      }}
+    >
       <strong>Descripción:</strong> {displayText}
       {shouldTruncate && (
         <Button

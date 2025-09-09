@@ -18,6 +18,7 @@ const GenericTournamentTable = ({
   actionIcon,
   actionTooltip,
   actionRoute,
+  onActionClick,
 }) => {
   const navigate = useNavigate();
 
@@ -55,7 +56,11 @@ const GenericTournamentTable = ({
               <TableCell>
                 <Tooltip title={actionTooltip}>
                   <IconButton
-                    onClick={() => navigate(`/torneo/${t._id}${actionRoute}`)}
+                    onClick={() =>
+                      onActionClick
+                        ? onActionClick(t)
+                        : navigate(`/torneo/${t._id}${actionRoute}`)
+                    }
                     color="primary"
                   >
                     {actionIcon}

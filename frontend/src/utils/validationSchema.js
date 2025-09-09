@@ -55,6 +55,22 @@ export const tournamentValidationSchema = Yup.object({
   format: Yup.string()
     .oneOf(["group-stage", "elimination"])
     .required("Selecciona un formato"),
+  groupsStageSettings: Yup.object().when("format", {
+    is: "group-stage",
+    then: (schema) =>
+      schema.shape({
+        teamsPerGroup: Yup.number()
+          .min(2, "Mínimo 2 equipos por grupo")
+          .required("Equipos por grupo es requerido"),
+        teamsAdvancingPerGroup: Yup.number()
+          .min(1, "Mínimo 1 equipo que avance")
+          .required("Equipos que avanzan es requerido"),
+        matchesPerTeamInGroup: Yup.string()
+          .oneOf(["single", "double"], "Debe ser 'Solo ida' o 'Ida y vuelta'")
+          .required("Tipo de enfrentamientos es requerido"),
+      }),
+    otherwise: (schema) => schema.optional(),
+  }),
   bestOfMatches: Yup.number()
     .transform((value, originalValue) =>
       originalValue === "" ? undefined : value
@@ -104,6 +120,26 @@ export const tournamentEditValidationSchema = Yup.object({
     .nullable()
     .oneOf(["group-stage", "elimination"], "Formato inválido")
     .required("Selecciona un formato"),
+  groupsStageSettings: Yup.object().when("format", {
+    is: "group-stage",
+    then: (schema) =>
+      schema.shape({
+        teamsPerGroup: Yup.number()
+          .typeError("Debe ser un número")
+          .transform((value) => (isNaN(value) ? undefined : value))
+          .min(2, "Mínimo 2 equipos por grupo")
+          .required("Equipos por grupo es requerido"),
+        teamsAdvancingPerGroup: Yup.number()
+          .typeError("Debe ser un número")
+          .transform((value) => (isNaN(value) ? undefined : value))
+          .min(1, "Mínimo 1 equipo que avance")
+          .required("Equipos que avanzan es requerido"),
+        matchesPerTeamInGroup: Yup.string()
+          .oneOf(["single", "double"], "Debe ser 'Solo ida' o 'Ida y vuelta'")
+          .required("Tipo de enfrentamientos es requerido"),
+      }),
+    otherwise: (schema) => schema.optional(),
+  }),
   bestOfMatches: Yup.number()
     .transform((value, originalValue) =>
       originalValue === "" ? undefined : value
@@ -161,7 +197,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
   captainExtra: Yup.object().shape({
     idNumber: Yup.string().required("La cédula del capitán es obligatoria"),
     career: Yup.string()
-      .required("La carrera es obligatorio")
+      .required("El programa es obligatorio")
       .oneOf(
         [
           "Bioingeniería",
@@ -177,7 +213,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
           "Ingeniería de Sistemas",
           "Ingeniería de Telecomunicaciones",
         ],
-        "Selecciona una carrera válida"
+        "Seleccione un programa válido"
       ),
   }),
   players: Yup.array().of(
@@ -193,7 +229,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
         )
         .required("El correo es obligatorio"),
       career: Yup.string()
-        .required("La carrera es obligatorio")
+        .required("El programa es obligatorio")
         .oneOf(
           [
             "Bioingeniería",
@@ -209,7 +245,7 @@ export const validationTeamRegisterSchema = Yup.object().shape({
             "Ingeniería de Sistemas",
             "Ingeniería de Telecomunicaciones",
           ],
-          "Selecciona una carrera válida"
+          "Seleccione un programa válido"
         ),
     })
   ),
@@ -227,7 +263,7 @@ export const validationNewPlayerSchema = Yup.object().shape({
       "Debe ser un correo institucional"
     ),
   career: Yup.string()
-    .required("La carrera es obligatorio")
+    .required("El programa es obligatorio")
     .oneOf(
       [
         "Bioingeniería",
@@ -243,6 +279,6 @@ export const validationNewPlayerSchema = Yup.object().shape({
         "Ingeniería de Sistemas",
         "Ingeniería de Telecomunicaciones",
       ],
-      "Selecciona una carrera válida"
+      "Seleccione un programa válido"
     ),
 });

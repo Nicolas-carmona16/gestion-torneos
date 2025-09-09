@@ -124,12 +124,24 @@ const TournamentFormFields = ({
               type="number"
               sx={{ mb: 2 }}
             />
-            <FormTextField
-              name="groupsStageSettings.matchesPerTeamInGroup"
-              label="Partidos por equipo"
-              type="number"
-              sx={{ mb: 2 }}
-            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="matches-per-team-label">Tipo de enfrentamientos</InputLabel>
+              <Select
+                labelId="matches-per-team-label"
+                name="groupsStageSettings.matchesPerTeamInGroup"
+                label="Tipo de enfrentamientos"
+                value={values.groupsStageSettings?.matchesPerTeamInGroup || "single"}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              >
+                <MenuItem value="single">Solo ida</MenuItem>
+                <MenuItem value="double">Ida y vuelta</MenuItem>
+              </Select>
+              {touched.groupsStageSettings?.matchesPerTeamInGroup && 
+               errors.groupsStageSettings?.matchesPerTeamInGroup && (
+                <FormHelperText>{errors.groupsStageSettings.matchesPerTeamInGroup}</FormHelperText>
+              )}
+            </FormControl>
           </Box>
         </Collapse>
         <FormTextField

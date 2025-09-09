@@ -196,7 +196,9 @@ const TournamentModal = ({
                     </Typography>
                     <Typography className="text-gray-700 text-sm">
                       <strong>Partidos por equipo:</strong>{" "}
-                      {tournament.groupsStageSettings.matchesPerTeamInGroup}
+                      {tournament.groupsStageSettings.matchesPerTeamInGroup === "single" 
+                        ? "Solo ida" 
+                        : "Ida y vuelta"}
                     </Typography>
                   </Box>
                 )}

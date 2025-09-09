@@ -17,6 +17,7 @@ const PlayerList = ({
   canModify,
   onDeletePlayer,
   team,
+  isRemovedPlayers = false,
 }) => {
   return (
     <>
@@ -25,8 +26,12 @@ const PlayerList = ({
           {players.map((player, index) => (
             <ListItem
               key={player._id || index}
+              sx={{
+                opacity: isRemovedPlayers ? 0.7 : 1,
+                backgroundColor: isRemovedPlayers ? "#f5f5f5" : "transparent",
+              }}
               secondaryAction={
-                (currentUser?._id === team?.captain?._id ||
+                !isRemovedPlayers && (currentUser?._id === team?.captain?._id ||
                   currentUser?.role === "admin") && (
                   <Tooltip
                     title={
@@ -66,18 +71,18 @@ const PlayerList = ({
                       color="text.secondary"
                       display="block"
                     >
-                      Carrera: {player.career}
-                    </Typography>
-                    <Typography
-                      component="span"
-                      variant="body2"
-                      color="text.secondary"
-                      display="block"
-                    >
-                      Correo: {player.email}
+                      Programa: {player.career}
                     </Typography>
                     {currentUser?.role === "admin" && (
                       <>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          Correo: {player.email}
+                        </Typography>
                         <Typography
                           component="span"
                           variant="body2"
@@ -106,6 +111,28 @@ const PlayerList = ({
                               <PictureAsPdf fontSize="small" sx={{ mr: 0.5 }} />
                               {player.eps.fileName || "Documento EPS"}
                             </Link>
+                          </Typography>
+                        )}
+                      </>
+                    )}
+                    {isRemovedPlayers && player.removedAt && (
+                      <>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="error"
+                          display="block"
+                        >
+                          Eliminado: {new Date(player.removedAt).toLocaleDateString()}
+                        </Typography>
+                        {player.removedBy && (
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="error"
+                            display="block"
+                          >
+                            Por: {player.removedBy.firstName} {player.removedBy.lastName}
                           </Typography>
                         )}
                       </>

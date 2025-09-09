@@ -99,3 +99,31 @@ export const addPlayersToTeam = async (teamId, newPlayers, epsFile) => {
     throw error;
   }
 };
+
+export const getTeamPlayers = async (teamId) => {
+  try {
+    const response = await api.get(`/teams/${teamId}`, {
+      withCredentials: true,
+    });
+    return response.data.team.players;
+  } catch (error) {
+    console.error("Error getting team players:", error);
+    throw error;
+  }
+};
+
+export const updateTeamName = async (teamId, name) => {
+  try {
+    const response = await api.put(
+      `/teams/${teamId}/name`,
+      { name },
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating team name:", error);
+    throw error;
+  }
+};

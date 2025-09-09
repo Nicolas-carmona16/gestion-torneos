@@ -14,6 +14,7 @@ import {
   getTeamById,
   removePlayerFromTeam,
   addPlayersToTeam,
+  updateTeamName,
 } from "../services/teamService";
 import { getTournamentById } from "../services/tournamentService";
 import { getUser } from "../services/authService";
@@ -21,6 +22,7 @@ import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import TeamCard from "../components/TeamsComponents/TeamCard";
 import TeamDetailsModal from "../components/TeamsComponents/TeamDetailModal";
 import AddPlayerDialog from "../components/TeamsComponents/AddPlayerDialog";
+import EditTeamNameDialog from "../components/TeamsComponents/EditTeamNameDialog";
 import TournamentHeader from "../components/TeamsComponents/TournamentHeader";
 
 const TournamentTeamsPage = () => {
@@ -39,6 +41,8 @@ const TournamentTeamsPage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [openAddPlayerDialog, setOpenAddPlayerDialog] = useState(false);
+  const [openEditNameDialog, setOpenEditNameDialog] = useState(false);
+  const [teamToEdit, setTeamToEdit] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -188,6 +192,42 @@ const TournamentTeamsPage = () => {
     );
   };
 
+  const handleEditTeamName = (team) => {
+    setTeamToEdit(team);
+    setOpenEditNameDialog(true);
+  };
+
+  const handleUpdateTeamName = async (teamId, newName) => {
+    try {
+      await updateTeamName(teamId, newName);
+
+      setTeams((prevTeams) =>
+        prevTeams.map((team) =>
+          team._id === teamId ? { ...team, name: newName } : team
+        )
+      );
+
+      if (selectedTeam && selectedTeam._id === teamId) {
+        setSelectedTeam((prev) => ({ ...prev, name: newName }));
+      }
+
+      showSnackbar("Nombre del equipo actualizado correctamente");
+    } catch (error) {
+      console.error("Error al actualizar el nombre del equipo:", error);
+      showSnackbar(
+        error.response?.data?.message ||
+          "Error al actualizar el nombre del equipo",
+        "error"
+      );
+      throw error;
+    }
+  };
+
+  const handleCloseEditNameDialog = () => {
+    setOpenEditNameDialog(false);
+    setTeamToEdit(null);
+  };
+
   if (loading) {
     return (
       <Box
@@ -234,7 +274,12 @@ const TournamentTeamsPage = () => {
                 flex: "0 0 auto",
               }}
             >
-              <TeamCard team={team} onClick={() => handleOpenModal(team)} />
+              <TeamCard
+                team={team}
+                onClick={() => handleOpenModal(team)}
+                currentUser={currentUser}
+                onEditName={handleEditTeamName}
+              />
             </Grid>
           ))}
         </Grid>
@@ -273,6 +318,13 @@ const TournamentTeamsPage = () => {
         currentUser={currentUser}
         showSnackbar={showSnackbar}
         isPlayerRegisteredInTournament={isPlayerRegisteredInTournament}
+      />
+
+      <EditTeamNameDialog
+        open={openEditNameDialog}
+        onClose={handleCloseEditNameDialog}
+        team={teamToEdit}
+        onUpdate={handleUpdateTeamName}
       />
 
       <ConfirmDeleteDialog

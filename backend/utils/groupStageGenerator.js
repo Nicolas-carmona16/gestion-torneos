@@ -64,7 +64,7 @@ export const generateGroups = async (tournament) => {
  */
 export const generateGroupStageMatches = async (tournament, groups) => {
   try {
-    const matchesPerTeam = tournament.groupsStageSettings.matchesPerTeamInGroup;
+    const roundRobinType = tournament.groupsStageSettings.matchesPerTeamInGroup;
     const allMatches = [];
     const groupMatches = {};
 
@@ -87,8 +87,8 @@ export const generateGroupStageMatches = async (tournament, groups) => {
         }
       }
 
-      // Generar partidos de vuelta si es necesario
-      if (matchesPerTeam > 1) {
+      // Generar partidos de vuelta si es round-robin doble
+      if (roundRobinType === "double") {
         for (let i = 0; i < teams.length; i++) {
           for (let j = i + 1; j < teams.length; j++) {
             const newMatch = {
@@ -274,30 +274,49 @@ const generateMatchdays = (groupMatches, teamsPerGroup) => {
   for (const [groupName, matches] of Object.entries(groupMatches)) {
     matchdays[groupName] = [];
 
-    // Calcular número de jornadas necesarias
-    const numTeams =
-      matches.length > 0
-        ? new Set([
-            ...matches.map((m) => m.team1),
-            ...matches.map((m) => m.team2),
-          ]).size
-        : 0;
+    if (matches.length === 0) {
+      continue;
+    }
 
-    const matchesPerTeam = numTeams - 1; // Round-robin simple
-    const totalMatchdays = matchesPerTeam * 2; // Ida y vuelta
+    // Calcular número de equipos únicos en este grupo
+    const uniqueTeams = new Set([
+      ...matches.map((m) => m.team1.toString()),
+      ...matches.map((m) => m.team2.toString()),
+    ]);
+    const numTeams = uniqueTeams.size;
 
-    // Distribuir partidos en jornadas
+    // Calcular número de jornadas necesarias para round-robin doble
+    // Fórmula: Para n equipos en round-robin doble necesitamos 2(n-1) jornadas
+    // Pero si n es impar, necesitamos 2n-1 jornadas para distribuir correctamente
+    let totalMatchdays;
+    if (numTeams % 2 === 0) {
+      // Número par de equipos: 2(n-1) jornadas
+      totalMatchdays = 2 * (numTeams - 1);
+    } else {
+      // Número impar de equipos: 2n-1 jornadas
+      totalMatchdays = 2 * numTeams - 1;
+    }
+
+    // Inicializar jornadas
     for (let i = 0; i < totalMatchdays; i++) {
       matchdays[groupName][i] = [];
     }
 
-    matches.forEach((match) => {
-      // Encontrar la primera jornada disponible para este partido
-      let matchday = 0;
-      while (matchday < totalMatchdays) {
-        const existingMatches = matchdays[groupName][matchday];
+    // Crear una copia de los partidos para procesar
+    const remainingMatches = [...matches];
+
+    // Distribuir partidos en jornadas usando algoritmo round-robin
+    let currentMatchday = 0;
+
+    while (remainingMatches.length > 0) {
+      let matchAssigned = false;
+
+      // Intentar asignar partidos en la jornada actual
+      for (let i = 0; i < remainingMatches.length; i++) {
+        const match = remainingMatches[i];
 
         // Verificar si alguno de los equipos ya juega en esta jornada
+        const existingMatches = matchdays[groupName][currentMatchday];
         const teamBusy = existingMatches.some(
           (m) =>
             m.team1.equals(match.team1) ||
@@ -307,13 +326,30 @@ const generateMatchdays = (groupMatches, teamsPerGroup) => {
         );
 
         if (!teamBusy) {
-          matchdays[groupName][matchday].push(match);
+          // Asignar el partido a esta jornada
+          matchdays[groupName][currentMatchday].push(match);
+          remainingMatches.splice(i, 1);
+          matchAssigned = true;
           break;
         }
-
-        matchday++;
       }
-    });
+
+      // Si no se pudo asignar ningún partido más en esta jornada, pasar a la siguiente
+      if (!matchAssigned) {
+        currentMatchday++;
+
+        // Verificar que no excedamos el número de jornadas
+        if (currentMatchday >= totalMatchdays) {
+          matchdays[groupName].push([]);
+          totalMatchdays++;
+        }
+      }
+    }
+
+    // Limpiar jornadas vacías
+    matchdays[groupName] = matchdays[groupName].filter(
+      (dayMatches) => dayMatches.length > 0
+    );
   }
 
   return matchdays;

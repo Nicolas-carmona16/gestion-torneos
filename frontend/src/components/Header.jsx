@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -6,12 +6,15 @@ import {
   Typography,
   Menu,
   MenuItem,
+  Divider,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import logo from "../assets/logoUdeA.png";
-import { logoutUser } from "../services/authService";
+import { logoutUser, getUser } from "../services/authService";
 
 /**
  * @module Header
@@ -29,7 +32,22 @@ import { logoutUser } from "../services/authService";
  */
 const Header = ({ isAuthenticated, setIsAuthenticated }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUser = async () => {
+        try {
+          const userData = await getUser();
+          setUser(userData);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      };
+      fetchUser();
+    }
+  }, [isAuthenticated]);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -53,8 +71,13 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
       className="shadow-md"
     >
       <Toolbar
-        className="flex justify-between items-center"
-        style={{ minHeight: "100px" }}
+        style={{ 
+          minHeight: "100px",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+          gap: "16px"
+        }}
       >
         <Link to="/" className="flex items-center gap-2">
           <HomeIcon className="text-white" style={{ fontSize: "32px" }} />
@@ -62,11 +85,11 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             Torneos UdeA
           </Typography>
         </Link>
-        <Link to={"/"}>
+        <Link to={"/"} style={{ display: "flex", justifyContent: "center" }}>
           <img src={logo} alt="Logo" className="h-20" />
         </Link>
-        {!isAuthenticated ? (
-          <div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          {!isAuthenticated ? (
             <Button
               color="inherit"
               component={Link}
@@ -78,9 +101,7 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             >
               Iniciar sesión
             </Button>
-          </div>
-        ) : (
-          <div>
+          ) : (
             <Button
               color="inherit"
               onClick={handleMenuOpen}
@@ -91,24 +112,48 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             >
               <AccountCircleIcon style={{ fontSize: "40px" }} />
             </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              disableScrollLock
-            >
+          )}
+        </div>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          disableScrollLock
+        >
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
+              navigate("/perfil");
+            }}
+          >
+            Perfil
+          </MenuItem>
+          {user?.role === "admin" && (
+            <>
+              <Divider />
               <MenuItem
                 onClick={() => {
                   handleMenuClose();
-                  navigate("/perfil");
+                  navigate("/gestion-usuarios");
                 }}
               >
-                Perfil
+                <SettingsIcon sx={{ mr: 1 }} />
+                Gestión de Usuarios
               </MenuItem>
-              <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
-            </Menu>
-          </div>
-        )}
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  navigate("/gestion-carrusel");
+                }}
+              >
+                <PhotoLibraryIcon sx={{ mr: 1 }} />
+                Gestión del Carrusel
+              </MenuItem>
+            </>
+          )}
+          <Divider />
+          <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );

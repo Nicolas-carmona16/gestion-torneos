@@ -10,6 +10,8 @@ import {
   getTournamentById,
   updateTournament,
   deleteTournament,
+  patchTournamentRulesUrl,
+  patchTournamentResolutionsUrl,
 } from "../controllers/tournamentController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
@@ -57,5 +59,19 @@ router.put("/:id", protect, authorizeRoles("admin"), updateTournament);
  * @access Private (Admin only)
  */
 router.delete("/:id", protect, authorizeRoles("admin"), deleteTournament);
+
+/**
+ * @route PATCH /api/tournaments/:id/rules-url
+ * @desc Update only the rulesUrl (reglamento) of a tournament
+ * @access Private (Admin only)
+ */
+router.patch("/:id/rules-url", protect, authorizeRoles("admin"), patchTournamentRulesUrl);
+
+/**
+ * @route PATCH /api/tournaments/:id/resolutions-url
+ * @desc Update only the resolutionsUrl (resoluciones) of a tournament
+ * @access Private (Admin only)
+ */
+router.patch("/:id/resolutions-url", protect, authorizeRoles("admin"), patchTournamentResolutionsUrl);
 
 export default router;

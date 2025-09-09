@@ -325,7 +325,7 @@ const TeamRegistrationForm = ({
                     Boolean(formik.errors.captainExtra?.career)
                   }
                 >
-                  <InputLabel id="captain-career-label">Carrera</InputLabel>
+                  <InputLabel id="captain-career-label">Programa</InputLabel>
                   <Select
                     labelId="captain-career-label"
                     name="captainExtra.career"
@@ -496,7 +496,7 @@ const TeamRegistrationForm = ({
                       }
                     >
                       <InputLabel id={`player-${index}-career-label`}>
-                        Carrera
+                        Programa
                       </InputLabel>
                       <Select
                         labelId={`player-${index}-career-label`}

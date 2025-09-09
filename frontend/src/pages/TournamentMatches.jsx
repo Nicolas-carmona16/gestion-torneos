@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import {
   getMatchesByMatchday,
   updateMatchResult,
+  checkPlayoffStatus,
 } from "../services/groupStageService";
 import {
   getEliminationBracket,
@@ -10,11 +11,23 @@ import {
 } from "../services/eliminationStageService";
 import { getUser } from "../services/authService";
 import { getTournamentById } from "../services/tournamentService";
-import { Paper, Typography, CircularProgress, Box } from "@mui/material";
+import {
+  Paper,
+  Typography,
+  CircularProgress,
+  Box,
+  Tabs,
+  Tab,
+  Alert,
+} from "@mui/material";
 import GroupStageMatches from "../components/matches/GroupStageMatches";
 import EliminationStageMatches from "../components/matches/EliminationStageMatches";
 import EditMatchDialog from "../components/matches/EditMatchDialog";
 import SeriesGameDialog from "../components/matches/SeriesGameDialog";
+import {
+  getTournamentScorers,
+  isScorersSupported,
+} from "../services/scorersService";
 
 const TournamentMatches = () => {
   const { tournamentId } = useParams();
@@ -37,6 +50,11 @@ const TournamentMatches = () => {
     scoreTeam1: "",
     scoreTeam2: "",
   });
+  const [scorersData, setScorersData] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [playoffStatus, setPlayoffStatus] = useState(null);
+  const [playoffBracket, setPlayoffBracket] = useState(null);
+  const [loadingPlayoffBracket, setLoadingPlayoffBracket] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,12 +67,47 @@ const TournamentMatches = () => {
         setTournament(tournamentData);
         setUser(userData);
 
+        const supportsScorers = isScorersSupported(tournamentData.sport?.name);
+
         if (tournamentData.format === "group-stage") {
-          const matchesData = await getMatchesByMatchday(tournamentId);
-          setMatchesByMatchday(matchesData);
+          const promises = [getMatchesByMatchday(tournamentId)];
+
+          if (supportsScorers) {
+            promises.push(getTournamentScorers(tournamentId));
+          }
+
+          const results = await Promise.all(promises);
+          setMatchesByMatchday(results[0]);
+          setScorersData(supportsScorers ? results[1] : null);
+
+          try {
+            const playoff = await checkPlayoffStatus(tournamentId);
+            setPlayoffStatus(playoff);
+
+            if (playoff.hasPlayoff) {
+              setLoadingPlayoffBracket(true);
+              try {
+                const bracketData = await getEliminationBracket(tournamentId);
+                setPlayoffBracket(bracketData);
+              } catch (error) {
+                console.error("Error cargando bracket del playoff:", error);
+              } finally {
+                setLoadingPlayoffBracket(false);
+              }
+            }
+          } catch (error) {
+            console.error("Error verificando estado del playoff:", error);
+          }
         } else if (tournamentData.format === "elimination") {
-          const bracketData = await getEliminationBracket(tournamentId);
-          setBracket(bracketData || {});
+          const promises = [getEliminationBracket(tournamentId)];
+
+          if (supportsScorers) {
+            promises.push(getTournamentScorers(tournamentId));
+          }
+
+          const results = await Promise.all(promises);
+          setBracket(results[0] || {});
+          setScorersData(supportsScorers ? results[1] : null);
         }
       } catch (err) {
         setError("Error al cargar los datos del torneo");
@@ -84,22 +137,22 @@ const TournamentMatches = () => {
         throw new Error("Los scores no pueden estar vacíos");
       }
 
-      const updatedMatch = await addSeriesGameResult(editingMatch._id, {
+      await addSeriesGameResult(editingMatch._id, {
         scoreTeam1: parseInt(scoreTeam1),
         scoreTeam2: parseInt(scoreTeam2),
       });
 
-      const updatedBracket = { ...bracket };
-      Object.keys(updatedBracket).forEach((round) => {
-        updatedBracket[round] = updatedBracket[round].map((match) => {
-          if (match._id === updatedMatch._id) {
-            return updatedMatch;
-          }
-          return match;
-        });
-      });
+      if (tournament.format === "elimination") {
+        const freshBracket = await getEliminationBracket(tournamentId);
+        setBracket(freshBracket || {});
+      } else if (playoffBracket) {
+        const freshPlayoffBracket = await getEliminationBracket(tournamentId);
+        setPlayoffBracket(freshPlayoffBracket || {});
+      }
 
-      setBracket(updatedBracket);
+      if (typeof refreshScorersData === "function") {
+        await refreshScorersData();
+      }
       setEditingMatch(null);
       setEditingSeriesGame(null);
     } catch (error) {
@@ -139,33 +192,42 @@ const TournamentMatches = () => {
         await updateMatchResult(editingMatch._id, updateData);
 
         if (tournament.format === "group-stage") {
-          const updatedMatchesByMatchday = { ...matchesByMatchday };
-          Object.keys(updatedMatchesByMatchday).forEach((matchday) => {
-            updatedMatchesByMatchday[matchday] = updatedMatchesByMatchday[
-              matchday
-            ].map((match) => {
-              if (match._id === editingMatch._id) {
-                return {
-                  ...match,
-                  ...updateData,
-                  ...(updateData.scoreTeam1 !== undefined &&
-                  updateData.scoreTeam2 !== undefined
-                    ? {
-                        winner:
-                          updateData.scoreTeam1 > updateData.scoreTeam2
-                            ? match.team1
-                            : updateData.scoreTeam1 < updateData.scoreTeam2
-                            ? match.team2
-                            : null,
-                        status: "completed",
-                      }
-                    : {}),
-                };
-              }
-              return match;
+          if (editingMatch.round === "group") {
+            const updatedMatchesByMatchday = { ...matchesByMatchday };
+            Object.keys(updatedMatchesByMatchday).forEach((matchday) => {
+              updatedMatchesByMatchday[matchday] = updatedMatchesByMatchday[
+                matchday
+              ].map((match) => {
+                if (match._id === editingMatch._id) {
+                  return {
+                    ...match,
+                    ...updateData,
+                    ...(updateData.scoreTeam1 !== undefined &&
+                    updateData.scoreTeam2 !== undefined
+                      ? {
+                          winner:
+                            updateData.scoreTeam1 > updateData.scoreTeam2
+                              ? match.team1
+                              : updateData.scoreTeam1 < updateData.scoreTeam2
+                              ? match.team2
+                              : null,
+                          status: "completed",
+                        }
+                      : {}),
+                  };
+                }
+                return match;
+              });
             });
-          });
-          setMatchesByMatchday(updatedMatchesByMatchday);
+            setMatchesByMatchday(updatedMatchesByMatchday);
+          } else {
+            if (playoffBracket) {
+              const freshPlayoffBracket = await getEliminationBracket(
+                tournamentId
+              );
+              setPlayoffBracket(freshPlayoffBracket || {});
+            }
+          }
         } else if (tournament.format === "elimination") {
           const updatedBracket = { ...bracket };
           Object.keys(updatedBracket).forEach((round) => {
@@ -205,12 +267,27 @@ const TournamentMatches = () => {
     }
   };
 
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   const matchdaysArray = Object.entries(matchesByMatchday).map(
     ([matchdayNumber, matches]) => ({
       matchday: matchdayNumber,
       matches,
     })
   );
+
+  const refreshScorersData = async () => {
+    try {
+      if (tournament && isScorersSupported(tournament.sport?.name)) {
+        const scorers = await getTournamentScorers(tournamentId);
+        setScorersData(scorers);
+      }
+    } catch (err) {
+      console.error("Error al refrescar la tabla de goleadores:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -236,6 +313,17 @@ const TournamentMatches = () => {
     );
   }
 
+  const showPlayoffTab =
+    tournament.format === "group-stage" && playoffStatus?.hasPlayoff;
+  const tabs = [
+    {
+      label:
+        tournament.format === "group-stage" ? "Fase de Grupos" : "Partidos",
+      value: 0,
+    },
+    ...(showPlayoffTab ? [{ label: "Eliminación Directa", value: 1 }] : []),
+  ];
+
   return (
     <Paper elevation={3} sx={{ p: 3, mt: 4, ml: 5, mr: 5 }}>
       <Typography
@@ -248,19 +336,70 @@ const TournamentMatches = () => {
         Programación del Torneo: {tournament.name}
       </Typography>
 
-      {tournament.format === "group-stage" ? (
-        <GroupStageMatches
-          matchdaysArray={matchdaysArray}
-          user={user}
-          onEditClick={handleEditClick}
-        />
-      ) : (
-        <EliminationStageMatches
-          bracket={bracket}
-          user={user}
-          onEditClick={handleEditClick}
-          onAddSeriesGame={handleAddSeriesGameClick}
-        />
+      {showPlayoffTab && (
+        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            centered
+            indicatorColor="primary"
+            textColor="primary"
+          >
+            {tabs.map((tab) => (
+              <Tab key={tab.value} label={tab.label} />
+            ))}
+          </Tabs>
+        </Box>
+      )}
+
+      {activeTab === 0 && (
+        <>
+          {tournament.format === "group-stage" ? (
+            <GroupStageMatches
+              matchdaysArray={matchdaysArray}
+              user={user}
+              onEditClick={handleEditClick}
+              scorersData={scorersData}
+              refreshScorersData={refreshScorersData}
+              sportName={tournament.sport?.name}
+            />
+          ) : (
+            <EliminationStageMatches
+              bracket={bracket}
+              user={user}
+              onEditClick={handleEditClick}
+              onAddSeriesGame={handleAddSeriesGameClick}
+              scorersData={scorersData}
+              refreshScorersData={refreshScorersData}
+              sportName={tournament.sport?.name}
+            />
+          )}
+        </>
+      )}
+
+      {activeTab === 1 && showPlayoffTab && (
+        <Box>
+          {loadingPlayoffBracket ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <CircularProgress />
+            </Box>
+          ) : playoffBracket ? (
+            <EliminationStageMatches
+              bracket={playoffBracket}
+              user={user}
+              onEditClick={handleEditClick}
+              onAddSeriesGame={handleAddSeriesGameClick}
+              scorersData={scorersData}
+              refreshScorersData={refreshScorersData}
+              sportName={tournament.sport?.name}
+              isPlayoff={true}
+            />
+          ) : (
+            <Alert severity="error">
+              No se pudo cargar el bracket de eliminacion directa
+            </Alert>
+          )}
+        </Box>
       )}
 
       <EditMatchDialog
