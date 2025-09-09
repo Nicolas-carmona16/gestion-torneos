@@ -32,6 +32,7 @@ import ManageMatches from "./pages/ManageMatches";
 import TournamentMatches from "./pages/TournamentMatches";
 import ManageReglamento from "./pages/ManageReglamento";
 import ManageResoluciones from "./pages/ManageResoluciones";
+import ManageCarrusel from "./pages/ManageCarrusel";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -161,6 +162,17 @@ const App = () => {
                   allowedRoles={["admin"]}
                 >
                   <CreateUser />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestion-carrusel"
+              element={
+                <ProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  allowedRoles={["admin"]}
+                >
+                  <ManageCarrusel />
                 </ProtectedRoute>
               }
             />

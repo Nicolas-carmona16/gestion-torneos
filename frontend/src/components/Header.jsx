@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -6,12 +6,15 @@ import {
   Typography,
   Menu,
   MenuItem,
+  Divider,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import logo from "../assets/logoUdeA.png";
-import { logoutUser } from "../services/authService";
+import { logoutUser, getUser } from "../services/authService";
 
 /**
  * @module Header
@@ -29,7 +32,22 @@ import { logoutUser } from "../services/authService";
  */
 const Header = ({ isAuthenticated, setIsAuthenticated }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUser = async () => {
+        try {
+          const userData = await getUser();
+          setUser(userData);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      };
+      fetchUser();
+    }
+  }, [isAuthenticated]);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -110,6 +128,30 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
           >
             Perfil
           </MenuItem>
+          {user?.role === "admin" && (
+            <>
+              <Divider />
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  navigate("/gestion-usuarios");
+                }}
+              >
+                <SettingsIcon sx={{ mr: 1 }} />
+                Gestión de Usuarios
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  navigate("/gestion-carrusel");
+                }}
+              >
+                <PhotoLibraryIcon sx={{ mr: 1 }} />
+                Gestión del Carrusel
+              </MenuItem>
+            </>
+          )}
+          <Divider />
           <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
         </Menu>
       </Toolbar>

@@ -15,6 +15,7 @@ import tournamentRoutes from "./routes/tournamentRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import playerRoutes from "./routes/playerRoutes.js";
+import carruselRoutes from "./routes/carruselRoutes.js";
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use("/api/tournaments", tournamentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/players", playerRoutes);
+app.use("/api/carrusel", carruselRoutes);
 
 // Middleware for handling errors
 app.use(notFound);
