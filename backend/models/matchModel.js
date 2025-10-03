@@ -69,6 +69,36 @@ const matchSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    // Estos campos son para los partidos de voleibol (sets)
+    setsTeam1: {
+      type: Number,
+      default: null,
+    },
+    setsTeam2: {
+      type: Number,
+      default: null,
+    },
+    setScores: [
+      {
+        setNumber: {
+          type: Number,
+          required: true,
+        },
+        scoreTeam1: {
+          type: Number,
+          required: true,
+        },
+        scoreTeam2: {
+          type: Number,
+          required: true,
+        },
+        winner: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Team",
+          default: null,
+        },
+      },
+    ],
     winner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
