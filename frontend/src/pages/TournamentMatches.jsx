@@ -28,6 +28,10 @@ import {
   getTournamentScorers,
   isScorersSupported,
 } from "../services/scorersService";
+import {
+  getTournamentGoalkeepers,
+  isGoalkeepersSupported,
+} from "../services/goalkeepersService";
 
 const TournamentMatches = () => {
   const { tournamentId } = useParams();
@@ -51,6 +55,7 @@ const TournamentMatches = () => {
     scoreTeam2: "",
   });
   const [scorersData, setScorersData] = useState(null);
+  const [goalkeepersData, setGoalkeepersData] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [playoffStatus, setPlayoffStatus] = useState(null);
   const [playoffBracket, setPlayoffBracket] = useState(null);
@@ -68,17 +73,27 @@ const TournamentMatches = () => {
         setUser(userData);
 
         const supportsScorers = isScorersSupported(tournamentData.sport?.name);
+        const supportsGoalkeepers = isGoalkeepersSupported(tournamentData.sport?.name);
 
         if (tournamentData.format === "group-stage") {
           const promises = [getMatchesByMatchday(tournamentId)];
-
+          
           if (supportsScorers) {
             promises.push(getTournamentScorers(tournamentId));
+          }
+          
+          if (supportsGoalkeepers) {
+            promises.push(getTournamentGoalkeepers(tournamentId));
           }
 
           const results = await Promise.all(promises);
           setMatchesByMatchday(results[0]);
-          setScorersData(supportsScorers ? results[1] : null);
+          
+          let scorersIndex = 1;
+          let goalkeepersIndex = supportsScorers ? 2 : 1;
+          
+          setScorersData(supportsScorers ? results[scorersIndex] : null);
+          setGoalkeepersData(supportsGoalkeepers ? results[goalkeepersIndex] : null);
 
           try {
             const playoff = await checkPlayoffStatus(tournamentId);
@@ -104,10 +119,19 @@ const TournamentMatches = () => {
           if (supportsScorers) {
             promises.push(getTournamentScorers(tournamentId));
           }
+          
+          if (supportsGoalkeepers) {
+            promises.push(getTournamentGoalkeepers(tournamentId));
+          }
 
           const results = await Promise.all(promises);
           setBracket(results[0] || {});
-          setScorersData(supportsScorers ? results[1] : null);
+          
+          let scorersIndex = 1;
+          let goalkeepersIndex = supportsScorers ? 2 : 1;
+          
+          setScorersData(supportsScorers ? results[scorersIndex] : null);
+          setGoalkeepersData(supportsGoalkeepers ? results[goalkeepersIndex] : null);
         }
       } catch (err) {
         setError("Error al cargar los datos del torneo");
@@ -153,6 +177,11 @@ const TournamentMatches = () => {
       if (typeof refreshScorersData === "function") {
         await refreshScorersData();
       }
+      
+      if (typeof refreshGoalkeepersData === "function") {
+        await refreshGoalkeepersData();
+      }
+      
       setEditingMatch(null);
       setEditingSeriesGame(null);
     } catch (error) {
@@ -201,6 +230,10 @@ const TournamentMatches = () => {
       if (typeof refreshScorersData === "function") {
         await refreshScorersData();
       }
+      
+      if (typeof refreshGoalkeepersData === "function") {
+        await refreshGoalkeepersData();
+      }
     } catch (error) {
       console.error("Error al actualizar el partido:", error);
       setError("Error al actualizar el partido");
@@ -244,6 +277,17 @@ const TournamentMatches = () => {
       }
     } catch (err) {
       console.error("Error al refrescar la tabla de goleadores:", err);
+    }
+  };
+
+  const refreshGoalkeepersData = async () => {
+    try {
+      if (tournament && isGoalkeepersSupported(tournament.sport?.name)) {
+        const goalkeepers = await getTournamentGoalkeepers(tournamentId);
+        setGoalkeepersData(goalkeepers);
+      }
+    } catch (err) {
+      console.error("Error al refrescar la tabla de porteros:", err);
     }
   };
 
@@ -319,7 +363,9 @@ const TournamentMatches = () => {
               onEditClick={handleEditClick}
               onUpdateMatch={handleUpdateMatch}
               scorersData={scorersData}
+              goalkeepersData={goalkeepersData}
               refreshScorersData={refreshScorersData}
+              refreshGoalkeepersData={refreshGoalkeepersData}
               sportName={tournament.sport?.name}
             />
           ) : (
@@ -330,7 +376,9 @@ const TournamentMatches = () => {
               onUpdateMatch={handleUpdateMatch}
               onAddSeriesGame={handleAddSeriesGameClick}
               scorersData={scorersData}
+              goalkeepersData={goalkeepersData}
               refreshScorersData={refreshScorersData}
+              refreshGoalkeepersData={refreshGoalkeepersData}
               sportName={tournament.sport?.name}
             />
           )}
@@ -351,7 +399,9 @@ const TournamentMatches = () => {
               onUpdateMatch={handleUpdateMatch}
               onAddSeriesGame={handleAddSeriesGameClick}
               scorersData={scorersData}
+              goalkeepersData={goalkeepersData}
               refreshScorersData={refreshScorersData}
+              refreshGoalkeepersData={refreshGoalkeepersData}
               sportName={tournament.sport?.name}
               isPlayoff={true}
             />
