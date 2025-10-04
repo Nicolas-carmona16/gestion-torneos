@@ -25,6 +25,7 @@ const EliminationStageMatches = ({
   bracket,
   user,
   onEditClick,
+  onUpdateMatch,
   onAddSeriesGame,
   scorersData,
   refreshScorersData,
@@ -46,7 +47,9 @@ const EliminationStageMatches = ({
   if (!bracket || Object.keys(bracket).length === 0) {
     return (
       <Typography sx={{ mt: 2 }}>
-        {isPlayoff ? "No hay partidos de eliminación directa programados" : "No hay partidos programados"}
+        {isPlayoff
+          ? "No hay partidos de eliminación directa programados"
+          : "No hay partidos programados"}
       </Typography>
     );
   }
@@ -64,7 +67,7 @@ const EliminationStageMatches = ({
         </Typography>
       )}
 
-      {(activeTab === 0 || !supportsScorers) ? (
+      {activeTab === 0 || !supportsScorers ? (
         Object.entries(bracket).map(([roundName, matches]) => (
           <Accordion
             key={roundName}
@@ -104,6 +107,7 @@ const EliminationStageMatches = ({
                   match={match}
                   user={user}
                   onEditClick={onEditClick}
+                  onUpdateMatch={onUpdateMatch}
                   onAddSeriesGame={onAddSeriesGame}
                   isElimination={true}
                   refreshScorersData={refreshScorersData}

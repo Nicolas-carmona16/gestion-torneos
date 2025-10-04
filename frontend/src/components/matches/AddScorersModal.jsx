@@ -157,7 +157,7 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={onClose} disableRestoreFocus>
       <Box sx={style}>
         <Typography variant="h6" gutterBottom>
           Agregar Goleadores

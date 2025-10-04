@@ -52,6 +52,8 @@ const GroupStage = ({
     tournament?.sport?.name === "Fútbol" ||
     tournament?.sport?.name === "Fútbol Sala";
 
+  const isVolleyball = tournament?.sport?.name === "Voleibol";
+
   useEffect(() => {
     const checkStatus = async () => {
       if (Object.keys(standings).length > 0) {
@@ -298,33 +300,41 @@ const GroupStage = ({
                       </Tooltip>
                       <Tooltip
                         title={
-                          isFootballSport ? "Goles a Favor" : "Puntos Anotados"
+                          isVolleyball
+                            ? "Sets a Favor"
+                            : isFootballSport
+                            ? "Goles a Favor"
+                            : "Puntos Anotados"
                         }
                       >
                         <TableCell align="right">
-                          {isFootballSport ? "GF" : "PA"}
+                          {isVolleyball ? "SF" : isFootballSport ? "GF" : "PA"}
                         </TableCell>
                       </Tooltip>
                       <Tooltip
                         title={
-                          isFootballSport
+                          isVolleyball
+                            ? "Sets en Contra"
+                            : isFootballSport
                             ? "Goles en Contra"
                             : "Puntos Recibidos"
                         }
                       >
                         <TableCell align="right">
-                          {isFootballSport ? "GC" : "PR"}
+                          {isVolleyball ? "SC" : isFootballSport ? "GC" : "PR"}
                         </TableCell>
                       </Tooltip>
                       <Tooltip
                         title={
-                          isFootballSport
+                          isVolleyball
+                            ? "Diferencia de Sets"
+                            : isFootballSport
                             ? "Diferencia de Goles"
                             : "Diferencia de Puntos"
                         }
                       >
                         <TableCell align="right">
-                          {isFootballSport ? "DG" : "DP"}
+                          {isVolleyball ? "DS" : isFootballSport ? "DG" : "DP"}
                         </TableCell>
                       </Tooltip>
                     </TableRow>
@@ -360,11 +370,29 @@ const GroupStage = ({
                           <TableCell align="right">{team.draws}</TableCell>
                         )}
                         <TableCell align="right">{team.losses}</TableCell>
-                        <TableCell align="right">{team.goalsFor}</TableCell>
-                        <TableCell align="right">{team.goalsAgainst}</TableCell>
-                        <TableCell align="right">
-                          {team.goalsFor - team.goalsAgainst}
-                        </TableCell>
+                        {isVolleyball ? (
+                          <>
+                            <TableCell align="right">
+                              {team.setsFor || 0}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.setsAgainst || 0}
+                            </TableCell>
+                            <TableCell align="right">
+                              {(team.setsFor || 0) - (team.setsAgainst || 0)}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell align="right">{team.goalsFor}</TableCell>
+                            <TableCell align="right">
+                              {team.goalsAgainst}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.goalsFor - team.goalsAgainst}
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

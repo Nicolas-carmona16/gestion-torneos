@@ -24,6 +24,7 @@ const GroupStageMatches = ({
   matchdaysArray,
   user,
   onEditClick,
+  onUpdateMatch,
   scorersData,
   refreshScorersData,
   sportName,
@@ -64,7 +65,7 @@ const GroupStageMatches = ({
         </Typography>
       )}
 
-      {(activeTab === 0 || !supportsScorers) ? (
+      {activeTab === 0 || !supportsScorers ? (
         matchdaysArray.map(({ matchday, matches }) => (
           <Accordion
             key={matchday}
@@ -102,6 +103,7 @@ const GroupStageMatches = ({
                   match={match}
                   user={user}
                   onEditClick={onEditClick}
+                  onUpdateMatch={onUpdateMatch}
                   isElimination={false}
                   refreshScorersData={refreshScorersData}
                 />

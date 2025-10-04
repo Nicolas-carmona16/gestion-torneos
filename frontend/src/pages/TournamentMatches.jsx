@@ -180,7 +180,34 @@ const TournamentMatches = () => {
     });
   };
 
-  const handleUpdateMatch = async () => {
+  const handleUpdateMatch = async (matchId, updateData) => {
+    try {
+      await updateMatchResult(matchId, updateData);
+
+      // Refrescar datos según el formato del torneo
+      if (tournament.format === "group-stage") {
+        const freshMatches = await getMatchesByMatchday(tournamentId);
+        setMatchesByMatchday(freshMatches);
+      } else if (tournament.format === "elimination") {
+        const freshBracket = await getEliminationBracket(tournamentId);
+        setBracket(freshBracket || {});
+      }
+
+      if (playoffBracket) {
+        const freshPlayoffBracket = await getEliminationBracket(tournamentId);
+        setPlayoffBracket(freshPlayoffBracket || {});
+      }
+
+      if (typeof refreshScorersData === "function") {
+        await refreshScorersData();
+      }
+    } catch (error) {
+      console.error("Error al actualizar el partido:", error);
+      setError("Error al actualizar el partido");
+    }
+  };
+
+  const handleUpdateMatchFromDialog = async () => {
     try {
       const updateData = Object.fromEntries(
         Object.entries(editFormData).filter(
@@ -189,78 +216,9 @@ const TournamentMatches = () => {
       );
 
       if (Object.keys(updateData).length > 0) {
-        await updateMatchResult(editingMatch._id, updateData);
-
-        if (tournament.format === "group-stage") {
-          if (editingMatch.round === "group") {
-            const updatedMatchesByMatchday = { ...matchesByMatchday };
-            Object.keys(updatedMatchesByMatchday).forEach((matchday) => {
-              updatedMatchesByMatchday[matchday] = updatedMatchesByMatchday[
-                matchday
-              ].map((match) => {
-                if (match._id === editingMatch._id) {
-                  return {
-                    ...match,
-                    ...updateData,
-                    ...(updateData.scoreTeam1 !== undefined &&
-                    updateData.scoreTeam2 !== undefined
-                      ? {
-                          winner:
-                            updateData.scoreTeam1 > updateData.scoreTeam2
-                              ? match.team1
-                              : updateData.scoreTeam1 < updateData.scoreTeam2
-                              ? match.team2
-                              : null,
-                          status: "completed",
-                        }
-                      : {}),
-                  };
-                }
-                return match;
-              });
-            });
-            setMatchesByMatchday(updatedMatchesByMatchday);
-          } else {
-            if (playoffBracket) {
-              const freshPlayoffBracket = await getEliminationBracket(
-                tournamentId
-              );
-              setPlayoffBracket(freshPlayoffBracket || {});
-            }
-          }
-        } else if (tournament.format === "elimination") {
-          const updatedBracket = { ...bracket };
-          Object.keys(updatedBracket).forEach((round) => {
-            updatedBracket[round] = updatedBracket[round].map((match) => {
-              if (match._id === editingMatch._id) {
-                const updatedMatch = {
-                  ...match,
-                  ...updateData,
-                };
-
-                if (
-                  updateData.scoreTeam1 !== undefined &&
-                  updateData.scoreTeam2 !== undefined
-                ) {
-                  updatedMatch.status = "completed";
-                  updatedMatch.winner =
-                    updateData.scoreTeam1 > updateData.scoreTeam2
-                      ? match.team1
-                      : updateData.scoreTeam1 < updateData.scoreTeam2
-                      ? match.team2
-                      : null;
-                }
-
-                return updatedMatch;
-              }
-              return match;
-            });
-          });
-          setBracket(updatedBracket);
-        }
+        await handleUpdateMatch(editingMatch._id, updateData);
+        setEditingMatch(null);
       }
-
-      setEditingMatch(null);
     } catch (error) {
       console.error("Error al actualizar el partido:", error);
       setError("Error al actualizar el partido");
@@ -359,6 +317,7 @@ const TournamentMatches = () => {
               matchdaysArray={matchdaysArray}
               user={user}
               onEditClick={handleEditClick}
+              onUpdateMatch={handleUpdateMatch}
               scorersData={scorersData}
               refreshScorersData={refreshScorersData}
               sportName={tournament.sport?.name}
@@ -368,6 +327,7 @@ const TournamentMatches = () => {
               bracket={bracket}
               user={user}
               onEditClick={handleEditClick}
+              onUpdateMatch={handleUpdateMatch}
               onAddSeriesGame={handleAddSeriesGameClick}
               scorersData={scorersData}
               refreshScorersData={refreshScorersData}
@@ -388,6 +348,7 @@ const TournamentMatches = () => {
               bracket={playoffBracket}
               user={user}
               onEditClick={handleEditClick}
+              onUpdateMatch={handleUpdateMatch}
               onAddSeriesGame={handleAddSeriesGameClick}
               scorersData={scorersData}
               refreshScorersData={refreshScorersData}
@@ -409,7 +370,7 @@ const TournamentMatches = () => {
         tournamentFormat={tournament?.format}
         formData={editFormData}
         onFormChange={handleEditFormChange}
-        onSubmit={handleUpdateMatch}
+        onSubmit={handleUpdateMatchFromDialog}
       />
 
       <SeriesGameDialog
