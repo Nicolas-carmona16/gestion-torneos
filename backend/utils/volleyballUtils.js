@@ -133,42 +133,91 @@ export const calculateVolleyballResult = (setScores, sportRules) => {
  */
 export const calculateVolleyballPoints = (matchResult, sportRules) => {
   const { setsTeam1, setsTeam2, isComplete } = matchResult;
-  const scoringRules = sportRules.scoring || {};
+  
 
+  
   if (!isComplete) {
     return { team1Points: 0, team2Points: 0 };
   }
 
-  // Determinar el tipo de victoria
-  const is3_0_or_3_1 =
-    (setsTeam1 === 3 && setsTeam2 <= 1) || (setsTeam2 === 3 && setsTeam1 <= 1);
-  const is3_2 =
-    (setsTeam1 === 3 && setsTeam2 === 2) ||
-    (setsTeam2 === 3 && setsTeam1 === 2);
+  // Verificar si las reglas usan el sistema simple (points.win, points.loss)
+  // o el sistema complejo de voleibol (scoring.win3_0_or_3_1, etc.)
+  const hasSimplePointsSystem = sportRules.points && (sportRules.points.win !== undefined);
+  const hasVolleyballScoring = sportRules.scoring && (sportRules.scoring.win3_0_or_3_1 !== undefined);
+  
 
-  let team1Points, team2Points;
-
-  if (setsTeam1 > setsTeam2) {
-    // Equipo 1 gana
-    if (is3_0_or_3_1) {
-      team1Points = scoringRules.win3_0_or_3_1 || 3;
-      team2Points = scoringRules.loss1_3_or_0_3 || 0;
-    } else if (is3_2) {
-      team1Points = scoringRules.win3_2 || 2;
-      team2Points = scoringRules.loss2_3 || 1;
+  
+  if (hasSimplePointsSystem) {
+    // Sistema simple: victoria = X puntos, derrota = Y puntos
+    const winPoints = sportRules.points.win || 3;
+    const lossPoints = sportRules.points.loss || 0;
+    
+    if (setsTeam1 > setsTeam2) {
+      console.log('Team 1 wins - Points assigned:', { team1: winPoints, team2: lossPoints });
+      console.log('=== END VOLLEYBALL POINTS DEBUG ===');
+      return { team1Points: winPoints, team2Points: lossPoints };
+    } else {
+      console.log('Team 2 wins - Points assigned:', { team1: lossPoints, team2: winPoints });
+      console.log('=== END VOLLEYBALL POINTS DEBUG ===');
+      return { team1Points: lossPoints, team2Points: winPoints };
     }
+  } else if (hasVolleyballScoring) {
+    // Sistema complejo de voleibol tradicional
+    const scoringRules = sportRules.scoring || {};
+    const setsToWin = parseInt(sportRules.setsToWin) || 3;
+    
+    // Determinar el tipo de victoria basado en setsToWin dinámico
+    let isDominantWin, isCloseWin;
+    
+    if (setsToWin === 2) {
+      // Para torneos que requieren 2 sets para ganar
+      isDominantWin = (setsTeam1 === 2 && setsTeam2 === 0) || (setsTeam2 === 2 && setsTeam1 === 0);
+      isCloseWin = (setsTeam1 === 2 && setsTeam2 === 1) || (setsTeam2 === 2 && setsTeam1 === 1);
+    } else {
+      // Para torneos tradicionales que requieren 3 sets para ganar
+      isDominantWin = (setsTeam1 === 3 && setsTeam2 <= 1) || (setsTeam2 === 3 && setsTeam1 <= 1);
+      isCloseWin = (setsTeam1 === 3 && setsTeam2 === 2) || (setsTeam2 === 3 && setsTeam1 === 2);
+    }
+    
+
+
+    let team1Points, team2Points;
+
+    if (setsTeam1 > setsTeam2) {
+      // Equipo 1 gana
+      if (isDominantWin) {
+        team1Points = parseInt(scoringRules.win3_0_or_3_1) || 3;
+        team2Points = parseInt(scoringRules.loss1_3_or_0_3) || 0;
+      } else if (isCloseWin) {
+        team1Points = parseInt(scoringRules.win3_2) || 2;
+        team2Points = parseInt(scoringRules.loss2_3) || 0; // Cambié de 1 a 0
+
+      }
+    } else {
+      // Equipo 2 gana
+      if (isDominantWin) {
+        team1Points = parseInt(scoringRules.loss1_3_or_0_3) || 0;
+        team2Points = parseInt(scoringRules.win3_0_or_3_1) || 3;
+      } else if (isCloseWin) {
+        team1Points = parseInt(scoringRules.loss2_3) || 0; // Cambié de 1 a 0
+        team2Points = parseInt(scoringRules.win3_2) || 2;
+      }
+    }
+
+
+    return { team1Points, team2Points };
   } else {
-    // Equipo 2 gana
-    if (is3_0_or_3_1) {
-      team1Points = scoringRules.loss1_3_or_0_3 || 0;
-      team2Points = scoringRules.win3_0_or_3_1 || 3;
-    } else if (is3_2) {
-      team1Points = scoringRules.loss2_3 || 1;
-      team2Points = scoringRules.win3_2 || 2;
+    // Fallback: sistema por defecto
+    // Fallback: sistema por defecto
+    const defaultWin = 3;
+    const defaultLoss = 0;
+    
+    if (setsTeam1 > setsTeam2) {
+      return { team1Points: defaultWin, team2Points: defaultLoss };
+    } else {
+      return { team1Points: defaultLoss, team2Points: defaultWin };
     }
   }
-
-  return { team1Points, team2Points };
 };
 
 /**

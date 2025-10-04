@@ -148,6 +148,8 @@ export const generateGroupStageMatches = async (tournament, groups) => {
 export const calculateGroupStandings = async (matches, tournament) => {
   const standings = {};
   const customRules = tournament.customRules || {};
+  
+
 
   // Obtener información del deporte
   const tournamentWithSport = await Tournament.findById(
@@ -156,10 +158,23 @@ export const calculateGroupStandings = async (matches, tournament) => {
   const sportRules = tournamentWithSport.sport.defaultRules;
   const isVolleyballSport = isVolleyball(tournamentWithSport.sport.name);
 
-  // Puntos por defecto si no hay customRules
-  const pointsForWin = customRules.points?.win || 3;
-  const pointsForDraw = customRules.points?.draw || 1;
-  const pointsForLoss = customRules.points?.loss || 0;
+  // Extraer puntos según el sistema (simple o complejo de voleibol)
+  let pointsForWin, pointsForDraw, pointsForLoss;
+  
+  if (isVolleyballSport && customRules.scoring) {
+    // Sistema de voleibol: usar el mayor valor de victoria como referencia
+    // Normalmente win3_0_or_3_1 es el más alto
+    pointsForWin = parseInt(customRules.scoring.win3_0_or_3_1) || 3;
+    pointsForDraw = 1; // Voleibol típicamente no tiene empates
+    pointsForLoss = parseInt(customRules.scoring.loss1_3_or_0_3) || 0;
+  } else {
+    // Sistema simple para otros deportes
+    pointsForWin = customRules.points?.win || 3;
+    pointsForDraw = customRules.points?.draw || 1;
+    pointsForLoss = customRules.points?.loss || 0;
+  }
+  
+
 
   // Inicializar standings para cada equipo
   matches.forEach((match) => {
@@ -217,9 +232,11 @@ export const calculateGroupStandings = async (matches, tournament) => {
             setsTeam2: match.setsTeam2,
             isComplete: true,
           };
+          // Usar customRules del torneo si existen, sino usar sportRules por defecto
+          const rulesForVolleyball = customRules && Object.keys(customRules).length > 0 ? customRules : sportRules;
           const volleyballPoints = calculateVolleyballPoints(
             matchResult,
-            sportRules
+            rulesForVolleyball
           );
 
           team1.points += volleyballPoints.team1Points;
