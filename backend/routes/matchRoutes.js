@@ -13,6 +13,8 @@ import {
   getBracket,
   addScorers,
   getTournamentScorers,
+  addGoalkeepers,
+  getTournamentGoalkeepers,
 } from "../controllers/matchController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
@@ -33,5 +35,9 @@ router.get("/:tournamentId/bracket", getBracket);
 // Rutas para goleadores
 router.post("/:matchId/scorers", protect, authorizeRoles("admin", "assistant"), addScorers);
 router.get("/:tournamentId/scorers", getTournamentScorers);
+
+// Rutas para porteros
+router.post("/:matchId/goalkeepers", protect, authorizeRoles("admin", "assistant"), addGoalkeepers);
+router.get("/:tournamentId/goalkeepers", getTournamentGoalkeepers);
 
 export default router;
