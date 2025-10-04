@@ -189,6 +189,8 @@ export const calculateGroupStandings = async (matches, tournament) => {
         goalsAgainst: 0,
         setsFor: 0,
         setsAgainst: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
         points: 0,
       };
     }
@@ -204,6 +206,8 @@ export const calculateGroupStandings = async (matches, tournament) => {
         goalsAgainst: 0,
         setsFor: 0,
         setsAgainst: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
         points: 0,
       };
     }
@@ -225,6 +229,17 @@ export const calculateGroupStandings = async (matches, tournament) => {
           team1.setsAgainst += match.setsTeam2;
           team2.setsFor += match.setsTeam2;
           team2.setsAgainst += match.setsTeam1;
+
+          // Calcular puntos totales a favor y en contra (suma de puntos de todos los sets)
+          if (match.setScores && match.setScores.length > 0) {
+            const team1TotalPoints = match.setScores.reduce((total, set) => total + (set.scoreTeam1 || 0), 0);
+            const team2TotalPoints = match.setScores.reduce((total, set) => total + (set.scoreTeam2 || 0), 0);
+            
+            team1.pointsFor += team1TotalPoints;
+            team1.pointsAgainst += team2TotalPoints;
+            team2.pointsFor += team2TotalPoints;
+            team2.pointsAgainst += team1TotalPoints;
+          }
 
           // Calcular puntos según reglas de voleibol
           const matchResult = {

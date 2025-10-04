@@ -337,6 +337,16 @@ const GroupStage = ({
                           {isVolleyball ? "DS" : isFootballSport ? "DG" : "DP"}
                         </TableCell>
                       </Tooltip>
+                      {isVolleyball && (
+                        <>
+                          <Tooltip title="Puntos a Favor">
+                            <TableCell align="right">PF</TableCell>
+                          </Tooltip>
+                          <Tooltip title="Puntos en Contra">
+                            <TableCell align="right">PC</TableCell>
+                          </Tooltip>
+                        </>
+                      )}
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -380,6 +390,12 @@ const GroupStage = ({
                             </TableCell>
                             <TableCell align="right">
                               {(team.setsFor || 0) - (team.setsAgainst || 0)}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.pointsFor || 0}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.pointsAgainst || 0}
                             </TableCell>
                           </>
                         ) : (
