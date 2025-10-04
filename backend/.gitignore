@@ -1,0 +1,61 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# OS especific files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+lerna-debug.log
+pnpm-debug.log
+
+# Editor & OS specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+Thumbs.db
+
+# Cache & Build Files
+dist/
+build/
+.cache/
+*.pid
+*.seed
+*.pid.lock
+
+# MongoDB
+dump/
+data/
+*.lock
+mongod.lock
+
+# Temporary Files
+tmp/
+temp/
+*.bak
+*.old
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.json
+docker-compose.override.env
+docker-compose.override.yaml
+
+# Ignore the docs folder
+/docs

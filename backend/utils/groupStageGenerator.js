@@ -6,6 +6,8 @@
 
 import Team from "../models/teamModel.js";
 import Match from "../models/matchModel.js";
+import Tournament from "../models/tournamentModel.js";
+import { calculateVolleyballPoints, isVolleyball } from "./volleyballUtils.js";
 
 /**
  * Generates group stage matches for a tournament.
@@ -143,9 +145,16 @@ export const generateGroupStageMatches = async (tournament, groups) => {
  * @param {Object} tournament - Tournament with the scoring rules
  * @returns {Array} Sorted standings table
  */
-export const calculateGroupStandings = (matches, tournament) => {
+export const calculateGroupStandings = async (matches, tournament) => {
   const standings = {};
   const customRules = tournament.customRules || {};
+
+  // Obtener información del deporte
+  const tournamentWithSport = await Tournament.findById(
+    tournament._id
+  ).populate("sport");
+  const sportRules = tournamentWithSport.sport.defaultRules;
+  const isVolleyballSport = isVolleyball(tournamentWithSport.sport.name);
 
   // Puntos por defecto si no hay customRules
   const pointsForWin = customRules.points?.win || 3;
@@ -163,6 +172,8 @@ export const calculateGroupStandings = (matches, tournament) => {
         losses: 0,
         goalsFor: 0,
         goalsAgainst: 0,
+        setsFor: 0,
+        setsAgainst: 0,
         points: 0,
       };
     }
@@ -176,6 +187,8 @@ export const calculateGroupStandings = (matches, tournament) => {
         losses: 0,
         goalsFor: 0,
         goalsAgainst: 0,
+        setsFor: 0,
+        setsAgainst: 0,
         points: 0,
       };
     }
@@ -183,38 +196,69 @@ export const calculateGroupStandings = (matches, tournament) => {
 
   // Procesar los partidos completados
   matches.forEach((match) => {
-    if (
-      match.status === "completed" &&
-      match.scoreTeam1 !== null &&
-      match.scoreTeam2 !== null
-    ) {
+    if (match.status === "completed") {
       const team1 = standings[match.team1];
       const team2 = standings[match.team2];
 
       team1.played++;
       team2.played++;
 
-      team1.goalsFor += match.scoreTeam1;
-      team1.goalsAgainst += match.scoreTeam2;
+      if (isVolleyballSport) {
+        // Lógica para voleibol (sets)
+        if (match.setsTeam1 !== null && match.setsTeam2 !== null) {
+          team1.setsFor += match.setsTeam1;
+          team1.setsAgainst += match.setsTeam2;
+          team2.setsFor += match.setsTeam2;
+          team2.setsAgainst += match.setsTeam1;
 
-      team2.goalsFor += match.scoreTeam2;
-      team2.goalsAgainst += match.scoreTeam1;
+          // Calcular puntos según reglas de voleibol
+          const matchResult = {
+            setsTeam1: match.setsTeam1,
+            setsTeam2: match.setsTeam2,
+            isComplete: true,
+          };
+          const volleyballPoints = calculateVolleyballPoints(
+            matchResult,
+            sportRules
+          );
 
-      if (match.scoreTeam1 > match.scoreTeam2) {
-        team1.wins++;
-        team1.points += pointsForWin;
-        team2.losses++;
-        team2.points += pointsForLoss;
-      } else if (match.scoreTeam1 < match.scoreTeam2) {
-        team2.wins++;
-        team2.points += pointsForWin;
-        team1.losses++;
-        team1.points += pointsForLoss;
+          team1.points += volleyballPoints.team1Points;
+          team2.points += volleyballPoints.team2Points;
+
+          // Determinar victorias/derrotas
+          if (match.setsTeam1 > match.setsTeam2) {
+            team1.wins++;
+            team2.losses++;
+          } else if (match.setsTeam1 < match.setsTeam2) {
+            team2.wins++;
+            team1.losses++;
+          }
+        }
       } else {
-        team1.draws++;
-        team2.draws++;
-        team1.points += pointsForDraw;
-        team2.points += pointsForDraw;
+        // Lógica original para otros deportes (goles)
+        if (match.scoreTeam1 !== null && match.scoreTeam2 !== null) {
+          team1.goalsFor += match.scoreTeam1;
+          team1.goalsAgainst += match.scoreTeam2;
+          team2.goalsFor += match.scoreTeam2;
+          team2.goalsAgainst += match.scoreTeam1;
+
+          if (match.scoreTeam1 > match.scoreTeam2) {
+            team1.wins++;
+            team1.points += pointsForWin;
+            team2.losses++;
+            team2.points += pointsForLoss;
+          } else if (match.scoreTeam1 < match.scoreTeam2) {
+            team2.wins++;
+            team2.points += pointsForWin;
+            team1.losses++;
+            team1.points += pointsForLoss;
+          } else {
+            team1.draws++;
+            team2.draws++;
+            team1.points += pointsForDraw;
+            team2.points += pointsForDraw;
+          }
+        }
       }
     }
   });
@@ -228,16 +272,30 @@ export const calculateGroupStandings = (matches, tournament) => {
       return b.points - a.points;
     }
 
-    // 2. Diferencia de goles
-    const diffA = a.goalsFor - a.goalsAgainst;
-    const diffB = b.goalsFor - b.goalsAgainst;
-    if (diffB !== diffA) {
-      return diffB - diffA;
-    }
+    if (isVolleyballSport) {
+      // 2. Diferencia de sets (voleibol)
+      const diffA = a.setsFor - a.setsAgainst;
+      const diffB = b.setsFor - b.setsAgainst;
+      if (diffB !== diffA) {
+        return diffB - diffA;
+      }
 
-    // 3. Goles a favor
-    if (b.goalsFor !== a.goalsFor) {
-      return b.goalsFor - a.goalsFor;
+      // 3. Sets a favor
+      if (b.setsFor !== a.setsFor) {
+        return b.setsFor - a.setsFor;
+      }
+    } else {
+      // 2. Diferencia de goles (otros deportes)
+      const diffA = a.goalsFor - a.goalsAgainst;
+      const diffB = b.goalsFor - b.goalsAgainst;
+      if (diffB !== diffA) {
+        return diffB - diffA;
+      }
+
+      // 3. Goles a favor
+      if (b.goalsFor !== a.goalsFor) {
+        return b.goalsFor - a.goalsFor;
+      }
     }
 
     // 4. Enfrentamiento directo (implementación básica)
@@ -248,10 +306,20 @@ export const calculateGroupStandings = (matches, tournament) => {
     );
 
     if (directMatch && directMatch.status === "completed") {
-      if (directMatch.team1.equals(a.team)) {
-        return directMatch.scoreTeam2 - directMatch.scoreTeam1;
+      if (isVolleyballSport) {
+        // Comparar por sets en voleibol
+        if (directMatch.team1.equals(a.team)) {
+          return directMatch.setsTeam2 - directMatch.setsTeam1;
+        } else {
+          return directMatch.setsTeam1 - directMatch.setsTeam2;
+        }
       } else {
-        return directMatch.scoreTeam1 - directMatch.scoreTeam2;
+        // Comparar por goles en otros deportes
+        if (directMatch.team1.equals(a.team)) {
+          return directMatch.scoreTeam2 - directMatch.scoreTeam1;
+        } else {
+          return directMatch.scoreTeam1 - directMatch.scoreTeam2;
+        }
       }
     }
 

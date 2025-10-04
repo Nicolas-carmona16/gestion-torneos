@@ -16,6 +16,11 @@ import {
   generateEliminationBracket,
   generatePlayoffBracket,
 } from "../utils/eliminationBracketGenerator.js";
+import {
+  validateVolleyballSets,
+  calculateVolleyballResult,
+  isVolleyball,
+} from "../utils/volleyballUtils.js";
 
 /**
  * Generates the group stage for a tournament
@@ -142,7 +147,10 @@ export const getGroupStandings = async (req, res) => {
     // Calcular posiciones para cada grupo
     const standings = {};
     for (const [group, groupMatches] of Object.entries(matchesByGroup)) {
-      standings[group] = calculateGroupStandings(groupMatches, tournament);
+      standings[group] = await calculateGroupStandings(
+        groupMatches,
+        tournament
+      );
     }
 
     // Populate los nombres de los equipos en los standings
@@ -177,30 +185,88 @@ export const updateMatch = async (req, res) => {
     const { matchId } = req.params;
     const updateData = req.body;
 
-    const match = await Match.findByIdAndUpdate(matchId, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
+    const match = await Match.findById(matchId).populate("tournament", "sport");
     if (!match) {
       return res.status(404).json({ error: "Partido no encontrado" });
     }
 
-    // Si se actualiza el resultado, determinar el ganador
-    if (
-      updateData.scoreTeam1 !== undefined &&
-      updateData.scoreTeam2 !== undefined
-    ) {
-      if (updateData.scoreTeam1 > updateData.scoreTeam2) {
-        match.winner = match.team1;
-      } else if (updateData.scoreTeam1 < updateData.scoreTeam2) {
-        match.winner = match.team2;
-      } else {
-        match.winner = null; // Empate
+    // Obtener reglas del deporte
+    const tournament = await Tournament.findById(match.tournament).populate(
+      "sport"
+    );
+    const sportRules = tournament.sport.defaultRules;
+
+    // Validar si es voleibol y se están actualizando sets
+    if (isVolleyball(tournament.sport.name) && updateData.setScores) {
+      // Validar sets de voleibol
+      const validation = validateVolleyballSets(
+        updateData.setScores,
+        sportRules
+      );
+      if (!validation.isValid) {
+        return res.status(400).json({
+          error: "Datos de sets inválidos",
+          details: validation.errors,
+        });
       }
 
-      match.status = "completed";
+      // Calcular resultado del partido
+      const result = calculateVolleyballResult(
+        updateData.setScores,
+        sportRules
+      );
+
+      // Actualizar campos de sets
+      match.setsTeam1 = result.setsTeam1;
+      match.setsTeam2 = result.setsTeam2;
+      match.setScores = updateData.setScores;
+
+      // Determinar ganador
+      if (result.winner === "team1") {
+        match.winner = match.team1;
+      } else if (result.winner === "team2") {
+        match.winner = match.team2;
+      } else {
+        match.winner = null;
+      }
+
+      // Marcar como completado si el partido terminó
+      if (result.isComplete) {
+        match.status = "completed";
+      }
+
+      // Actualizar otros campos si se proporcionan
+      if (updateData.date !== undefined) match.date = updateData.date;
+      if (updateData.time !== undefined) match.time = updateData.time;
+      if (updateData.location !== undefined)
+        match.location = updateData.location;
+      if (updateData.description !== undefined)
+        match.description = updateData.description;
+
       await match.save();
+    } else {
+      // Lógica original para otros deportes
+      const updatedMatch = await Match.findByIdAndUpdate(matchId, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
+      // Si se actualiza el resultado, determinar el ganador
+      if (
+        updateData.scoreTeam1 !== undefined &&
+        updateData.scoreTeam2 !== undefined
+      ) {
+        if (updateData.scoreTeam1 > updateData.scoreTeam2) {
+          updatedMatch.winner = updatedMatch.team1;
+        } else if (updateData.scoreTeam1 < updateData.scoreTeam2) {
+          updatedMatch.winner = updatedMatch.team2;
+        } else {
+          updatedMatch.winner = null; // Empate
+        }
+
+        updatedMatch.status = "completed";
+        await updatedMatch.save();
+      }
     }
 
     // Populate para mejor respuesta
@@ -390,7 +456,7 @@ export const createPlayoffBracket = async (req, res) => {
     // Calcular posiciones para cada grupo
     const standings = {};
     for (const [group, matches] of Object.entries(matchesByGroup)) {
-      standings[group] = calculateGroupStandings(matches, tournament);
+      standings[group] = await calculateGroupStandings(matches, tournament);
     }
 
     // Obtener equipos que avanzan
@@ -406,12 +472,10 @@ export const createPlayoffBracket = async (req, res) => {
     });
 
     if (advancingTeams.length < 2) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "No hay suficientes equipos para generar el playoff. Se necesitan al menos 2 equipos.",
-        });
+      return res.status(400).json({
+        error:
+          "No hay suficientes equipos para generar el playoff. Se necesitan al menos 2 equipos.",
+      });
     }
 
     // Verificar que no existan partidos de playoff ya generados
