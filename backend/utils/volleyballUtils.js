@@ -29,7 +29,15 @@ export const validateVolleyballSets = (setScores, sportRules) => {
   // Validar cada set
   setScores.forEach((set, index) => {
     const { setNumber, scoreTeam1, scoreTeam2 } = set;
-    const isLastSet = setNumber === 5;
+    
+    // Calcular sets ganados antes de este set
+    const team1SetsBefore = setScores.slice(0, index).filter(s => s.scoreTeam1 > s.scoreTeam2).length;
+    const team2SetsBefore = setScores.slice(0, index).filter(s => s.scoreTeam2 > s.scoreTeam1).length;
+    
+    // Es el último set si cualquier equipo puede ganar el partido con este set
+    const couldBeDecisive = (team1SetsBefore === setsToWin - 1) || (team2SetsBefore === setsToWin - 1);
+    const isLastSet = couldBeDecisive;
+    
     const requiredPoints = isLastSet ? lastSetPoints : regularSetPoints;
 
     // Validar que los puntajes sean números válidos
@@ -59,7 +67,7 @@ export const validateVolleyballSets = (setScores, sportRules) => {
     }
 
     // Validar que no haya empate
-    if (scoreTeam1 === scoreTeam2) {
+    if (scoreTeam1 === scoreTeam2 && scoreTeam1 > 0) {
       errors.push(`Set ${setNumber}: No puede haber empate en voleibol`);
     }
   });

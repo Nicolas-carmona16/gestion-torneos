@@ -44,7 +44,10 @@ const VolleyballSetsDialog = ({
   }, [open, match]);
 
   const addSet = () => {
-    if (sets.length < 5) {
+    const { setsToWin } = getTournamentRules();
+    const maxPossibleSets = (setsToWin * 2) - 1; // Ej: si se necesitan 3 sets para ganar, max = 5 sets
+    
+    if (sets.length < maxPossibleSets) {
       const newSet = {
         setNumber: sets.length + 1,
         scoreTeam1: 0,
@@ -75,15 +78,44 @@ const VolleyballSetsDialog = ({
     setSets(newSets);
   };
 
+  // Helper function to extract tournament rules
+  const getTournamentRules = () => {
+    const tournamentRules = match?.tournament?.customRules || {};
+    
+    return {
+      regularSetPoints: 
+        tournamentRules.sets?.regularSetPoints || 
+        tournamentRules.regularSetPoints || 
+        25,
+      lastSetPoints: 
+        tournamentRules.sets?.lastSetPoints || 
+        tournamentRules.lastSetPoints || 
+        15,
+      minDifference: 
+        tournamentRules.sets?.minDifference || 
+        tournamentRules.minDifference || 
+        2,
+      setsToWin: 
+        tournamentRules.setsToWin || 
+        3
+    };
+  };
+
   const validateSets = () => {
     const newErrors = [];
-    const regularSetPoints = 25;
-    const lastSetPoints = 15;
-    const minDifference = 2;
+    const { regularSetPoints, lastSetPoints, minDifference, setsToWin } = getTournamentRules();
 
-    sets.forEach((set) => {
+    sets.forEach((set, index) => {
       const { setNumber, scoreTeam1, scoreTeam2 } = set;
-      const isLastSet = setNumber === 5;
+      
+      // Calcular sets ganados antes de este set
+      const team1SetsBefore = sets.slice(0, index).filter(s => s.scoreTeam1 > s.scoreTeam2).length;
+      const team2SetsBefore = sets.slice(0, index).filter(s => s.scoreTeam2 > s.scoreTeam1).length;
+      
+      // Es el último set si cualquier equipo puede ganar el partido con este set
+      const couldBeDecisive = (team1SetsBefore === setsToWin - 1) || (team2SetsBefore === setsToWin - 1);
+      const isLastSet = couldBeDecisive;
+      
       const requiredPoints = isLastSet ? lastSetPoints : regularSetPoints;
 
       // Validar que los puntajes no sean negativos
@@ -122,12 +154,12 @@ const VolleyballSetsDialog = ({
       (set) => set.scoreTeam2 > set.scoreTeam1
     ).length;
 
-    if (team1Sets < 3 && team2Sets < 3) {
-      newErrors.push("El partido debe completarse a 3 sets");
+    if (team1Sets < setsToWin && team2Sets < setsToWin) {
+      newErrors.push(`El partido debe completarse a ${setsToWin} sets`);
     }
 
     // Validar que no se jueguen sets innecesarios
-    if (team1Sets >= 3 && team2Sets >= 3) {
+    if (team1Sets >= setsToWin && team2Sets >= setsToWin) {
       newErrors.push("No se pueden ganar sets ambos equipos");
     }
 
@@ -177,6 +209,10 @@ const VolleyballSetsDialog = ({
     (set) => set.scoreTeam2 > set.scoreTeam1
   ).length;
 
+  // Get tournament rules for UI display
+  const { setsToWin, regularSetPoints, lastSetPoints } = getTournamentRules();
+  const maxPossibleSets = (setsToWin * 2) - 1;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" disableRestoreFocus>
       <DialogTitle>
@@ -206,14 +242,19 @@ const VolleyballSetsDialog = ({
               alignItems: "center",
             }}
           >
-            <Typography variant="h6">
-              Resultado: {team1Sets} - {team2Sets}
-            </Typography>
+            <Box>
+              <Typography variant="h6">
+                Resultado: {team1Sets} - {team2Sets}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Se necesitan {setsToWin} sets para ganar • Sets regulares: {regularSetPoints} pts • Último set: {lastSetPoints} pts
+              </Typography>
+            </Box>
             <Button
               variant="outlined"
               startIcon={<Add />}
               onClick={addSet}
-              disabled={sets.length >= 5}
+              disabled={sets.length >= maxPossibleSets}
             >
               Agregar Set
             </Button>

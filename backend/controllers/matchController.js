@@ -194,7 +194,9 @@ export const updateMatch = async (req, res) => {
     const tournament = await Tournament.findById(match.tournament).populate(
       "sport"
     );
-    const sportRules = tournament.sport.defaultRules;
+    
+    // Usar customRules del torneo si existen, sino usar defaultRules del deporte
+    const sportRules = tournament.customRules || tournament.sport.defaultRules;
 
     // Validar si es voleibol y se están actualizando sets
     if (isVolleyball(tournament.sport.name) && updateData.setScores) {
@@ -300,7 +302,7 @@ export const getMatchesByMatchday = async (req, res) => {
       .populate("scorers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
@@ -341,7 +343,7 @@ export const getSingleMatchday = async (req, res) => {
       .populate("scorers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
@@ -693,7 +695,7 @@ export const getBracket = async (req, res) => {
       .populate("scorers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
@@ -907,7 +909,7 @@ export const getMatchById = async (req, res) => {
       .populate("scorers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
