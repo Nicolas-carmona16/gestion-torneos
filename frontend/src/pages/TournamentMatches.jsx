@@ -11,6 +11,7 @@ import {
 } from "../services/eliminationStageService";
 import { getUser } from "../services/authService";
 import { getTournamentById } from "../services/tournamentService";
+import { utcToLocalDateString } from "../utils/dateHelpers";
 import {
   Paper,
   Typography,
@@ -195,7 +196,7 @@ const TournamentMatches = () => {
     setEditFormData({
       scoreTeam1: match.scoreTeam1 || "",
       scoreTeam2: match.scoreTeam2 || "",
-      date: match.date ? match.date.split("T")[0] : "",
+      date: match.date ? utcToLocalDateString(match.date) : "",
       time: match.time || "",
       description: match.description || "",
     });

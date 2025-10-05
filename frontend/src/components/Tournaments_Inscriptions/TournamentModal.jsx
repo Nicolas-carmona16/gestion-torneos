@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { formatDate } from "../../utils/formatDate";
+import { isTeamRegistrationOpen } from "../../utils/dateHelpers";
 import BasketballRules from "../sportsRules/BasketballRules";
 import SoccerRules from "../sportsRules/SoccerRules";
 import VolleyballRules from "../sportsRules/VolleyballRules";
@@ -64,13 +65,7 @@ const TournamentModal = ({
   }, [tournament, open]);
 
   const isRegistrationOpen = () => {
-    if (!tournament) return false;
-
-    const currentDate = new Date();
-    return (
-      currentDate >= new Date(tournament.registrationStart) &&
-      currentDate <= new Date(tournament.registrationTeamEnd)
-    );
+    return isTeamRegistrationOpen(tournament);
   };
 
   const isUserCaptain = () => {

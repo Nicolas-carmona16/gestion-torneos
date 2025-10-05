@@ -12,6 +12,7 @@ import {
   generateGroupStageMatches,
   calculateGroupStandings,
 } from "../utils/groupStageGenerator.js";
+import { getNowInColombia, isTeamRegistrationOpen } from "../utils/dateUtils.js";
 import {
   generateEliminationBracket,
   generatePlayoffBracket,
@@ -36,14 +37,34 @@ export const createGroupStage = async (req, res) => {
       return res.status(404).json({ error: "Torneo no encontrado" });
     }
 
-    const now = new Date();
-    if (now < tournament.registrationTeamEnd) {
+    // Verificar si el registro de equipos aún está abierto
+    const isRegistrationOpen = isTeamRegistrationOpen(
+      tournament.registrationStart,
+      tournament.registrationTeamEnd
+    );
+    
+    if (isRegistrationOpen) {
       return res.status(400).json({
         error: "El registro de equipos aún no ha terminado",
       });
     }
 
-    if (now > tournament.startDate) {
+    // Función auxiliar para convertir fechas UTC de BD a fechas locales
+    const getDateFromUTC = (dateStr) => {
+      const date = new Date(dateStr);
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const day = date.getUTCDate();
+      return new Date(year, month, day);
+    };
+
+    const now = new Date();
+    const startDate = getDateFromUTC(tournament.startDate);
+    
+    now.setHours(12, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    if (now >= startDate) {
       return res.status(400).json({
         error: "El torneo ya ha comenzado",
       });

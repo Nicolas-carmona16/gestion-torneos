@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Typography, Button, Chip } from "@mui/material";
 import DescriptionWithToggle from "./DescriptionWithToggle";
 import { formatDate, formatTimeTo12h } from "../../utils/formatDate";
+import { utcToLocalDateString } from "../../utils/dateHelpers";
 import { translateStatus } from "../../utils/translations";
 import { isScorersSupported } from "../../services/scorersService";
 import AddScorersModal from "./AddScorersModal";
@@ -460,7 +461,7 @@ const MatchItem = ({
         match={match}
         formData={{
           date: match.date
-            ? new Date(match.date).toISOString().split("T")[0]
+            ? utcToLocalDateString(match.date)
             : "",
           time: match.time || "",
           description: match.description || "",

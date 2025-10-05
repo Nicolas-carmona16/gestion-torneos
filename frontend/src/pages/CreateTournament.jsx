@@ -5,6 +5,7 @@ import { createTournament } from "../services/tournamentService";
 import { getAllSports } from "../services/sportService";
 import TournamentForm from "../components/Tournaments_Inscriptions/TournamentForm";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { prepareDatesForBackend } from "../utils/dateHelpers";
 
 const CreateTournamentPage = () => {
   const [sports, setSports] = useState([]);
@@ -28,7 +29,10 @@ const CreateTournamentPage = () => {
     { setSubmitting, setErrors, resetForm }
   ) => {
     try {
-      await createTournament(values);
+      // Preparar fechas correctamente antes de enviar al backend
+      const dataToSend = prepareDatesForBackend(values);
+      
+      await createTournament(dataToSend);
       setSuccessMessage("¡Torneo creado exitosamente!");
       resetForm();
       setTimeout(() => navigate("/inscripciones"), 2000);

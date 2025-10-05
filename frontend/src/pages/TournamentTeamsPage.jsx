@@ -18,6 +18,8 @@ import {
 } from "../services/teamService";
 import { getTournamentById } from "../services/tournamentService";
 import { getUser } from "../services/authService";
+import { canModifyPlayers as canModifyPlayersUtil } from "../utils/dateHelpers";
+import { formatDate } from "../utils/formatDate";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import TeamCard from "../components/TeamsComponents/TeamCard";
 import TeamDetailsModal from "../components/TeamsComponents/TeamDetailModal";
@@ -78,9 +80,9 @@ const TournamentTeamsPage = () => {
   const handleOpenAddPlayerDialog = () => {
     if (!canModifyPlayers(selectedTeam)) {
       showSnackbar(
-        `El periodo para modificar jugadores finalizó el ${new Date(
+        `El periodo para modificar jugadores finalizó el ${formatDate(
           selectedTeam.tournament.registrationPlayerEnd
-        ).toLocaleDateString()}`,
+        )}`,
         "error"
       );
       return;
@@ -94,17 +96,15 @@ const TournamentTeamsPage = () => {
 
   const canModifyPlayers = (team) => {
     if (!team?.tournament) return false;
-    const currentDate = new Date();
-    const registrationEnd = new Date(tournament.registrationPlayerEnd);
-    return currentDate <= registrationEnd;
+    return canModifyPlayersUtil(tournament);
   };
 
   const handleOpenDeleteDialog = (playerId) => {
     if (!canModifyPlayers(selectedTeam)) {
       showSnackbar(
-        `El periodo para modificar jugadores finalizó el ${new Date(
+        `El periodo para modificar jugadores finalizó el ${formatDate(
           selectedTeam.tournament.registrationPlayerEnd
-        ).toLocaleDateString()}`,
+        )}`,
         "error"
       );
       return;

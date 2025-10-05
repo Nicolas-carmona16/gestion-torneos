@@ -3,6 +3,7 @@ import Player from "../models/playerModel.js";
 import Tournament from "../models/tournamentModel.js";
 import mongoose from "mongoose";
 import { supabase } from "../config/supabase.js";
+import { getNowInColombia, getDateFromUTC } from "../utils/dateUtils.js";
 
 async function uploadEPSToSupabase(file, fileName) {
   if (file.mimetype !== "application/pdf") {
@@ -28,6 +29,28 @@ async function uploadEPSToSupabase(file, fileName) {
 
   return publicUrl;
 }
+
+/**
+ * Valida si las modificaciones de jugadores están permitidas
+ * @param {Object} tournament - Objeto torneo con fechas
+ * @returns {boolean} - true si se pueden modificar jugadores
+ */
+const canModifyPlayers = (tournament) => {
+  if (!tournament || !tournament.registrationStart || !tournament.registrationPlayerEnd) {
+    return false;
+  }
+
+  const now = getNowInColombia();
+  const registrationStart = getDateFromUTC(tournament.registrationStart);
+  const registrationEnd = getDateFromUTC(tournament.registrationPlayerEnd);
+
+  // Configurar horas para comparación
+  now.setHours(12, 0, 0, 0); // Mediodía para evitar problemas de borde
+  registrationStart.setHours(0, 0, 0, 0); // Inicio del día
+  registrationEnd.setHours(23, 59, 59, 999); // Final del día
+
+  return now >= registrationStart && now <= registrationEnd;
+};
 
 export const registerTeam = async (req, res) => {
   try {
@@ -187,15 +210,11 @@ export const registerTeam = async (req, res) => {
 export const removePlayerFromTeam = async (req, res) => {
   try {
     const { teamId, playerId } = req.body;
-    const currentDate = new Date();
 
     const team = await Team.findById(teamId).populate("tournament players");
     if (!team) return res.status(404).json({ message: "Team not found" });
 
-    if (
-      currentDate < team.tournament.registrationStart ||
-      currentDate > team.tournament.registrationPlayerEnd
-    ) {
+    if (!canModifyPlayers(team.tournament)) {
       return res.status(400).json({
         message:
           "Player modifications are only allowed between registration start and player registration end dates",
@@ -245,7 +264,6 @@ export const removePlayerFromTeam = async (req, res) => {
 export const addPlayersToTeam = async (req, res) => {
   try {
     const { teamId, newPlayers } = req.body;
-    const currentDate = new Date();
     const playerEPSFile = req.file;
 
     if (!playerEPSFile || playerEPSFile.mimetype !== "application/pdf") {
@@ -269,10 +287,7 @@ export const addPlayersToTeam = async (req, res) => {
       });
     }
 
-    if (
-      currentDate < team.tournament.registrationStart ||
-      currentDate > team.tournament.registrationPlayerEnd
-    ) {
+    if (!canModifyPlayers(team.tournament)) {
       return res.status(400).json({
         message:
           "Player modifications are only allowed between registration start and player registration end dates",

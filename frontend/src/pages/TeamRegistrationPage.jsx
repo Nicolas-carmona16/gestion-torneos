@@ -5,6 +5,7 @@ import { getTournamentById } from "../services/tournamentService";
 import TeamRegistrationForm from "../components/TeamsComponents/TeamRegistrationForm";
 import { getTeamsByTournament } from "../services/teamService";
 import { getUser } from "../services/authService";
+import { isTeamRegistrationOpen } from "../utils/dateHelpers";
 
 const TeamRegistrationPage = () => {
   const { tournamentId } = useParams();
@@ -33,12 +34,7 @@ const TeamRegistrationPage = () => {
 
         setIsFull(teamsData.teams.length >= tournamentData.maxTeams);
 
-        const currentDate = new Date();
-        const registrationOpen =
-          currentDate >= new Date(tournamentData.registrationStart) &&
-          currentDate <= new Date(tournamentData.registrationTeamEnd);
-
-        if (!registrationOpen) {
+        if (!isTeamRegistrationOpen(tournamentData)) {
           throw new Error(
             "El período de registro para este torneo está cerrado"
           );
