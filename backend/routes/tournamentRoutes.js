@@ -12,6 +12,7 @@ import {
   deleteTournament,
   patchTournamentRulesUrl,
   patchTournamentResolutionsUrl,
+  getTournamentWildcards,
 } from "../controllers/tournamentController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
@@ -73,5 +74,12 @@ router.patch("/:id/rules-url", protect, authorizeRoles("admin"), patchTournament
  * @access Private (Admin only)
  */
 router.patch("/:id/resolutions-url", protect, authorizeRoles("admin"), patchTournamentResolutionsUrl);
+
+/**
+ * @route GET /api/tournaments/:id/wildcards
+ * @desc Get wildcard (comodín) team IDs for a tournament
+ * @access Public
+ */
+router.get("/:id/wildcards", getTournamentWildcards);
 
 export default router;
