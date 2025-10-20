@@ -22,6 +22,7 @@ import {
   checkPlayoffStatus,
 } from "../../services/groupStageService";
 import { getEliminationBracket } from "../../services/eliminationStageService";
+import { getWildcardTeams } from "../../services/wildcardService";
 import EliminationStage from "./EliminationStage";
 
 const GroupStage = ({
@@ -43,6 +44,7 @@ const GroupStage = ({
   const [activeTab, setActiveTab] = useState(0);
   const [playoffBracket, setPlayoffBracket] = useState(null);
   const [loadingPlayoffBracket, setLoadingPlayoffBracket] = useState(false);
+  const [wildcardTeamIds, setWildcardTeamIds] = useState([]);
 
   const showDrawsColumn =
     tournament?.sport?.name === "Fútbol" ||
@@ -58,14 +60,16 @@ const GroupStage = ({
     const checkStatus = async () => {
       if (Object.keys(standings).length > 0) {
         try {
-          const [completion, playoff] = await Promise.all([
+          const [completion, playoff, wildcards] = await Promise.all([
             checkGroupStageCompletion(tournamentId),
             checkPlayoffStatus(tournamentId),
+            getWildcardTeams(tournamentId),
           ]);
 
           setCompletionData(completion);
           setPlayoffStatus(playoff);
           setGroupStageComplete(completion.isComplete);
+          setWildcardTeamIds(wildcards.map((id) => id.toString()));
 
           if (playoff.hasPlayoff) {
             setLoadingPlayoffBracket(true);
@@ -350,27 +354,32 @@ const GroupStage = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {teams.map((team, index) => (
-                      <TableRow
-                        key={team.team._id || index}
-                        sx={{
-                          backgroundColor:
-                            index < teamsAdvancing
+                    {teams.map((team, index) => {
+                      const teamId = team.team._id?.toString() || team.team.toString();
+                      const isWildcard = wildcardTeamIds.includes(teamId);
+                      
+                      return (
+                        <TableRow
+                          key={team.team._id || index}
+                          sx={{
+                            backgroundColor: isWildcard
+                              ? "rgba(255, 215, 0, 0.2)"
+                              : index < teamsAdvancing
                               ? "rgba(0, 200, 0, 0.1)"
                               : "inherit",
-                          "&:hover": { backgroundColor: "action.hover" },
-                        }}
-                      >
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>
-                          {typeof team.team === "object" ? (
-                            team.team.name
-                          ) : (
-                            <Typography color="textSecondary">
-                              Equipo no encontrado
-                            </Typography>
-                          )}
-                        </TableCell>
+                            "&:hover": { backgroundColor: "action.hover" },
+                          }}
+                        >
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>
+                            {typeof team.team === "object" ? (
+                              team.team.name
+                            ) : (
+                              <Typography color="textSecondary">
+                                Equipo no encontrado
+                              </Typography>
+                            )}
+                          </TableCell>
                         <TableCell align="right">
                           <strong>{team.points}</strong>
                         </TableCell>
@@ -410,7 +419,8 @@ const GroupStage = ({
                           </>
                         )}
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </Paper>
