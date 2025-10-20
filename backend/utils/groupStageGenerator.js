@@ -454,3 +454,41 @@ const generateMatchdays = (groupMatches, teamsPerGroup) => {
 
   return matchdays;
 };
+
+/**
+ * Obtiene los mejores equipos que NO clasificaron directamente para completar el bracket a 2^n.
+ * Reutiliza la lógica de calculateGroupStandings para ordenar globalmente a todos los equipos
+ * de fase de grupos y selecciona los mejores no clasificados.
+ *
+ * @param {Object} tournament - Torneo
+ * @param {Array} allGroupMatches - TODOS los partidos de fase de grupos del torneo
+ * @param {Array<mongoose.Types.ObjectId|string>} qualifiedTeamIds - IDs de equipos ya clasificados directamente
+ * @param {number} numberOfTeamsNeeded - Cantidad de equipos comodín requeridos
+ * @returns {Promise<Array<mongoose.Types.ObjectId>>} IDs de equipos seleccionados como comodines
+ */
+export const getBestNonQualifiedTeams = async (
+  tournament,
+  allGroupMatches,
+  qualifiedTeamIds,
+  numberOfTeamsNeeded
+) => {
+  if (!numberOfTeamsNeeded || numberOfTeamsNeeded <= 0) return [];
+
+  // Asegurar comparación de IDs por string
+  const qualifiedSet = new Set(qualifiedTeamIds.map((id) => id.toString()));
+
+  // Orden global de TODOS los equipos según calculateGroupStandings
+  const globalStandings = await calculateGroupStandings(
+    allGroupMatches,
+    tournament
+  );
+
+  // Filtrar los NO clasificados directos
+  const nonQualified = globalStandings.filter(
+    (row) => !qualifiedSet.has(row.team.toString())
+  );
+
+  // Tomar los primeros N requeridos
+  const selected = nonQualified.slice(0, numberOfTeamsNeeded);
+  return selected.map((row) => row.team);
+};

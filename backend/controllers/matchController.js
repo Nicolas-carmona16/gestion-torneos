@@ -17,6 +17,7 @@ import {
   generateEliminationBracket,
   generatePlayoffBracket,
 } from "../utils/eliminationBracketGenerator.js";
+import { getBestNonQualifiedTeams } from "../utils/groupStageGenerator.js";
 import {
   validateVolleyballSets,
   calculateVolleyballResult,
@@ -523,7 +524,23 @@ export const createPlayoffBracket = async (req, res) => {
       });
     }
 
-    // Generar bracket de playoff
+    // Calcular si se requiere completar a 2^n
+    const targetTeams = Math.pow(2, Math.ceil(Math.log2(advancingTeams.length)));
+    const teamsNeeded = targetTeams - advancingTeams.length;
+
+    let wildCardTeams = [];
+    if (teamsNeeded > 0) {
+      // Seleccionar mejores no clasificados usando la misma lógica de posiciones
+      wildCardTeams = await getBestNonQualifiedTeams(
+        tournament,
+        groupMatches,
+        advancingTeams,
+        teamsNeeded
+      );
+      advancingTeams.push(...wildCardTeams);
+    }
+
+    // Generar bracket de playoff con SEEDING (la función ya usa seeded order)
     const matches = await generatePlayoffBracket(tournament, advancingTeams);
     const createdMatches = await Match.insertMany(matches);
 
@@ -531,6 +548,9 @@ export const createPlayoffBracket = async (req, res) => {
       message: "Playoff generado exitosamente",
       matches: createdMatches,
       advancingTeams: advancingTeams.length,
+      directQualified: advancingTeams.length - wildCardTeams.length,
+      wildCards: wildCardTeams.length,
+      wildCardTeamsIds: wildCardTeams,
       groupsProcessed: Object.keys(standings).length,
     });
   } catch (error) {

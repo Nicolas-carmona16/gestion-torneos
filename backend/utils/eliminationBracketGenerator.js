@@ -120,11 +120,111 @@ function getRoundByStage(stage) {
 }
 
 /**
+ * Genera bracket con SEEDING: los equipos deben venir ya ordenados por seed (1..N)
+ * Acepta tanto documentos Team como ObjectIds.
+ * Empareja usando posiciones de bracket estándar balanceadas.
+ * @param {Object} tournament
+ * @param {Array} seededTeams - Array ordenado por seed (mejor primero)
+ * @returns {Array} Partidos generados
+ */
+export const generateSeededEliminationBracket = async (tournament, seededTeams) => {
+  const matches = [];
+  const N = seededTeams.length;
+  const totalRounds = Math.ceil(Math.log2(N));
+  const initialRoundName = getRoundByStage(totalRounds - 1);
+
+  // Helper para obtener el _id si es documento, o el valor si es ObjectId
+  const getId = (t) => (t && t._id ? t._id : t);
+
+  // Generar orden de posiciones en el cuadro (1-indexed seeds)
+  const buildPositions = (n) => {
+    let pos = [1, 2];
+    while (pos.length < n) {
+      const m = pos.length * 2;
+      const next = [];
+      for (const p of pos) {
+        next.push(p);
+        next.push(m + 1 - p);
+      }
+      pos = next;
+    }
+    return pos.slice(0, n);
+  };
+
+  const positions = N === 1 ? [1] : buildPositions(N);
+  // Mapear posiciones a seeds (1-based seed index)
+  // Luego formar partidos por pares consecutivos de posiciones
+  const teamByPosition = new Map();
+  positions.forEach((seedNumber, idx) => {
+    const teamIndex = seedNumber - 1; // seed 1 -> index 0
+    teamByPosition.set(idx + 1, getId(seededTeams[teamIndex])); // positions are 1-based here
+  });
+
+  let bracketIdCounter = 1;
+  const currentRoundMatches = [];
+
+  // Crear partidos de la primera ronda
+  for (let i = 1; i <= N; i += 2) {
+    const team1 = teamByPosition.get(i);
+    const team2 = teamByPosition.get(i + 1);
+    const matchData = {
+      tournament: tournament._id,
+      round: initialRoundName,
+      status: "scheduled",
+      bracketId: `M${bracketIdCounter}`,
+      isBestOfSeries: tournament.bestOfMatches > 1,
+      team1,
+      team2,
+    };
+    currentRoundMatches.push(matchData);
+    bracketIdCounter++;
+  }
+
+  // Construir rondas siguientes con enlaces
+  let roundMatches = currentRoundMatches;
+  let roundNumber = 1;
+  while (roundNumber < totalRounds) {
+    const nextRoundName = getRoundByStage(totalRounds - (roundNumber + 1));
+    const nextRoundMatches = [];
+    const nextCount = Math.ceil(roundMatches.length / 2);
+
+    const nextRoundStartId = bracketIdCounter;
+    for (let i = 0; i < nextCount; i++) {
+      const match = {
+        tournament: tournament._id,
+        round: nextRoundName,
+        status: "pending",
+        bracketId: `M${bracketIdCounter}`,
+        isBestOfSeries: tournament.bestOfMatches > 1,
+      };
+      nextRoundMatches.push(match);
+      bracketIdCounter++;
+    }
+
+    // Enlazar nextMatchBracketId desde la ronda actual a la siguiente
+    roundMatches.forEach((m, idx) => {
+      const targetIndex = Math.floor(idx / 2);
+      const targetMatch = nextRoundMatches[targetIndex];
+      if (targetMatch) m.nextMatchBracketId = targetMatch.bracketId;
+    });
+
+    matches.push(...roundMatches);
+    roundMatches = nextRoundMatches;
+    roundNumber++;
+  }
+
+  // Agregar última ronda (final) que quedó en pending
+  matches.push(...roundMatches);
+  return matches;
+};
+
+/**
  * Genera partidos de eliminación directa después de fase de grupos
  * @param {Object} tournament - Torneo
  * @param {Array} advancingTeams - Equipos que avanzan
  * @returns {Array} Partidos generados
  */
 export const generatePlayoffBracket = async (tournament, advancingTeams) => {
-  return generateEliminationBracket(tournament, advancingTeams);
+  // Para play-offs posteriores a grupos, usar SEEDING.
+  return generateSeededEliminationBracket(tournament, advancingTeams);
 };
