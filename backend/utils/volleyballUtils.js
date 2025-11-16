@@ -226,7 +226,22 @@ export const calculateVolleyballPoints = (matchResult, sportRules) => {
  * @returns {boolean} True if the sport is volleyball
  */
 export const isVolleyball = (sportName) => {
-  return sportName === "Voleibol";
+  if (!sportName || typeof sportName !== "string") return false;
+  
+  // Normalizar: quitar tildes, convertir a minúsculas
+  const normalized = sportName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  
+  // Aceptar variantes: voleibol, volleyball, voley, volley
+  return (
+    normalized === "voleibol" ||
+    normalized === "volleyball" ||
+    normalized === "voley" ||
+    normalized === "volley"
+  );
 };
 
 /**

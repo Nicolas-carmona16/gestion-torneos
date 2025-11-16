@@ -22,6 +22,7 @@ import BasketballRules from "../sportsRules/BasketballRules";
 import FutsalRules from "../sportsRules/FutsalRules";
 import SoccerRules from "../sportsRules/SoccerRules";
 import VolleyballRules from "../sportsRules/VolleyballRules";
+import GenericRules from "../sportsRules/GenericRules";
 import { getSportRules } from "../../services/sportService";
 
 const EditTournamentDialog = ({
@@ -43,6 +44,7 @@ const EditTournamentDialog = ({
     "Fútbol Sala": FutsalRules,
     Fútbol: SoccerRules,
     Voleibol: VolleyballRules,
+    Otro: GenericRules,
   };
 
   useEffect(() => {
@@ -51,7 +53,7 @@ const EditTournamentDialog = ({
 
   const getSportRulesComponent = (sportId) => {
     const sport = sports.find((s) => s._id === sportId);
-    return sport ? rulesComponents[sport.name] : null;
+    return sport ? (rulesComponents[sport.name] || GenericRules) : GenericRules;
   };
 
   const validateForm = async () => {
