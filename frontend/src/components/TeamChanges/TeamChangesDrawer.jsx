@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Drawer,
   Box,
@@ -26,6 +27,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {
   getAllChangeLogs,
   markChangeAsRead,
@@ -42,10 +44,19 @@ import {
  * @returns {JSX.Element} Team changes drawer component
  */
 const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => {
+  const navigate = useNavigate();
   const [changes, setChanges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all"); // "all" or "unread"
+
+  /**
+   * Navigate to tournament teams page
+   */
+  const handleGoToTournament = (tournamentId, teamId) => {
+    navigate(`/torneo/${tournamentId}/equipos?team=${teamId}`);
+    onClose();
+  };
 
   /**
    * Fetches all change logs when drawer opens
@@ -380,16 +391,25 @@ const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => 
                       }}
                     />
 
-                    {/* Mark as read button */}
-                    {change.readBy?.length === 0 && (
+                    {/* Action buttons */}
+                    <Box sx={{ display: "flex", gap: 1, mt: 1, width: "100%" }}>
                       <Button
                         size="small"
-                        onClick={() => handleMarkAsRead(change._id)}
-                        sx={{ mt: 1 }}
+                        variant="outlined"
+                        startIcon={<ArrowForwardIcon />}
+                        onClick={() => handleGoToTournament(change.tournament._id, change.team._id)}
                       >
-                        Marcar como leída
+                        Ir
                       </Button>
-                    )}
+                      {change.readBy?.length === 0 && (
+                        <Button
+                          size="small"
+                          onClick={() => handleMarkAsRead(change._id)}
+                        >
+                          Marcar como leída
+                        </Button>
+                      )}
+                    </Box>
                   </ListItem>
                   {index < changes.length - 1 && <Divider />}
                 </Box>
