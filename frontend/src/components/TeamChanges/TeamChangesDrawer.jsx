@@ -18,6 +18,8 @@ import {
   Divider,
   CircularProgress,
   Alert,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -43,6 +45,7 @@ const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => 
   const [changes, setChanges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filter, setFilter] = useState("all"); // "all" or "unread"
 
   /**
    * Fetches all change logs when drawer opens
@@ -198,6 +201,13 @@ const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => 
     });
   };
 
+  /**
+   * Filter changes based on selected filter
+   */
+  const filteredChanges = filter === "unread" 
+    ? changes.filter(change => !change.readBy || change.readBy.length === 0)
+    : changes;
+
   return (
     <Drawer
       anchor="right"
@@ -227,9 +237,31 @@ const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => 
           </IconButton>
         </Box>
 
-        {/* Actions */}
+        {/* Filter and Actions */}
         {changes.length > 0 && (
           <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+            {/* Filter Tabs */}
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(e, newFilter) => {
+                if (newFilter !== null) {
+                  setFilter(newFilter);
+                }
+              }}
+              fullWidth
+              size="small"
+              sx={{ mb: 2 }}
+            >
+              <ToggleButton value="all">
+                Todas ({changes.length})
+              </ToggleButton>
+              <ToggleButton value="unread">
+                No leídas ({changes.filter(c => !c.readBy || c.readBy.length === 0).length})
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Mark all as read button */}
             <Button
               size="small"
               startIcon={<DoneAllIcon />}
@@ -259,7 +291,7 @@ const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => 
             <Box sx={{ p: 2 }}>
               <Alert severity="error">{error}</Alert>
             </Box>
-          ) : changes.length === 0 ? (
+          ) : filteredChanges.length === 0 ? (
             <Box
               sx={{
                 display: "flex",
@@ -272,15 +304,17 @@ const TeamChangesDrawer = ({ open, onClose, onDecrementCount, liveChanges }) => 
               }}
             >
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                No hay novedades
+                {filter === "unread" ? "No hay novedades sin leer" : "No hay novedades"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Aquí aparecerán las inscripciones y cambios de jugadores
+                {filter === "unread" 
+                  ? "Todas las novedades han sido leídas" 
+                  : "Aquí aparecerán las inscripciones y cambios de jugadores"}
               </Typography>
             </Box>
           ) : (
             <List sx={{ p: 0 }}>
-              {changes.map((change, index) => (
+              {filteredChanges.map((change, index) => (
                 <Box key={change._id}>
                   <ListItem
                     sx={{
