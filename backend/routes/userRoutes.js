@@ -13,6 +13,7 @@ import {
   createUser,
   getUserProfile,
   getAllUsers,
+  getWebSocketToken,
 } from "../controllers/userController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 import {
@@ -60,6 +61,13 @@ router.post("/logout", logoutUser);
  * @access Private (Authenticated users only)
  */
 router.get("/profile", protect, getUserProfile);
+
+/**
+ * @route GET /api/users/ws-token
+ * @desc Get JWT token for WebSocket connection
+ * @access Private (Authenticated users only)
+ */
+router.get("/ws-token", protect, getWebSocketToken);
 
 /**
  * Admin-only routes

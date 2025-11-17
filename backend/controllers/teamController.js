@@ -4,6 +4,8 @@ import Tournament from "../models/tournamentModel.js";
 import mongoose from "mongoose";
 import { supabase } from "../config/supabase.js";
 import { getNowInColombia, getDateFromUTC } from "../utils/dateUtils.js";
+import TeamChangeLog from "../models/teamChangeLogModel.js";
+import { adminNamespace } from "../server.js";
 
 async function uploadEPSToSupabase(file, fileName) {
   if (file.mimetype !== "application/pdf") {
@@ -194,6 +196,31 @@ export const registerTeam = async (req, res) => {
       players: playerIds,
     });
 
+    // Registrar novedad de inscripción en TeamChangeLog
+    try {
+      const changeLog = await TeamChangeLog.create({
+        tournament: tournamentId,
+        team: newTeam._id,
+        responsible: captainUser._id,
+        type: "inscription",
+        description: `El equipo ${name} se inscribió al torneo ${tournament.name}`,
+      });
+
+      // Emitir evento a admins conectados
+      adminNamespace.emit("team-change", {
+        _id: changeLog._id,
+        tournament: tournament.name,
+        team: name,
+        responsible: captainUser.firstName + " " + captainUser.lastName,
+        type: "inscription",
+        description: changeLog.description,
+        createdAt: changeLog.createdAt,
+      });
+    } catch (logError) {
+      console.error("Error logging team inscription:", logError);
+      // No fallar si el log falla
+    }
+
     res.status(201).json({
       message: "Team successfully registered",
       team: newTeam,
@@ -249,6 +276,28 @@ export const removePlayerFromTeam = async (req, res) => {
     });
     
     await team.save();
+
+    // Registrar novedad en TeamChangeLog
+    const changeLog = await TeamChangeLog.create({
+      tournament: team.tournament._id,
+      team: team._id,
+      responsible: req.user._id,
+      type: "remove_player",
+      description: `Se eliminó al jugador ${playerToRemove.fullName} del equipo ${team.name} en el torneo ${team.tournament.name}`,
+      playerAffected: playerToRemove._id,
+    });
+
+    // Emitir evento a admins conectados
+    adminNamespace.emit("team-change", {
+      _id: changeLog._id,
+      tournament: team.tournament.name,
+      team: team.name,
+      responsible: req.user.firstName + " " + req.user.lastName,
+      type: "remove_player",
+      description: changeLog.description,
+      playerAffected: playerToRemove.fullName,
+      createdAt: changeLog.createdAt,
+    });
 
     res.status(200).json({ 
       message: "Player removed from team", 
@@ -366,7 +415,32 @@ export const addPlayersToTeam = async (req, res) => {
     }
 
     team.players.push(...playerIdsToAdd);
+
     await team.save();
+
+    // Registrar novedad en TeamChangeLog
+    const changeLog = await TeamChangeLog.create({
+      tournament: team.tournament._id,
+      team: team._id,
+      responsible: req.user._id,
+      type: "add_player",
+      description: wasRemoved
+        ? `Se re-agregó al jugador ${player.fullName} al equipo ${team.name} en el torneo ${team.tournament.name}`
+        : `Se agregó al jugador ${player.fullName} al equipo ${team.name} en el torneo ${team.tournament.name}`,
+      playerAffected: player._id,
+    });
+
+    // Emitir evento a admins conectados
+    adminNamespace.emit("team-change", {
+      _id: changeLog._id,
+      tournament: team.tournament.name,
+      team: team.name,
+      responsible: req.user.firstName + " " + req.user.lastName,
+      type: "add_player",
+      description: changeLog.description,
+      playerAffected: player.fullName,
+      createdAt: changeLog.createdAt,
+    });
 
     res.status(200).json({
       message: wasRemoved 

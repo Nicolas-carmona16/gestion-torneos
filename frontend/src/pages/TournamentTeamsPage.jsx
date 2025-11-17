@@ -7,8 +7,8 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   getTeamsByTournament,
   getTeamById,
@@ -30,6 +30,7 @@ import TournamentHeader from "../components/TeamsComponents/TournamentHeader";
 const TournamentTeamsPage = () => {
   const { tournamentId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tournament, setTournament] = useState(null);
@@ -45,6 +46,8 @@ const TournamentTeamsPage = () => {
   const [openAddPlayerDialog, setOpenAddPlayerDialog] = useState(false);
   const [openEditNameDialog, setOpenEditNameDialog] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState(null);
+  const [highlightedTeamId, setHighlightedTeamId] = useState(null);
+  const teamRefs = useRef({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +79,27 @@ const TournamentTeamsPage = () => {
     };
     fetchUser();
   }, []);
+
+  // Handle team highlighting from URL parameter
+  useEffect(() => {
+    const teamId = searchParams.get("team");
+    if (teamId && teams.length > 0) {
+      setHighlightedTeamId(teamId);
+      
+      // Scroll to the team after a short delay
+      setTimeout(() => {
+        const teamElement = teamRefs.current[teamId];
+        if (teamElement) {
+          teamElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300);
+
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedTeamId(null);
+      }, 3000);
+    }
+  }, [searchParams, teams]);
 
   const handleOpenAddPlayerDialog = () => {
     if (!canModifyPlayers(selectedTeam)) {
@@ -268,10 +292,19 @@ const TournamentTeamsPage = () => {
           {teams.map((team) => (
             <Grid
               key={team._id}
+              ref={(el) => (teamRefs.current[team._id] = el)}
               sx={{
                 width: { xs: "100%", sm: "350px", md: "350px" },
                 maxWidth: "100%",
                 flex: "0 0 auto",
+                transition: "all 0.3s ease",
+                ...(highlightedTeamId === team._id && {
+                  transform: "scale(1.05)",
+                  "& > *": {
+                    boxShadow: "0 0 20px rgba(2, 105, 55, 0.6)",
+                    border: "3px solid #026937",
+                  },
+                }),
               }}
             >
               <TeamCard
