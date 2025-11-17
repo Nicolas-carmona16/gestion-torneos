@@ -148,6 +148,8 @@ export const generateGroupStageMatches = async (tournament, groups) => {
 export const calculateGroupStandings = async (matches, tournament) => {
   const standings = {};
   const customRules = tournament.customRules || {};
+  
+
 
   // Obtener información del deporte
   const tournamentWithSport = await Tournament.findById(
@@ -156,10 +158,23 @@ export const calculateGroupStandings = async (matches, tournament) => {
   const sportRules = tournamentWithSport.sport.defaultRules;
   const isVolleyballSport = isVolleyball(tournamentWithSport.sport.name);
 
-  // Puntos por defecto si no hay customRules
-  const pointsForWin = customRules.points?.win || 3;
-  const pointsForDraw = customRules.points?.draw || 1;
-  const pointsForLoss = customRules.points?.loss || 0;
+  // Extraer puntos según el sistema (simple o complejo de voleibol)
+  let pointsForWin, pointsForDraw, pointsForLoss;
+  
+  if (isVolleyballSport && customRules.scoring) {
+    // Sistema de voleibol: usar el mayor valor de victoria como referencia
+    // Normalmente win3_0_or_3_1 es el más alto
+    pointsForWin = parseInt(customRules.scoring.win3_0_or_3_1) || 3;
+    pointsForDraw = 1; // Voleibol típicamente no tiene empates
+    pointsForLoss = parseInt(customRules.scoring.loss1_3_or_0_3) || 0;
+  } else {
+    // Sistema simple para otros deportes
+    pointsForWin = customRules.points?.win || 3;
+    pointsForDraw = customRules.points?.draw || 1;
+    pointsForLoss = customRules.points?.loss || 0;
+  }
+  
+
 
   // Inicializar standings para cada equipo
   matches.forEach((match) => {
@@ -174,6 +189,8 @@ export const calculateGroupStandings = async (matches, tournament) => {
         goalsAgainst: 0,
         setsFor: 0,
         setsAgainst: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
         points: 0,
       };
     }
@@ -189,6 +206,8 @@ export const calculateGroupStandings = async (matches, tournament) => {
         goalsAgainst: 0,
         setsFor: 0,
         setsAgainst: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
         points: 0,
       };
     }
@@ -211,15 +230,28 @@ export const calculateGroupStandings = async (matches, tournament) => {
           team2.setsFor += match.setsTeam2;
           team2.setsAgainst += match.setsTeam1;
 
+          // Calcular puntos totales a favor y en contra (suma de puntos de todos los sets)
+          if (match.setScores && match.setScores.length > 0) {
+            const team1TotalPoints = match.setScores.reduce((total, set) => total + (set.scoreTeam1 || 0), 0);
+            const team2TotalPoints = match.setScores.reduce((total, set) => total + (set.scoreTeam2 || 0), 0);
+            
+            team1.pointsFor += team1TotalPoints;
+            team1.pointsAgainst += team2TotalPoints;
+            team2.pointsFor += team2TotalPoints;
+            team2.pointsAgainst += team1TotalPoints;
+          }
+
           // Calcular puntos según reglas de voleibol
           const matchResult = {
             setsTeam1: match.setsTeam1,
             setsTeam2: match.setsTeam2,
             isComplete: true,
           };
+          // Usar customRules del torneo si existen, sino usar sportRules por defecto
+          const rulesForVolleyball = customRules && Object.keys(customRules).length > 0 ? customRules : sportRules;
           const volleyballPoints = calculateVolleyballPoints(
             matchResult,
-            sportRules
+            rulesForVolleyball
           );
 
           team1.points += volleyballPoints.team1Points;
@@ -421,4 +453,42 @@ const generateMatchdays = (groupMatches, teamsPerGroup) => {
   }
 
   return matchdays;
+};
+
+/**
+ * Obtiene los mejores equipos que NO clasificaron directamente para completar el bracket a 2^n.
+ * Reutiliza la lógica de calculateGroupStandings para ordenar globalmente a todos los equipos
+ * de fase de grupos y selecciona los mejores no clasificados.
+ *
+ * @param {Object} tournament - Torneo
+ * @param {Array} allGroupMatches - TODOS los partidos de fase de grupos del torneo
+ * @param {Array<mongoose.Types.ObjectId|string>} qualifiedTeamIds - IDs de equipos ya clasificados directamente
+ * @param {number} numberOfTeamsNeeded - Cantidad de equipos comodín requeridos
+ * @returns {Promise<Array<mongoose.Types.ObjectId>>} IDs de equipos seleccionados como comodines
+ */
+export const getBestNonQualifiedTeams = async (
+  tournament,
+  allGroupMatches,
+  qualifiedTeamIds,
+  numberOfTeamsNeeded
+) => {
+  if (!numberOfTeamsNeeded || numberOfTeamsNeeded <= 0) return [];
+
+  // Asegurar comparación de IDs por string
+  const qualifiedSet = new Set(qualifiedTeamIds.map((id) => id.toString()));
+
+  // Orden global de TODOS los equipos según calculateGroupStandings
+  const globalStandings = await calculateGroupStandings(
+    allGroupMatches,
+    tournament
+  );
+
+  // Filtrar los NO clasificados directos
+  const nonQualified = globalStandings.filter(
+    (row) => !qualifiedSet.has(row.team.toString())
+  );
+
+  // Tomar los primeros N requeridos
+  const selected = nonQualified.slice(0, numberOfTeamsNeeded);
+  return selected.map((row) => row.team);
 };

@@ -4,13 +4,33 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
+  Popover,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import { InfoOutlined } from "@mui/icons-material";
+import { useState } from "react";
 
 const VolleyballRules = ({ rules, editable = false, onChange }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [popoverContent, setPopoverContent] = useState("");
+
   const handleChange = (field, value) => {
     if (!editable || !onChange) return;
     onChange({ ...rules, [field]: value });
   };
+
+  const handlePopoverOpen = (event, content) => {
+    setAnchorEl(event.currentTarget);
+    setPopoverContent(content);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+    setPopoverContent("");
+  };
+
+  const open = Boolean(anchorEl);
 
   return (
     <Box className="space-y-2">
@@ -69,9 +89,42 @@ const VolleyballRules = ({ rules, editable = false, onChange }) => {
             fullWidth
           />
 
-          <Typography fontWeight="bold">Puntaje por resultado:</Typography>
+          <Box style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Typography fontWeight="bold">Puntaje por resultado:</Typography>
+            <Tooltip title="Ver explicación del sistema de puntaje">
+              <IconButton
+                size="small"
+                onClick={(e) =>
+                  handlePopoverOpen(
+                    e,
+                    `Sistema de Puntuación:
+
+Victoria dominante (diferencia de 2 sets o más)
+• Ejemplos: ${rules.setsToWin}-0, ${rules.setsToWin}-${Math.max(
+                      0,
+                      rules.setsToWin - 2
+                    )}
+
+Victoria ajustada (diferencia de 1 set)
+• Ejemplo: ${rules.setsToWin}-${rules.setsToWin - 1}
+
+Derrota ajustada (pérdida por 1 set)
+• Ejemplo: ${rules.setsToWin - 1}-${rules.setsToWin}
+
+Derrota dominante (pérdida por 2 sets o más)
+• Ejemplos: 0-${rules.setsToWin}, ${Math.max(0, rules.setsToWin - 2)}-${
+                      rules.setsToWin
+                    }`
+                  )
+                }
+                sx={{ padding: "2px" }}
+              >
+                <InfoOutlined fontSize="small" color="primary" />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <TextField
-            label="Victoria 3-0 o 3-1"
+            label="Victoria dominante"
             type="number"
             value={rules.scoring.win3_0_or_3_1}
             onChange={(e) =>
@@ -83,7 +136,7 @@ const VolleyballRules = ({ rules, editable = false, onChange }) => {
             fullWidth
           />
           <TextField
-            label="Victoria 3-2"
+            label="Victoria ajustada"
             type="number"
             value={rules.scoring.win3_2}
             onChange={(e) =>
@@ -95,7 +148,7 @@ const VolleyballRules = ({ rules, editable = false, onChange }) => {
             fullWidth
           />
           <TextField
-            label="Derrota 2-3"
+            label="Derrota ajustada"
             type="number"
             value={rules.scoring.loss2_3}
             onChange={(e) =>
@@ -107,7 +160,7 @@ const VolleyballRules = ({ rules, editable = false, onChange }) => {
             fullWidth
           />
           <TextField
-            label="Derrota 1-3 o 0-3"
+            label="Derrota dominante"
             type="number"
             value={rules.scoring.loss1_3_or_0_3}
             onChange={(e) =>
@@ -152,22 +205,51 @@ const VolleyballRules = ({ rules, editable = false, onChange }) => {
               puntos
             </li>
           </Box>
-          <Typography className="text-gray-700 text-sm">
-            <strong>Puntaje por resultado:</strong>
-          </Typography>
+          <Box style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Typography className="text-gray-700 text-sm">
+              <strong>Puntaje por resultado:</strong>
+            </Typography>
+            <Tooltip title="Ver explicación del sistema de puntaje">
+              <IconButton
+                size="small"
+                onClick={(e) =>
+                  handlePopoverOpen(
+                    e,
+                    `¿Cómo se asignan los puntos?
+Victoria dominante (${rules.setsToWin}-0 o ${rules.setsToWin}-${Math.max(
+                      0,
+                      rules.setsToWin - 2
+                    )}): ${rules.scoring.win3_0_or_3_1} puntos
+Victoria ajustada (${rules.setsToWin}-${rules.setsToWin - 1}): ${
+                      rules.scoring.win3_2
+                    } puntos
+Derrota ajustada (${rules.setsToWin - 1}-${rules.setsToWin}): ${
+                      rules.scoring.loss2_3
+                    } puntos
+Derrota dominante (0-${rules.setsToWin} o ${Math.max(0, rules.setsToWin - 2)}-${
+                      rules.setsToWin
+                    }): ${rules.scoring.loss1_3_or_0_3} puntos`
+                  )
+                }
+                sx={{ padding: "2px" }}
+              >
+                <InfoOutlined fontSize="small" color="primary" />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Box component="ul">
             <li>
-              <strong>Victoria 3-0 o 3-1:</strong> {rules.scoring.win3_0_or_3_1}{" "}
+              <strong>Victoria dominante:</strong> {rules.scoring.win3_0_or_3_1}{" "}
               puntos
             </li>
             <li>
-              <strong>Victoria 3-2:</strong> {rules.scoring.win3_2} puntos
+              <strong>Victoria ajustada:</strong> {rules.scoring.win3_2} puntos
             </li>
             <li>
-              <strong>Derrota 2-3:</strong> {rules.scoring.loss2_3} puntos
+              <strong>Derrota ajustada:</strong> {rules.scoring.loss2_3} puntos
             </li>
             <li>
-              <strong>Derrota 1-3 o 0-3:</strong> {rules.scoring.loss1_3_or_0_3}{" "}
+              <strong>Derrota dominante:</strong> {rules.scoring.loss1_3_or_0_3}{" "}
               puntos
             </li>
           </Box>
@@ -176,6 +258,31 @@ const VolleyballRules = ({ rules, editable = false, onChange }) => {
           </Typography>
         </>
       )}
+
+      {/* Popover para explicaciones */}
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handlePopoverClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        sx={{
+          "& .MuiPopover-paper": {
+            maxWidth: 400,
+            padding: 2,
+          },
+        }}
+      >
+        <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+          {popoverContent}
+        </Typography>
+      </Popover>
     </Box>
   );
 };

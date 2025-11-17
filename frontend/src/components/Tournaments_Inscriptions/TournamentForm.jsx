@@ -15,12 +15,14 @@ import BasketballRules from "../sportsRules/BasketballRules";
 import SoccerRules from "../sportsRules/SoccerRules";
 import VolleyballRules from "../sportsRules/VolleyballRules";
 import FutsalRules from "../sportsRules/FutsalRules";
+import GenericRules from "../sportsRules/GenericRules";
 
 const rulesComponents = {
   Baloncesto: BasketballRules,
   Fútbol: SoccerRules,
   Voleibol: VolleyballRules,
   "Fútbol Sala": FutsalRules,
+  Otro: GenericRules,
 };
 
 const TournamentForm = ({ sports, onSubmit }) => {
@@ -53,7 +55,7 @@ const TournamentForm = ({ sports, onSubmit }) => {
   };
 
   const SportRulesComponent = selectedSport
-    ? rulesComponents[selectedSport.name]
+    ? (rulesComponents[selectedSport.name] || GenericRules)
     : null;
 
   return (

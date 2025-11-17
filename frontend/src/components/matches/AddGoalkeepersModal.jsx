@@ -14,7 +14,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-import { addScorersToMatch } from "../../services/scorersService";
+import { addGoalkeepersToMatch } from "../../services/goalkeepersService";
 import { getTeamPlayers } from "../../services/teamService";
 
 const style = {
@@ -22,7 +22,7 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 600,
+  width: 650,
   maxWidth: "90vw",
   bgcolor: "background.paper",
   boxShadow: 24,
@@ -32,10 +32,16 @@ const style = {
   overflowY: "auto",
 };
 
-const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScorersData }) => {
+const AddGoalkeepersModal = ({ 
+  open, 
+  onClose, 
+  match, 
+  fetchMatchDetails, 
+  refreshGoalkeepersData 
+}) => {
   const [team1Players, setTeam1Players] = useState([]);
   const [team2Players, setTeam2Players] = useState([]);
-  const [scorers, setScorers] = useState([]);
+  const [goalkeepers, setGoalkeepers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -43,7 +49,7 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
   // Cargar jugadores de los equipos al abrir el modal
   useEffect(() => {
     if (open && match) {
-      const fetchPlayersAndScorers = async () => {
+      const fetchPlayersAndGoalkeepers = async () => {
         try {
           setLoading(true);
           setError(null);
@@ -57,12 +63,13 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
           setTeam1Players(team1Data);
           setTeam2Players(team2Data);
 
-          // Si hay goleadores existentes, cargarlos
-          if (match.scorers && match.scorers.length > 0) {
-            setScorers(match.scorers.map(s => ({
-              playerId: s.playerId._id || s.playerId,
-              teamId: s.teamId._id || s.teamId,
-              goals: s.goals
+          // Si hay porteros existentes, cargarlos
+          if (match.goalkeepers && match.goalkeepers.length > 0) {
+            setGoalkeepers(match.goalkeepers.map(gk => ({
+              playerId: gk.playerId._id || gk.playerId,
+              teamId: gk.teamId._id || gk.teamId,
+              goalsAgainst: gk.goalsAgainst,
+              minutesPlayed: gk.minutesPlayed || 90
             })));
           }
         } catch (err) {
@@ -73,46 +80,47 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
         }
       };
 
-      fetchPlayersAndScorers();
+      fetchPlayersAndGoalkeepers();
     }
   }, [open, match]);
 
-  // Calcular total de goles
-  const totalGoals = scorers.reduce(
-    (sum, scorer) => sum + (parseInt(scorer.goals) || 0),
+  // Calcular total de goles recibidos
+  const totalGoalsAgainst = goalkeepers.reduce(
+    (sum, gk) => sum + (parseInt(gk.goalsAgainst) || 0),
     0
   );
   const matchTotalGoals =
     (parseInt(match?.scoreTeam1) || 0) + (parseInt(match?.scoreTeam2) || 0);
-  const isValid = totalGoals === matchTotalGoals;
+  const isValid = totalGoalsAgainst === matchTotalGoals;
 
-  const handleAddScorer = (teamId) => {
-    setScorers([
-      ...scorers,
+  const handleAddGoalkeeper = (teamId) => {
+    setGoalkeepers([
+      ...goalkeepers,
       {
         playerId: "",
         teamId: teamId,
-        goals: 1,
+        goalsAgainst: 0,
+        minutesPlayed: 90,
       },
     ]);
   };
 
-  const handleRemoveScorer = (index) => {
-    const newScorers = [...scorers];
-    newScorers.splice(index, 1);
-    setScorers(newScorers);
+  const handleRemoveGoalkeeper = (index) => {
+    const newGoalkeepers = [...goalkeepers];
+    newGoalkeepers.splice(index, 1);
+    setGoalkeepers(newGoalkeepers);
   };
 
-  const handleScorerChange = (index, field, value) => {
-    const newScorers = [...scorers];
-    if (field === "goals") {
+  const handleGoalkeeperChange = (index, field, value) => {
+    const newGoalkeepers = [...goalkeepers];
+    if (field === "goalsAgainst" || field === "minutesPlayed") {
       // Asegurar que sea un número válido
       const numValue = parseInt(value) || 0;
-      newScorers[index][field] = numValue < 0 ? 0 : numValue;
+      newGoalkeepers[index][field] = numValue < 0 ? 0 : numValue;
     } else {
-      newScorers[index][field] = value;
+      newGoalkeepers[index][field] = value;
     }
-    setScorers(newScorers);
+    setGoalkeepers(newGoalkeepers);
   };
 
   const handleSubmit = async () => {
@@ -123,34 +131,35 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
       // Validación adicional
       if (!isValid) {
         throw new Error(
-          `El total de goles (${totalGoals}) debe coincidir con el resultado del partido (${matchTotalGoals})`
+          `El total de goles recibidos (${totalGoalsAgainst}) debe coincidir con el total de goles del partido (${matchTotalGoals})`
         );
       }
 
       // Preparar datos para enviar
-      const scorersToSend = scorers.map((scorer) => ({
-        playerId: scorer.playerId,
-        teamId: scorer.teamId,
-        goals: scorer.goals,
+      const goalkeepersToSend = goalkeepers.map((gk) => ({
+        playerId: gk.playerId,
+        teamId: gk.teamId,
+        goalsAgainst: gk.goalsAgainst,
+        minutesPlayed: gk.minutesPlayed,
       }));
 
-      await addScorersToMatch(match._id, scorersToSend);
+      await addGoalkeepersToMatch(match._id, goalkeepersToSend);
 
-      // Refrescar tabla de goleadores y partido si corresponde
-      if (typeof refreshScorersData === 'function') {
-        await refreshScorersData();
+      // Refrescar tabla de porteros y partido si corresponde
+      if (typeof refreshGoalkeepersData === 'function') {
+        await refreshGoalkeepersData();
       }
       if (typeof fetchMatchDetails === 'function') {
         await fetchMatchDetails();
       }
 
-      setSuccess("Goleadores agregados correctamente");
+      setSuccess("Porteros agregados correctamente");
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (err) {
-      console.error("Error adding scorers:", err);
-      setError(err.message || "Error al agregar goleadores");
+      console.error("Error adding goalkeepers:", err);
+      setError(err.message || "Error al agregar porteros");
     } finally {
       setLoading(false);
     }
@@ -160,7 +169,7 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
     <Modal open={open} onClose={onClose} disableRestoreFocus>
       <Box sx={style}>
         <Typography variant="h6" gutterBottom>
-          Agregar Goleadores
+          Agregar Porteros
         </Typography>
         <Typography variant="subtitle1" gutterBottom>
           {match?.team1?.name} {match?.scoreTeam1} - {match?.scoreTeam2}{" "}
@@ -181,11 +190,11 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
 
         <Box sx={{ mb: 3 }}>
           <Typography variant="body1" gutterBottom>
-            Total de goles: <strong>{totalGoals}</strong> / {matchTotalGoals}
+            Total de goles recibidos: <strong>{totalGoalsAgainst}</strong> / {matchTotalGoals}
           </Typography>
           {!isValid && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              El total de goles debe coincidir con el resultado del partido
+              El total de goles recibidos debe coincidir con el total de goles del partido
             </Alert>
           )}
         </Box>
@@ -197,10 +206,10 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
           <Button
             variant="outlined"
             size="small"
-            onClick={() => handleAddScorer(match.team1._id)}
+            onClick={() => handleAddGoalkeeper(match.team1._id)}
             disabled={loading}
           >
-            Agregar goleador
+            Agregar portero
           </Button>
 
           <Typography variant="subtitle2" gutterBottom sx={{ mt: 3 }}>
@@ -209,30 +218,30 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
           <Button
             variant="outlined"
             size="small"
-            onClick={() => handleAddScorer(match.team2._id)}
+            onClick={() => handleAddGoalkeeper(match.team2._id)}
             disabled={loading}
           >
-            Agregar goleador
+            Agregar portero
           </Button>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle1" gutterBottom>
-          Goleadores registrados
+          Porteros registrados
         </Typography>
 
-        {scorers.length === 0 ? (
+        {goalkeepers.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            No se han agregado goleadores
+            No se han agregado porteros
           </Typography>
         ) : (
           <Box sx={{ mb: 3 }}>
-            {scorers.map((scorer, index) => {
+            {goalkeepers.map((goalkeeper, index) => {
               const team =
-                scorer.teamId === match.team1._id ? match.team1 : match.team2;
+                goalkeeper.teamId === match.team1._id ? match.team1 : match.team2;
               const players =
-                scorer.teamId === match.team1._id ? team1Players : team2Players;
+                goalkeeper.teamId === match.team1._id ? team1Players : team2Players;
 
               return (
                 <Box
@@ -245,17 +254,18 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
                     p: 2,
                     backgroundColor: "#f5f5f5",
                     borderRadius: 1,
+                    flexWrap: "wrap",
                   }}
                 >
                   <Chip label={team.name} size="small" />
 
                   <FormControl sx={{ minWidth: 200 }} size="small">
-                    <InputLabel>Jugador</InputLabel>
+                    <InputLabel>Portero</InputLabel>
                     <Select
-                      value={scorer.playerId}
-                      label="Jugador"
+                      value={goalkeeper.playerId}
+                      label="Portero"
                       onChange={(e) =>
-                        handleScorerChange(index, "playerId", e.target.value)
+                        handleGoalkeeperChange(index, "playerId", e.target.value)
                       }
                       disabled={loading}
                     >
@@ -269,22 +279,35 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
                   </FormControl>
 
                   <TextField
-                    label="Goles"
+                    label="Goles Recibidos"
                     type="number"
                     size="small"
-                    value={scorer.goals}
+                    value={goalkeeper.goalsAgainst}
                     onChange={(e) =>
-                      handleScorerChange(index, "goals", e.target.value)
+                      handleGoalkeeperChange(index, "goalsAgainst", e.target.value)
                     }
-                    inputProps={{ min: 1 }}
-                    sx={{ width: 80 }}
+                    inputProps={{ min: 0 }}
+                    sx={{ width: 120 }}
+                    disabled={loading}
+                  />
+
+                  <TextField
+                    label="Minutos"
+                    type="number" 
+                    size="small"
+                    value={goalkeeper.minutesPlayed}
+                    onChange={(e) =>
+                      handleGoalkeeperChange(index, "minutesPlayed", e.target.value)
+                    }
+                    inputProps={{ min: 1, max: 120 }}
+                    sx={{ width: 100 }}
                     disabled={loading}
                   />
 
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => handleRemoveScorer(index)}
+                    onClick={() => handleRemoveGoalkeeper(index)}
                     disabled={loading}
                   >
                     Eliminar
@@ -295,18 +318,16 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
           </Box>
         )}
 
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
           <Button onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={loading || !isValid || scorers.length === 0}
+            disabled={loading || !isValid || goalkeepers.length === 0}
           >
-            {loading ? <CircularProgress size={24} /> : "Guardar Goleadores"}
+            {loading ? <CircularProgress size={20} /> : "Guardar Porteros"}
           </Button>
         </Box>
       </Box>
@@ -314,4 +335,4 @@ const AddScorersModal = ({ open, onClose, match, fetchMatchDetails, refreshScore
   );
 };
 
-export default AddScorersModal;
+export default AddGoalkeepersModal;

@@ -23,6 +23,7 @@ import FilterTournaments from "../components/FilterTournaments";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import EditTournamentDialog from "../components/Tournaments_Inscriptions/EditTournamentDialog";
 import { calculateTournamentStatus } from "../utils/tournamentStatusMapping";
+import { prepareDatesForEdit, prepareDatesForBackend, compareDatesOnly } from "../utils/dateHelpers";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -104,11 +105,9 @@ const ManageTournaments = () => {
         : true;
       const matchesDate =
         (!registrationStart ||
-          new Date(tournament.registrationStart) >=
-            new Date(registrationStart)) &&
+          compareDatesOnly(tournament.registrationStart, registrationStart) >= 0) &&
         (!registrationTeamEnd ||
-          new Date(tournament.registrationTeamEnd) <=
-            new Date(registrationTeamEnd));
+          compareDatesOnly(tournament.registrationTeamEnd, registrationTeamEnd) <= 0);
 
       return matchesName && matchesSport && matchesDate;
     });
@@ -125,6 +124,10 @@ const ManageTournaments = () => {
 
   const handleEditTournament = (tournament) => {
     setCurrentTournament(tournament);
+    
+    // Usar la nueva utilidad para preparar fechas correctamente
+    const datesProcessed = prepareDatesForEdit(tournament);
+    
     setUpdatedData({
       name: tournament.name,
       description: tournament.description,
@@ -132,11 +135,11 @@ const ManageTournaments = () => {
       format: tournament.format,
       groupsStageSettings: tournament.groupsStageSettings,
       bestOfMatches: tournament.bestOfMatches,
-      registrationStart: tournament.registrationStart.split("T")[0],
-      registrationTeamEnd: tournament.registrationTeamEnd.split("T")[0],
-      registrationPlayerEnd: tournament.registrationPlayerEnd.split("T")[0],
-      startDate: tournament.startDate.split("T")[0],
-      endDate: tournament.endDate.split("T")[0],
+      registrationStart: datesProcessed.registrationStart,
+      registrationTeamEnd: datesProcessed.registrationTeamEnd,
+      registrationPlayerEnd: datesProcessed.registrationPlayerEnd,
+      startDate: datesProcessed.startDate,
+      endDate: datesProcessed.endDate,
       maxTeams: tournament.maxTeams,
       minPlayersPerTeam: tournament.minPlayersPerTeam,
       maxPlayersPerTeam: tournament.maxPlayersPerTeam,
@@ -148,7 +151,10 @@ const ManageTournaments = () => {
 
   const handleUpdateTournament = async () => {
     try {
-      await updateTournament(currentTournament._id, updatedData);
+      // Preparar fechas correctamente antes de enviar al backend
+      const dataToSend = prepareDatesForBackend(updatedData);
+      
+      await updateTournament(currentTournament._id, dataToSend);
       setSnackbarMessage("Torneo actualizado exitosamente.");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);

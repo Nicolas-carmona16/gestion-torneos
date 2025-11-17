@@ -12,10 +12,12 @@ import {
   generateGroupStageMatches,
   calculateGroupStandings,
 } from "../utils/groupStageGenerator.js";
+import { getNowInColombia, isTeamRegistrationOpen } from "../utils/dateUtils.js";
 import {
   generateEliminationBracket,
   generatePlayoffBracket,
 } from "../utils/eliminationBracketGenerator.js";
+import { getBestNonQualifiedTeams } from "../utils/groupStageGenerator.js";
 import {
   validateVolleyballSets,
   calculateVolleyballResult,
@@ -36,14 +38,34 @@ export const createGroupStage = async (req, res) => {
       return res.status(404).json({ error: "Torneo no encontrado" });
     }
 
-    const now = new Date();
-    if (now < tournament.registrationTeamEnd) {
+    // Verificar si el registro de equipos aún está abierto
+    const isRegistrationOpen = isTeamRegistrationOpen(
+      tournament.registrationStart,
+      tournament.registrationTeamEnd
+    );
+    
+    if (isRegistrationOpen) {
       return res.status(400).json({
         error: "El registro de equipos aún no ha terminado",
       });
     }
 
-    if (now > tournament.startDate) {
+    // Función auxiliar para convertir fechas UTC de BD a fechas locales
+    const getDateFromUTC = (dateStr) => {
+      const date = new Date(dateStr);
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const day = date.getUTCDate();
+      return new Date(year, month, day);
+    };
+
+    const now = new Date();
+    const startDate = getDateFromUTC(tournament.startDate);
+    
+    now.setHours(12, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    if (now >= startDate) {
       return res.status(400).json({
         error: "El torneo ya ha comenzado",
       });
@@ -194,7 +216,9 @@ export const updateMatch = async (req, res) => {
     const tournament = await Tournament.findById(match.tournament).populate(
       "sport"
     );
-    const sportRules = tournament.sport.defaultRules;
+    
+    // Usar customRules del torneo si existen, sino usar defaultRules del deporte
+    const sportRules = tournament.customRules || tournament.sport.defaultRules;
 
     // Validar si es voleibol y se están actualizando sets
     if (isVolleyball(tournament.sport.name) && updateData.setScores) {
@@ -298,9 +322,11 @@ export const getMatchesByMatchday = async (req, res) => {
       .populate("team2", "name")
       .populate("scorers.playerId", "fullName firstName lastName")
       .populate("scorers.teamId", "name")
+      .populate("goalkeepers.playerId", "fullName firstName lastName")
+      .populate("goalkeepers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
@@ -341,7 +367,7 @@ export const getSingleMatchday = async (req, res) => {
       .populate("scorers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
@@ -498,7 +524,23 @@ export const createPlayoffBracket = async (req, res) => {
       });
     }
 
-    // Generar bracket de playoff
+    // Calcular si se requiere completar a 2^n
+    const targetTeams = Math.pow(2, Math.ceil(Math.log2(advancingTeams.length)));
+    const teamsNeeded = targetTeams - advancingTeams.length;
+
+    let wildCardTeams = [];
+    if (teamsNeeded > 0) {
+      // Seleccionar mejores no clasificados usando la misma lógica de posiciones
+      wildCardTeams = await getBestNonQualifiedTeams(
+        tournament,
+        groupMatches,
+        advancingTeams,
+        teamsNeeded
+      );
+      advancingTeams.push(...wildCardTeams);
+    }
+
+    // Generar bracket de playoff con SEEDING (la función ya usa seeded order)
     const matches = await generatePlayoffBracket(tournament, advancingTeams);
     const createdMatches = await Match.insertMany(matches);
 
@@ -506,6 +548,9 @@ export const createPlayoffBracket = async (req, res) => {
       message: "Playoff generado exitosamente",
       matches: createdMatches,
       advancingTeams: advancingTeams.length,
+      directQualified: advancingTeams.length - wildCardTeams.length,
+      wildCards: wildCardTeams.length,
+      wildCardTeamsIds: wildCardTeams,
       groupsProcessed: Object.keys(standings).length,
     });
   } catch (error) {
@@ -691,9 +736,13 @@ export const getBracket = async (req, res) => {
       .populate("seriesWinner", "name")
       .populate("scorers.playerId", "fullName firstName lastName")
       .populate("scorers.teamId", "name")
+      .populate("goalkeepers.playerId", "fullName firstName lastName")
+      .populate("goalkeepers.teamId", "name")
+      .populate("goalkeepers.playerId", "fullName firstName lastName")
+      .populate("goalkeepers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",
@@ -805,6 +854,210 @@ export const addScorers = async (req, res) => {
 };
 
 /**
+ * Agrega porteros a un partido
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const addGoalkeepers = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const { goalkeepers } = req.body;
+
+    const match = await Match.findById(matchId)
+      .populate("tournament", "sport")
+      .populate("team1", "name")
+      .populate("team2", "name");
+
+    if (!match) {
+      return res.status(404).json({ error: "Partido no encontrado" });
+    }
+
+    // Verificar que el partido sea de fútbol o fútbol sala
+    const tournament = await Tournament.findById(match.tournament).populate(
+      "sport",
+      "name"
+    );
+
+    if (!["Fútbol", "Fútbol Sala"].includes(tournament.sport.name)) {
+      return res.status(400).json({
+        error:
+          "Los porteros solo se pueden registrar en partidos de fútbol y fútbol sala",
+      });
+    }
+
+    // Validar que el partido esté completado o en progreso
+    if (match.status !== "completed" && match.status !== "in-progress") {
+      return res.status(400).json({
+        error:
+          "Solo se pueden agregar porteros a partidos completados o en progreso",
+      });
+    }
+
+    // Validar que los porteros pertenezcan a los equipos del partido
+    const validTeamIds = [
+      match.team1._id.toString(),
+      match.team2._id.toString(),
+    ];
+
+    for (const goalkeeper of goalkeepers) {
+      if (!validTeamIds.includes(goalkeeper.teamId.toString())) {
+        return res.status(400).json({
+          error: `El portero ${goalkeeper.playerId} no pertenece a ninguno de los equipos del partido`,
+        });
+      }
+    }
+
+    // Validar que el total de goles recibidos coincida con el resultado del partido
+    const totalGoalsAgainst = goalkeepers.reduce((sum, gk) => sum + gk.goalsAgainst, 0);
+    const matchTotalGoals = (match.scoreTeam1 || 0) + (match.scoreTeam2 || 0);
+
+    if (totalGoalsAgainst !== matchTotalGoals) {
+      return res.status(400).json({
+        error: `El total de goles recibidos (${totalGoalsAgainst}) debe coincidir con el total de goles del partido (${matchTotalGoals})`,
+      });
+    }
+
+    // Calcular isCleanSheet automáticamente
+    const processedGoalkeepers = goalkeepers.map(gk => ({
+      ...gk,
+      isCleanSheet: gk.goalsAgainst === 0
+    }));
+
+    // Limpiar porteros existentes y agregar los nuevos
+    match.goalkeepers = processedGoalkeepers;
+    await match.save();
+
+    // Populate para mejor respuesta
+    const populatedMatch = await Match.findById(matchId)
+      .populate("team1", "name")
+      .populate("team2", "name")
+      .populate("goalkeepers.playerId", "fullName")
+      .populate("goalkeepers.teamId", "name");
+
+    res.status(200).json(populatedMatch);
+  } catch (error) {
+    console.error("Error adding goalkeepers:", error);
+    res.status(500).json({
+      error: "Error al agregar porteros",
+      details: error.message,
+    });
+  }
+};
+
+/**
+ * Obtiene la tabla de porteros de un torneo
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+export const getTournamentGoalkeepers = async (req, res) => {
+  try {
+    const { tournamentId } = req.params;
+
+    const tournament = await Tournament.findById(tournamentId).populate(
+      "sport",
+      "name"
+    );
+
+    if (!tournament) {
+      return res.status(404).json({ error: "Torneo no encontrado" });
+    }
+
+    // Verificar que el torneo sea de fútbol o fútbol sala
+    if (!["Fútbol", "Fútbol Sala"].includes(tournament.sport.name)) {
+      return res.status(400).json({
+        error:
+          "La tabla de porteros solo está disponible para torneos de fútbol y fútbol sala",
+      });
+    }
+
+    // Obtener todos los partidos completados o en progreso del torneo con porteros
+    const matches = await Match.find({
+      tournament: tournamentId,
+      status: { $in: ["completed", "in-progress"] },
+      goalkeepers: { $exists: true, $ne: [] },
+    })
+      .populate("goalkeepers.playerId", "fullName")
+      .populate("goalkeepers.teamId", "name");
+
+    // Calcular estadísticas de porteros
+    const goalkeepersStats = {};
+
+    matches.forEach((match) => {
+      match.goalkeepers.forEach((goalkeeper) => {
+        const playerId = goalkeeper.playerId._id.toString();
+        const playerName = goalkeeper.playerId.fullName;
+        const teamName = goalkeeper.teamId.name;
+
+        if (!goalkeepersStats[playerId]) {
+          goalkeepersStats[playerId] = {
+            player: {
+              _id: goalkeeper.playerId._id,
+              fullName: playerName,
+            },
+            team: {
+              _id: goalkeeper.teamId._id,
+              name: teamName,
+            },
+            gamesPlayed: 0,
+            minutesPlayed: 0,
+            goalsAgainst: 0,
+            cleanSheets: 0,
+            average: 0,
+          };
+        }
+
+        goalkeepersStats[playerId].gamesPlayed += 1;
+        goalkeepersStats[playerId].minutesPlayed += goalkeeper.minutesPlayed;
+        goalkeepersStats[playerId].goalsAgainst += goalkeeper.goalsAgainst;
+        if (goalkeeper.isCleanSheet) {
+          goalkeepersStats[playerId].cleanSheets += 1;
+        }
+      });
+    });
+
+    // Convertir a array, calcular promedios y ordenar
+    const goalkeepersTable = Object.values(goalkeepersStats)
+      .map(gk => ({
+        ...gk,
+        average: gk.gamesPlayed > 0 ? (gk.goalsAgainst / gk.gamesPlayed).toFixed(2) : "0.00"
+      }))
+      .sort((a, b) => {
+        // Primero por menor promedio de goles recibidos
+        const avgA = parseFloat(a.average);
+        const avgB = parseFloat(b.average);
+        if (avgA !== avgB) {
+          return avgA - avgB;
+        }
+        // En caso de empate, por más vallas invictas
+        if (b.cleanSheets !== a.cleanSheets) {
+          return b.cleanSheets - a.cleanSheets;
+        }
+        // Finalmente, por más partidos jugados
+        if (b.gamesPlayed !== a.gamesPlayed) {
+          return b.gamesPlayed - a.gamesPlayed;
+        }
+        // En último caso, por nombre del jugador
+        return a.player.fullName.localeCompare(b.player.fullName);
+      });
+
+    res.status(200).json({
+      tournament: {
+        _id: tournament._id,
+        name: tournament.name,
+        sport: tournament.sport.name,
+      },
+      goalkeepers: goalkeepersTable,
+    });
+  } catch (error) {
+    console.error("Error getting tournament goalkeepers:", error);
+    res.status(500).json({
+      error: "Error al obtener la tabla de porteros",
+      details: error.message,
+    });
+  }
+};
+
+/**
  * Obtiene la tabla de goleadores de un torneo
  * @param {Object} req - Request object
  * @param {Object} res - Response object
@@ -905,9 +1158,11 @@ export const getMatchById = async (req, res) => {
       .populate("winner", "name")
       .populate("scorers.playerId", "fullName firstName lastName")
       .populate("scorers.teamId", "name")
+      .populate("goalkeepers.playerId", "fullName firstName lastName")
+      .populate("goalkeepers.teamId", "name")
       .populate({
         path: "tournament",
-        select: "name sport",
+        select: "name sport customRules",
         populate: {
           path: "sport",
           select: "name",

@@ -5,6 +5,7 @@
 
 import Tournament from "../models/tournamentModel.js";
 import Sport from "../models/sportModel.js";
+import Match from "../models/matchModel.js";
 import asyncHandler from "express-async-handler";
 import {
   validateTournamentInput,
@@ -12,6 +13,7 @@ import {
   validateTournamentUpdate,
 } from "../utils/tournamentValidators.js";
 import { calculateTournamentStatus } from "../utils/tournamentStatus.js";
+import { getBestNonQualifiedTeams } from "../utils/groupStageGenerator.js";
 
 /**
  * @function createTournament
@@ -335,6 +337,63 @@ const patchTournamentResolutionsUrl = asyncHandler(async (req, res) => {
     .json({ message: "Resoluciones actualizadas", resolutionsUrl: tournament.resolutionsUrl });
 });
 
+/**
+ * @function getTournamentWildcards
+ * @desc Get wildcard (comodín) team IDs for a tournament
+ * @route GET /api/tournaments/:id/wildcards
+ * @access Public
+ */
+const getTournamentWildcards = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const errors = validateObjectId(id, "tournament ID");
+  if (errors.length > 0) {
+    res.status(400);
+    throw new Error(errors.join(". "));
+  }
+  const tournament = await Tournament.findById(id);
+  if (!tournament) {
+    res.status(404);
+    throw new Error("Tournament not found");
+  }
+  if (tournament.format !== "group-stage") {
+    return res.status(400).json({ error: "Tournament is not group-stage format" });
+  }
+  // Obtener todos los partidos de fase de grupos
+  const groupMatches = await Match.find({
+    tournament: id,
+    round: "group",
+  });
+  // Obtener equipos clasificados directos (top N de cada grupo)
+  const groupNames = [...new Set(groupMatches.map((m) => m.group))];
+  const teamsAdvancing = tournament.groupsStageSettings?.teamsAdvancingPerGroup || 2;
+  const teamsPerGroup = tournament.groupsStageSettings?.teamsPerGroup || 4;
+  // Construir standings por grupo
+  const standingsByGroup = {};
+  for (const group of groupNames) {
+    const matches = groupMatches.filter((m) => m.group === group);
+    const standings = await (await import("../utils/groupStageGenerator.js")).calculateGroupStandings(matches, tournament);
+    standingsByGroup[group] = standings;
+  }
+  // IDs de clasificados directos
+  const qualifiedTeamIds = [];
+  Object.values(standingsByGroup).forEach((group) => {
+    group.slice(0, teamsAdvancing).forEach((row) => qualifiedTeamIds.push(row.team));
+  });
+  // Calcular cuántos comodines se necesitan
+  const totalDirect = qualifiedTeamIds.length;
+  const totalToAdvance = Math.pow(2, Math.ceil(Math.log2(totalDirect)));
+  const wildCardsNeeded = totalToAdvance - totalDirect;
+  if (wildCardsNeeded <= 0) return res.json([]);
+  // Obtener comodines
+  const wildcards = await getBestNonQualifiedTeams(
+    tournament,
+    groupMatches,
+    qualifiedTeamIds,
+    wildCardsNeeded
+  );
+  res.json(wildcards);
+});
+
 export {
   createTournament,
   getAllTournaments,
@@ -343,4 +402,5 @@ export {
   deleteTournament,
   patchTournamentRulesUrl,
   patchTournamentResolutionsUrl,
+  getTournamentWildcards,
 };

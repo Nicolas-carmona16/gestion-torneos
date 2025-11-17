@@ -1,3 +1,5 @@
+import { getNowInColombia, getDateFromUTC } from "./dateHelpers";
+
 export const statusMapping = (status) => {
   switch (status) {
     case "coming soon":
@@ -18,21 +20,21 @@ export const statusMapping = (status) => {
 };
 
 export const calculateTournamentStatus = (tournament) => {
-  const now = new Date();
+  const now = getNowInColombia();
   const dates = {
-    regStart: new Date(tournament.registrationStart),
-    regTeamEnd: new Date(tournament.registrationTeamEnd),
-    regPlayerEnd: new Date(tournament.registrationPlayerEnd),
-    start: new Date(tournament.startDate),
-    end: new Date(tournament.endDate),
+    regStart: getDateFromUTC(tournament.registrationStart),
+    regTeamEnd: getDateFromUTC(tournament.registrationTeamEnd),
+    regPlayerEnd: getDateFromUTC(tournament.registrationPlayerEnd),
+    start: getDateFromUTC(tournament.startDate),
+    end: getDateFromUTC(tournament.endDate),
   };
 
   if (now < dates.regStart) return "coming soon";
-  if (now >= dates.regStart && now < dates.regTeamEnd)
+  if (now >= dates.regStart && now <= dates.regTeamEnd)
     return "registration open";
-  if (now >= dates.regTeamEnd && now < dates.regPlayerEnd && now < dates.start)
+  if (now > dates.regTeamEnd && now <= dates.regPlayerEnd && now < dates.start)
     return "player adjustment";
-  if (now >= dates.regPlayerEnd && now < dates.start) return "preparation";
-  if (now >= dates.start && now < dates.end) return "in progress";
+  if (now > dates.regPlayerEnd && now < dates.start) return "preparation";
+  if (now >= dates.start && now <= dates.end) return "in progress";
   return "completed";
 };

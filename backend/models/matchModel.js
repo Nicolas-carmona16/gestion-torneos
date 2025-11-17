@@ -181,6 +181,42 @@ const matchSchema = new mongoose.Schema(
         },
       },
     ],
+    // Campo solo para futbol y fútbol sala - Porteros
+    goalkeepers: [
+      {
+        playerId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Player",
+          required: true,
+        },
+        teamId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Team",
+          required: true,
+        },
+        goalsAgainst: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        minutesPlayed: {
+          type: Number,
+          required: true,
+          min: 1,
+          default: 90,
+        },
+        isCleanSheet: {
+          type: Boolean,
+          default: function() {
+            return this.goalsAgainst === 0;
+          }
+        },
+        matchDate: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

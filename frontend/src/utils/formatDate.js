@@ -1,8 +1,16 @@
 export const formatDate = (dateString) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("es-ES", {
-    timeZone: "UTC",
-  });
+  
+  const date = new Date(dateString);
+  
+  // Para fechas que se guardaron como medianoche UTC (fechas de torneos),
+  // queremos mostrar el día que realmente se quiso representar
+  // Usar los valores UTC directamente para evitar conversión de zona horaria
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  
+  return `${day}/${month}/${year}`;
 };
 
 export const formatTimeTo12h = (timeString) => {

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { compareDatesOnly } from "./dateUtils.js";
 
 /**
  * Validates the input data for creating or updating a tournament.
@@ -39,25 +40,25 @@ export const validateTournamentInput = (data) => {
     errors.push("Invalid sport ID");
   }
 
-  if (new Date(registrationStart) >= new Date(registrationTeamEnd)) {
+  if (compareDatesOnly(registrationStart, registrationTeamEnd) >= 0) {
     errors.push(
       "Registration start date must be before team registration end date"
     );
   }
 
-  if (new Date(registrationTeamEnd) >= new Date(registrationPlayerEnd)) {
+  if (compareDatesOnly(registrationTeamEnd, registrationPlayerEnd) >= 0) {
     errors.push(
       "Team registration end date must be before player registration end date"
     );
   }
 
-  if (new Date(registrationTeamEnd) >= new Date(startDate)) {
+  if (compareDatesOnly(registrationTeamEnd, startDate) >= 0) {
     errors.push(
       "Team registration end date must be before tournament start date"
     );
   }
 
-  if (new Date(startDate) >= new Date(endDate)) {
+  if (compareDatesOnly(startDate, endDate) >= 0) {
     errors.push("Tournament end date must be after start date");
   }
 

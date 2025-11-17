@@ -71,12 +71,12 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
       className="shadow-md"
     >
       <Toolbar
-        style={{ 
+        style={{
           minHeight: "100px",
           display: "grid",
           gridTemplateColumns: "1fr auto 1fr",
           alignItems: "center",
-          gap: "16px"
+          gap: "16px",
         }}
       >
         <Link to="/" className="flex items-center gap-2">
@@ -128,29 +128,29 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
           >
             Perfil
           </MenuItem>
-          {user?.role === "admin" && (
-            <>
-              <Divider />
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  navigate("/gestion-usuarios");
-                }}
-              >
-                <SettingsIcon sx={{ mr: 1 }} />
-                Gestión de Usuarios
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  navigate("/gestion-carrusel");
-                }}
-              >
-                <PhotoLibraryIcon sx={{ mr: 1 }} />
-                Gestión del Carrusel
-              </MenuItem>
-            </>
-          )}
+          {user?.role === "admin" && [
+            <Divider key="divider-admin" />,
+            <MenuItem
+              key="gestion-usuarios"
+              onClick={() => {
+                handleMenuClose();
+                navigate("/gestion-usuarios");
+              }}
+            >
+              <SettingsIcon sx={{ mr: 1 }} />
+              Gestión de Usuarios
+            </MenuItem>,
+            <MenuItem
+              key="gestion-carrusel"
+              onClick={() => {
+                handleMenuClose();
+                navigate("/gestion-carrusel");
+              }}
+            >
+              <PhotoLibraryIcon sx={{ mr: 1 }} />
+              Gestión del Carrusel
+            </MenuItem>,
+          ]}
           <Divider />
           <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
         </Menu>

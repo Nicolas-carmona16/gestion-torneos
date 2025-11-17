@@ -2,9 +2,12 @@ import { useState } from "react";
 import { Box, Typography, Button, Chip } from "@mui/material";
 import DescriptionWithToggle from "./DescriptionWithToggle";
 import { formatDate, formatTimeTo12h } from "../../utils/formatDate";
+import { utcToLocalDateString } from "../../utils/dateHelpers";
 import { translateStatus } from "../../utils/translations";
 import { isScorersSupported } from "../../services/scorersService";
 import AddScorersModal from "./AddScorersModal";
+import AddGoalkeepersModal from "./AddGoalkeepersModal";
+import VolleyballSetsDialog from "./VolleyballSetsDialog";
 
 const MatchItem = ({
   match,
@@ -14,12 +17,18 @@ const MatchItem = ({
   isElimination,
   fetchMatchDetails,
   refreshScorersData,
+  refreshGoalkeepersData,
+  onUpdateMatch,
 }) => {
   // Verificar si el partido es de fútbol o fútbol sala
   const isFootballOrFutsal = isScorersSupported(match?.tournament?.sport?.name);
 
+  // Verificar si el partido es de voleibol
+  const isVolleyball = match?.tournament?.sport?.name === "Voleibol";
+
   // Verificar si el partido está completado o en progreso
-  const isCompletedOrInProgress = match.status === "completed" || match.status === "in-progress";
+  const isCompletedOrInProgress =
+    match.status === "completed" || match.status === "in-progress";
 
   // Verificar si el usuario tiene permisos
   const hasPermission = user?.role === "admin" || user?.role === "assistant";
@@ -28,7 +37,24 @@ const MatchItem = ({
   const canAddScorers =
     isFootballOrFutsal && isCompletedOrInProgress && hasPermission;
 
+  // Validación completa para mostrar el botón de porteros
+  const canAddGoalkeepers =
+    isFootballOrFutsal && isCompletedOrInProgress && hasPermission;
+
   const [openScorersModal, setOpenScorersModal] = useState(false);
+  const [openGoalkeepersModal, setOpenGoalkeepersModal] = useState(false);
+  const [openVolleyballSetsModal, setOpenVolleyballSetsModal] = useState(false);
+
+  const handleVolleyballUpdate = async (updateData) => {
+    try {
+      if (onUpdateMatch) {
+        await onUpdateMatch(match._id, updateData);
+        setOpenVolleyballSetsModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating volleyball match:", error);
+    }
+  };
 
   const renderSeriesGames = () => {
     const canAddMoreGames =
@@ -71,6 +97,50 @@ const MatchItem = ({
               Agregar Juego
             </Button>
           )}
+      </Box>
+    );
+  };
+
+  const renderVolleyballSets = () => {
+    if (!match.setScores || match.setScores.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          mt: 2,
+          p: 2,
+          backgroundColor: "#f8f8f8",
+          borderRadius: 1,
+          border: "1px solid #eee",
+          width: "100%",
+        }}
+      >
+        <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+          Sets del partido:
+        </Typography>
+
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          {match.setScores.map((set, index) => (
+            <Box
+              key={index}
+              sx={{
+                p: 1,
+                border: "1px solid #ddd",
+                borderRadius: 1,
+                backgroundColor: "white",
+                minWidth: "80px",
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="body2" fontWeight="bold">
+                Set {set.setNumber}
+              </Typography>
+              <Typography variant="body1">
+                {set.scoreTeam1} - {set.scoreTeam2}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
       </Box>
     );
   };
@@ -162,6 +232,97 @@ const MatchItem = ({
     );
   };
 
+  const renderGoalkeepers = () => {
+    if (!match.goalkeepers || match.goalkeepers.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          mt: 2,
+          p: 2,
+          backgroundColor: "#f8f8f8",
+          borderRadius: 1,
+          border: "1px solid #eee",
+          width: "100%",
+        }}
+      >
+        <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+          Porteros del partido:
+        </Typography>
+
+        <Box sx={{ display: "flex", gap: 4, width: "100%" }}>
+          {/* Equipo 1 */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body1" fontWeight="medium" color="primary">
+              {match.team1.name}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0 }}>
+              {match.goalkeepers
+                .filter(
+                  (gk) =>
+                    gk.teamId === match.team1._id ||
+                    (typeof gk.teamId === "object" &&
+                      gk.teamId._id === match.team1._id)
+                )
+                .map((goalkeeper, index) => {
+                  const playerName =
+                    goalkeeper.playerId?.fullName ||
+                    (goalkeeper.playerId?.firstName && goalkeeper.playerId?.lastName
+                      ? `${goalkeeper.playerId.firstName} ${goalkeeper.playerId.lastName}`
+                      : "Portero desconocido");
+                  return (
+                    <Box component="li" key={index} sx={{ py: 0.5 }}>
+                      <Typography variant="body2" noWrap={false}>
+                        <strong>{playerName}</strong>: {goalkeeper.goalsAgainst} gol
+                        {goalkeeper.goalsAgainst !== 1 ? "es" : ""} recibido
+                        {goalkeeper.goalsAgainst !== 1 ? "s" : ""} 
+                        ({goalkeeper.minutesPlayed}')
+                        {goalkeeper.isCleanSheet}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+            </Box>
+          </Box>
+
+          {/* Equipo 2 */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body1" fontWeight="medium" color="primary">
+              {match.team2.name}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0 }}>
+              {match.goalkeepers
+                .filter(
+                  (gk) =>
+                    gk.teamId === match.team2._id ||
+                    (typeof gk.teamId === "object" &&
+                      gk.teamId._id === match.team2._id)
+                )
+                .map((goalkeeper, index) => {
+                  const playerName =
+                    goalkeeper.playerId?.fullName ||
+                    (goalkeeper.playerId?.firstName && goalkeeper.playerId?.lastName
+                      ? `${goalkeeper.playerId.firstName} ${goalkeeper.playerId.lastName}`
+                      : "Portero desconocido");
+                  return (
+                    <Box component="li" key={index} sx={{ py: 0.5 }}>
+                      <Typography variant="body2" noWrap={false}>
+                        <strong>{playerName}</strong>: {goalkeeper.goalsAgainst} gol
+                        {goalkeeper.goalsAgainst !== 1 ? "es" : ""} recibido
+                        {goalkeeper.goalsAgainst !== 1 ? "s" : ""} 
+                        ({goalkeeper.minutesPlayed}')
+                        {goalkeeper.isCleanSheet}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -183,9 +344,18 @@ const MatchItem = ({
             top: 8,
           }}
         >
-          <Button size="small" onClick={() => onEditClick(match)}>
-            Actualizar
-          </Button>
+          {isVolleyball ? (
+            <Button
+              size="small"
+              onClick={() => setOpenVolleyballSetsModal(true)}
+            >
+              Actualizar Sets
+            </Button>
+          ) : (
+            <Button size="small" onClick={() => onEditClick(match)}>
+              Actualizar
+            </Button>
+          )}
 
           {canAddScorers && (
             <Button
@@ -195,6 +365,17 @@ const MatchItem = ({
               onClick={() => setOpenScorersModal(true)}
             >
               Agregar Goleadores
+            </Button>
+          )}
+
+          {canAddGoalkeepers && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="primary"
+              onClick={() => setOpenGoalkeepersModal(true)}
+            >
+              Agregar Porteros
             </Button>
           )}
         </Box>
@@ -239,12 +420,21 @@ const MatchItem = ({
               variant="body2"
               sx={{ fontWeight: "bold", color: "#00796b" }}
             >
-              Resultado: {match.scoreTeam1} - {match.scoreTeam2}
+              {isVolleyball
+                ? `Resultado: ${match.setsTeam1 || 0} - ${
+                    match.setsTeam2 || 0
+                  } sets`
+                : `Resultado: ${match.scoreTeam1} - ${match.scoreTeam2}`}
             </Typography>
           </Box>
         )}
 
-        {renderScorers()}
+        {isVolleyball ? renderVolleyballSets() : (
+          <>
+            {renderScorers()}
+            {renderGoalkeepers()}
+          </>
+        )}
       </Box>
 
       {isElimination && match.seriesMatches && renderSeriesGames()}
@@ -255,6 +445,29 @@ const MatchItem = ({
         match={match}
         fetchMatchDetails={fetchMatchDetails}
         refreshScorersData={refreshScorersData}
+      />
+
+      <AddGoalkeepersModal
+        open={openGoalkeepersModal}
+        onClose={() => setOpenGoalkeepersModal(false)}
+        match={match}
+        fetchMatchDetails={fetchMatchDetails}
+        refreshGoalkeepersData={refreshGoalkeepersData}
+      />
+
+      <VolleyballSetsDialog
+        open={openVolleyballSetsModal}
+        onClose={() => setOpenVolleyballSetsModal(false)}
+        match={match}
+        formData={{
+          date: match.date
+            ? utcToLocalDateString(match.date)
+            : "",
+          time: match.time || "",
+          description: match.description || "",
+        }}
+        onFormChange={() => {}} // No-op: los cambios se manejan internamente
+        onSubmit={handleVolleyballUpdate}
       />
     </Box>
   );

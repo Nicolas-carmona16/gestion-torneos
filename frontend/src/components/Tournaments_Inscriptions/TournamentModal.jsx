@@ -11,10 +11,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import { formatDate } from "../../utils/formatDate";
+import { isTeamRegistrationOpen } from "../../utils/dateHelpers";
 import BasketballRules from "../sportsRules/BasketballRules";
 import SoccerRules from "../sportsRules/SoccerRules";
 import VolleyballRules from "../sportsRules/VolleyballRules";
 import FutsalRules from "../sportsRules/FutsalRules";
+import GenericRules from "../sportsRules/GenericRules";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getTeamsByTournament } from "../../services/teamService";
@@ -24,6 +26,7 @@ const rulesComponents = {
   Fútbol: SoccerRules,
   Voleibol: VolleyballRules,
   "Fútbol Sala": FutsalRules,
+  Otro: GenericRules,
 };
 
 const formatMapping = {
@@ -41,7 +44,7 @@ const TournamentModal = ({
   const navigate = useNavigate();
   const [isFull, setIsFull] = useState(false);
   const [teamsLoading, setTeamsLoading] = useState(false);
-  const SportRulesComponent = rulesComponents[tournament?.sport?.name] || null;
+  const SportRulesComponent = rulesComponents[tournament?.sport?.name] || GenericRules;
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -64,13 +67,7 @@ const TournamentModal = ({
   }, [tournament, open]);
 
   const isRegistrationOpen = () => {
-    if (!tournament) return false;
-
-    const currentDate = new Date();
-    return (
-      currentDate >= new Date(tournament.registrationStart) &&
-      currentDate <= new Date(tournament.registrationTeamEnd)
-    );
+    return isTeamRegistrationOpen(tournament);
   };
 
   const isUserCaptain = () => {

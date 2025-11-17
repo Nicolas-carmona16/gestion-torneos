@@ -22,6 +22,7 @@ import {
   checkPlayoffStatus,
 } from "../../services/groupStageService";
 import { getEliminationBracket } from "../../services/eliminationStageService";
+import { getWildcardTeams } from "../../services/wildcardService";
 import EliminationStage from "./EliminationStage";
 
 const GroupStage = ({
@@ -43,6 +44,7 @@ const GroupStage = ({
   const [activeTab, setActiveTab] = useState(0);
   const [playoffBracket, setPlayoffBracket] = useState(null);
   const [loadingPlayoffBracket, setLoadingPlayoffBracket] = useState(false);
+  const [wildcardTeamIds, setWildcardTeamIds] = useState([]);
 
   const showDrawsColumn =
     tournament?.sport?.name === "Fútbol" ||
@@ -52,18 +54,22 @@ const GroupStage = ({
     tournament?.sport?.name === "Fútbol" ||
     tournament?.sport?.name === "Fútbol Sala";
 
+  const isVolleyball = tournament?.sport?.name === "Voleibol";
+
   useEffect(() => {
     const checkStatus = async () => {
       if (Object.keys(standings).length > 0) {
         try {
-          const [completion, playoff] = await Promise.all([
+          const [completion, playoff, wildcards] = await Promise.all([
             checkGroupStageCompletion(tournamentId),
             checkPlayoffStatus(tournamentId),
+            getWildcardTeams(tournamentId),
           ]);
 
           setCompletionData(completion);
           setPlayoffStatus(playoff);
           setGroupStageComplete(completion.isComplete);
+          setWildcardTeamIds(wildcards.map((id) => id.toString()));
 
           if (playoff.hasPlayoff) {
             setLoadingPlayoffBracket(true);
@@ -298,59 +304,82 @@ const GroupStage = ({
                       </Tooltip>
                       <Tooltip
                         title={
-                          isFootballSport ? "Goles a Favor" : "Puntos Anotados"
+                          isVolleyball
+                            ? "Sets a Favor"
+                            : isFootballSport
+                            ? "Goles a Favor"
+                            : "Puntos Anotados"
                         }
                       >
                         <TableCell align="right">
-                          {isFootballSport ? "GF" : "PA"}
+                          {isVolleyball ? "SF" : isFootballSport ? "GF" : "PA"}
                         </TableCell>
                       </Tooltip>
                       <Tooltip
                         title={
-                          isFootballSport
+                          isVolleyball
+                            ? "Sets en Contra"
+                            : isFootballSport
                             ? "Goles en Contra"
                             : "Puntos Recibidos"
                         }
                       >
                         <TableCell align="right">
-                          {isFootballSport ? "GC" : "PR"}
+                          {isVolleyball ? "SC" : isFootballSport ? "GC" : "PR"}
                         </TableCell>
                       </Tooltip>
                       <Tooltip
                         title={
-                          isFootballSport
+                          isVolleyball
+                            ? "Diferencia de Sets"
+                            : isFootballSport
                             ? "Diferencia de Goles"
                             : "Diferencia de Puntos"
                         }
                       >
                         <TableCell align="right">
-                          {isFootballSport ? "DG" : "DP"}
+                          {isVolleyball ? "DS" : isFootballSport ? "DG" : "DP"}
                         </TableCell>
                       </Tooltip>
+                      {isVolleyball && (
+                        <>
+                          <Tooltip title="Puntos a Favor">
+                            <TableCell align="right">PF</TableCell>
+                          </Tooltip>
+                          <Tooltip title="Puntos en Contra">
+                            <TableCell align="right">PC</TableCell>
+                          </Tooltip>
+                        </>
+                      )}
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {teams.map((team, index) => (
-                      <TableRow
-                        key={team.team._id || index}
-                        sx={{
-                          backgroundColor:
-                            index < teamsAdvancing
+                    {teams.map((team, index) => {
+                      const teamId = team.team._id?.toString() || team.team.toString();
+                      const isWildcard = wildcardTeamIds.includes(teamId);
+                      
+                      return (
+                        <TableRow
+                          key={team.team._id || index}
+                          sx={{
+                            backgroundColor: isWildcard
+                              ? "rgba(255, 215, 0, 0.2)"
+                              : index < teamsAdvancing
                               ? "rgba(0, 200, 0, 0.1)"
                               : "inherit",
-                          "&:hover": { backgroundColor: "action.hover" },
-                        }}
-                      >
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>
-                          {typeof team.team === "object" ? (
-                            team.team.name
-                          ) : (
-                            <Typography color="textSecondary">
-                              Equipo no encontrado
-                            </Typography>
-                          )}
-                        </TableCell>
+                            "&:hover": { backgroundColor: "action.hover" },
+                          }}
+                        >
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>
+                            {typeof team.team === "object" ? (
+                              team.team.name
+                            ) : (
+                              <Typography color="textSecondary">
+                                Equipo no encontrado
+                              </Typography>
+                            )}
+                          </TableCell>
                         <TableCell align="right">
                           <strong>{team.points}</strong>
                         </TableCell>
@@ -360,13 +389,38 @@ const GroupStage = ({
                           <TableCell align="right">{team.draws}</TableCell>
                         )}
                         <TableCell align="right">{team.losses}</TableCell>
-                        <TableCell align="right">{team.goalsFor}</TableCell>
-                        <TableCell align="right">{team.goalsAgainst}</TableCell>
-                        <TableCell align="right">
-                          {team.goalsFor - team.goalsAgainst}
-                        </TableCell>
+                        {isVolleyball ? (
+                          <>
+                            <TableCell align="right">
+                              {team.setsFor || 0}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.setsAgainst || 0}
+                            </TableCell>
+                            <TableCell align="right">
+                              {(team.setsFor || 0) - (team.setsAgainst || 0)}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.pointsFor || 0}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.pointsAgainst || 0}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell align="right">{team.goalsFor}</TableCell>
+                            <TableCell align="right">
+                              {team.goalsAgainst}
+                            </TableCell>
+                            <TableCell align="right">
+                              {team.goalsFor - team.goalsAgainst}
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </Paper>
