@@ -16,6 +16,11 @@ import teamRoutes from "./routes/teamRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import playerRoutes from "./routes/playerRoutes.js";
 import carruselRoutes from "./routes/carruselRoutes.js";
+import teamChangeLogRoutes from "./routes/teamChangeLogRoutes.js";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
+import jwt from "jsonwebtoken";
+import User from "./models/userModel.js";
 
 dotenv.config();
 
@@ -23,6 +28,43 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+
+// Configuración de Socket.IO
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
+});
+
+// Namespace para admins
+const adminNamespace = io.of("/admin");
+
+adminNamespace.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.query?.token;
+    if (!token) {
+      return next(new Error("No token provided"));
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user || user.role !== "admin") {
+      return next(new Error("Not authorized as admin"));
+    }
+    socket.user = user; // Guardar info del usuario en el socket
+    next();
+  } catch (err) {
+    next(new Error("Invalid token"));
+  }
+});
+
+adminNamespace.on("connection", (socket) => {
+  console.log(`Admin conectado: ${socket.user.email}`);
+  socket.on("disconnect", () => {
+    console.log(`Admin desconectado: ${socket.user.email}`);
+  });
+});
 
 // Middlewares
 app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
@@ -45,13 +87,17 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/players", playerRoutes);
 app.use("/api/carrusel", carruselRoutes);
+app.use("/api/changelog", teamChangeLogRoutes);
 
 // Middleware for handling errors
 app.use(notFound);
 app.use(errorHandler);
 
-// Start the server
+// Start the server (usando http + socket.io)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Exportar adminNamespace para emitir eventos desde otros módulos
+export { adminNamespace };
