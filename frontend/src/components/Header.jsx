@@ -7,14 +7,19 @@ import {
   Menu,
   MenuItem,
   Divider,
+  IconButton,
+  Badge,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import logo from "../assets/logoUdeA.png";
 import { logoutUser, getUser } from "../services/authService";
+import { useTeamChanges } from "../hooks/useTeamChanges";
+import TeamChangesDrawer from "./TeamChanges/TeamChangesDrawer";
 
 /**
  * @module Header
@@ -33,7 +38,13 @@ import { logoutUser, getUser } from "../services/authService";
 const Header = ({ isAuthenticated, setIsAuthenticated }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Hook for team changes (only for admins)
+  const { changes, unreadCount, decrementUnreadCount } = useTeamChanges(
+    user?.role === "admin"
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -102,16 +113,35 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
               Iniciar sesión
             </Button>
           ) : (
-            <Button
-              color="inherit"
-              onClick={handleMenuOpen}
-              sx={{
-                backgroundColor: "transparent",
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
-              }}
-            >
-              <AccountCircleIcon style={{ fontSize: "40px" }} />
-            </Button>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* Notifications button (only for admins) */}
+              {user?.role === "admin" && (
+                <IconButton
+                  color="inherit"
+                  onClick={() => setDrawerOpen(true)}
+                  sx={{
+                    backgroundColor: "transparent",
+                    "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+                  }}
+                >
+                  <Badge badgeContent={unreadCount} color="error">
+                    <NotificationsIcon style={{ fontSize: "32px" }} />
+                  </Badge>
+                </IconButton>
+              )}
+
+              {/* User menu button */}
+              <Button
+                color="inherit"
+                onClick={handleMenuOpen}
+                sx={{
+                  backgroundColor: "transparent",
+                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+                }}
+              >
+                <AccountCircleIcon style={{ fontSize: "40px" }} />
+              </Button>
+            </div>
           )}
         </div>
         <Menu
@@ -154,6 +184,14 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
           <Divider />
           <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
         </Menu>
+
+        {/* Team Changes Drawer */}
+        <TeamChangesDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          onDecrementCount={decrementUnreadCount}
+          liveChanges={changes}
+        />
       </Toolbar>
     </AppBar>
   );

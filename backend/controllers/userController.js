@@ -440,6 +440,24 @@ const getUserProfile = asyncHandler(async (req, res) => {
   res.json(userProfile);
 });
 
+/**
+ * @function getWebSocketToken
+ * @desc Get JWT token for WebSocket connection
+ * @route GET /api/users/ws-token
+ * @access Private
+ */
+const getWebSocketToken = asyncHandler(async (req, res) => {
+  // Extract token from httpOnly cookie
+  const token = req.cookies.jwt;
+  
+  if (!token) {
+    res.status(401);
+    throw new Error("Not authorized, no token");
+  }
+
+  res.json({ token });
+});
+
 export {
   registerUser,
   loginUser,
@@ -449,4 +467,5 @@ export {
   createUser,
   getUserProfile,
   getAllUsers,
+  getWebSocketToken,
 };
