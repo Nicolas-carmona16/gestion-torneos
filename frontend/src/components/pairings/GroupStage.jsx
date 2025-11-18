@@ -24,6 +24,8 @@ import {
 import { getEliminationBracket } from "../../services/eliminationStageService";
 import { getWildcardTeams } from "../../services/wildcardService";
 import EliminationStage from "./EliminationStage";
+import { generateStandingsPDF } from "../../services/pdfService";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const GroupStage = ({
   standings,
@@ -163,6 +165,22 @@ const GroupStage = ({
     ...(showPlayoffTab ? [{ label: "Eliminación Directa", value: 1 }] : []),
   ];
 
+  // Función para manejar la descarga del PDF
+  const handleDownloadPDF = () => {
+    const tournamentInfo = {
+      name: tournament?.name || "Torneo",
+    };
+    const sportName = tournament?.sport?.name || "Deporte";
+
+    generateStandingsPDF(
+      standings,
+      tournamentInfo,
+      sportName,
+      teamsAdvancing,
+      wildcardTeamIds
+    );
+  };
+
   return (
     <Box>
       {completionData && playoffStatus && (
@@ -268,6 +286,19 @@ const GroupStage = ({
       {/* Contenido de los tabs */}
       {activeTab === 0 && (
         <Box>
+          {/* Botón para descargar PDF */}
+          <Box display="flex" justifyContent="flex-end" mb={3}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<DownloadIcon />}
+              onClick={handleDownloadPDF}
+              disabled={!standings || Object.keys(standings).length === 0}
+            >
+              Descargar PDF
+            </Button>
+          </Box>
+
           {Object.entries(standings).map(([groupName, teams]) => (
             <Box key={groupName} mb={4}>
               <Typography variant="h6" gutterBottom>
