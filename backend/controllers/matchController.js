@@ -257,6 +257,15 @@ export const updateMatch = async (req, res) => {
       // Marcar como completado si el partido terminó
       if (result.isComplete) {
         match.status = "completed";
+        
+        // Actualizar siguiente partido en el bracket si existe un ganador
+        if (match.winner && match.nextMatchBracketId) {
+          await updateNextMatch(
+            match.tournament._id,
+            match.nextMatchBracketId,
+            match.winner
+          );
+        }
       }
 
       // Actualizar otros campos si se proporcionan
@@ -290,6 +299,15 @@ export const updateMatch = async (req, res) => {
 
         updatedMatch.status = "completed";
         await updatedMatch.save();
+        
+        // Actualizar siguiente partido en el bracket si existe un ganador
+        if (updatedMatch.winner && updatedMatch.nextMatchBracketId) {
+          await updateNextMatch(
+            updatedMatch.tournament,
+            updatedMatch.nextMatchBracketId,
+            updatedMatch.winner
+          );
+        }
       }
     }
 

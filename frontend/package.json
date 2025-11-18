@@ -24,6 +24,8 @@
     "formik": "^2.4.6",
     "js-cookie": "^3.0.5",
     "jsdoc": "^4.0.4",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "postcss": "^8.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

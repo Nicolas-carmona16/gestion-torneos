@@ -64,9 +64,11 @@ const MatchItem = ({
 
     return (
       <Box sx={{ mt: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          <strong>Partidos de la serie:</strong>
-        </Typography>
+        {!isVolleyball && (
+          <Typography variant="subtitle2" gutterBottom>
+            <strong>Partidos de la serie:</strong>
+          </Typography>
+        )}
         {match.seriesMatches?.map((game, index) => (
           <Box
             key={index}
@@ -87,7 +89,8 @@ const MatchItem = ({
           </Box>
         ))}
         {(user?.role === "admin" || user?.role === "assistant") &&
-          canAddMoreGames && (
+          canAddMoreGames &&
+          !isVolleyball && (
             <Button
               variant="outlined"
               size="small"
