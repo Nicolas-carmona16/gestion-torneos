@@ -12,6 +12,7 @@ import {
   TableCell,
   TableBody,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 import {
   ReactFlow,
   Background,
@@ -22,6 +23,7 @@ import {
   Handle,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { generateEliminationBracketPDF } from "../../services/pdfService";
 
 // Componente personalizado para los nodos de match
 const MatchNode = ({ data }) => {
@@ -171,7 +173,19 @@ const EliminationStage = ({
   generationError,
   bracket,
   isPlayoff = false,
+  tournament,
 }) => {
+  // Función para manejar la descarga del PDF del bracket
+  const handleDownloadBracketPDF = () => {
+    if (!bracket || Object.keys(bracket).length === 0) return;
+
+    const tournamentInfo = {
+      name: tournament?.name || "Torneo",
+    };
+
+    generateEliminationBracketPDF(bracket, tournamentInfo, isPlayoff);
+  };
+
   const { nodes, edges } = useMemo(() => {
     if (!bracket || Object.keys(bracket).length === 0) {
       return { nodes: [], edges: [] };
@@ -314,17 +328,30 @@ const EliminationStage = ({
 
   return (
     <Box sx={{ height: "80vh", width: "100%", background: "#f5f5f5" }}>
-      {isPlayoff && (
-        <Typography 
-          variant="h5" 
-          gutterBottom 
-          align="center" 
-          color="primary" 
-          sx={{ mb: 2 }}
+      {/* Encabezado con título y botón de descarga */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+        px={2}
+      >
+        {isPlayoff && (
+          <Typography variant="h5" color="primary">
+            Bracket de Eliminación Directa
+          </Typography>
+        )}
+        {!isPlayoff && <Box />}
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<DownloadIcon />}
+          onClick={handleDownloadBracketPDF}
+          disabled={!bracket || Object.keys(bracket).length === 0}
         >
-          Bracket de Eliminación Directa
-        </Typography>
-      )}
+          Descargar PDF
+        </Button>
+      </Box>
       <Paper
         elevation={3}
         sx={{

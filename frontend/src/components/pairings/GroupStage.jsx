@@ -471,6 +471,7 @@ const GroupStage = ({
               user={user}
               bracket={playoffBracket}
               isPlayoff={true}
+              tournament={tournament}
             />
           ) : (
             <Typography align="center" color="textSecondary">

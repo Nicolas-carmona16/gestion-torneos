@@ -391,7 +391,237 @@ export const getColumnDescriptions = (sportName) => {
   }
 };
 
+/**
+ * Traduce el nombre de la ronda al español
+ * @param {string} round - Nombre de la ronda en inglés
+ * @returns {string} Nombre de la ronda en español
+ */
+const translateRound = (round) => {
+  const translations = {
+    "round-of-32": "Dieciseisavos de Final",
+    "round-of-16": "Octavos de Final",
+    "quarter-finals": "Cuartos de Final",
+    "semi-finals": "Semifinales",
+    "final": "Final",
+  };
+  return translations[round] || round;
+};
+
+/**
+ * Traduce el estado del partido al español
+ * @param {string} status - Estado del partido en inglés
+ * @returns {string} Estado del partido en español
+ */
+const translateStatus = (status) => {
+  const translations = {
+    scheduled: "Programado",
+    pending: "Pendiente",
+    "in-progress": "En Progreso",
+    completed: "Completado",
+    postponed: "Aplazado",
+    cancelled: "Cancelado",
+    walkover: "Walkover",
+  };
+  return translations[status] || status;
+};
+
+/**
+ * Genera un PDF con el bracket de eliminación directa
+ * @param {Object} bracket - Objeto con las rondas del bracket
+ * @param {Object} tournamentInfo - Información del torneo
+ * @param {boolean} isPlayoff - Si es fase eliminatoria o bracket principal
+ */
+export const generateEliminationBracketPDF = (
+  bracket,
+  tournamentInfo,
+  isPlayoff = false
+) => {
+  // Crear documento en orientación horizontal
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4",
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+
+  // Título principal
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  const title = isPlayoff
+    ? "BRACKET DE ELIMINACIÓN DIRECTA"
+    : "BRACKET DE ELIMINACIÓN";
+  doc.text(title, pageWidth / 2, margin, { align: "center" });
+
+  // Información del torneo
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  let yPosition = margin + 8;
+  doc.text(`Torneo: ${tournamentInfo.name}`, margin, yPosition);
+  yPosition += 6;
+
+  const currentDate = new Date().toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  doc.text(`Fecha: ${currentDate}`, margin, yPosition);
+  yPosition += 10;
+
+  // Orden de las rondas
+  const roundOrder = [
+    "round-of-32",
+    "round-of-16",
+    "quarter-finals",
+    "semi-finals",
+    "final",
+  ];
+
+  const existingRounds = roundOrder.filter((round) => bracket[round]);
+
+  // Generar tabla para cada ronda
+  existingRounds.forEach((round) => {
+    const matches = bracket[round] || [];
+
+    // Si no hay espacio, añadir nueva página
+    if (yPosition > pageHeight - 80) {
+      doc.addPage();
+      yPosition = margin;
+    }
+
+    // Título de la ronda
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(translateRound(round), margin, yPosition);
+    yPosition += 7;
+
+    // Preparar datos de la tabla
+    const tableData = [];
+
+    matches.forEach((match, matchIndex) => {
+      const team1Name =
+        typeof match.team1 === "object"
+          ? match.team1?.name || "TBD"
+          : "TBD";
+      const team2Name =
+        typeof match.team2 === "object"
+          ? match.team2?.name || "TBD"
+          : "TBD";
+
+      // Obtener ganador si existe
+      const winnerId = match.seriesWinner?._id || match.seriesWinner;
+      const team1Id = match.team1?._id || match.team1;
+      const team2Id = match.team2?._id || match.team2;
+
+      let team1Display = team1Name;
+      let team2Display = team2Name;
+
+      // Marcar ganador con ✓
+      if (winnerId) {
+        if (winnerId.toString() === team1Id?.toString()) {
+          team1Display = `✓ ${team1Name}`;
+        } else if (winnerId.toString() === team2Id?.toString()) {
+          team2Display = `✓ ${team2Name}`;
+        }
+      }
+
+      // Obtener resultados de los partidos de la serie
+      let seriesScores = "";
+      if (match.seriesMatches && match.seriesMatches.length > 0) {
+        const scores = match.seriesMatches
+          .map((game) => {
+            if (game.scoreTeam1 !== null && game.scoreTeam2 !== null) {
+              return `${game.scoreTeam1}-${game.scoreTeam2}`;
+            }
+            return "-";
+          })
+          .join(", ");
+        seriesScores = scores;
+      }
+
+      tableData.push({
+        match: `Partido ${matchIndex + 1}`,
+        team1: team1Display,
+        team2: team2Display,
+        scores: seriesScores || "-",
+        status: translateStatus(match.status),
+      });
+    });
+
+    // Configuración de la tabla
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Partido", "Equipo 1", "Equipo 2", "Resultados", "Estado"]],
+      body: tableData.map((row) => [
+        row.match,
+        row.team1,
+        row.team2,
+        row.scores,
+        row.status,
+      ]),
+      theme: "grid",
+      headStyles: {
+        fillColor: [2, 105, 55], // Color verde del proyecto
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 10,
+        halign: "center",
+      },
+      bodyStyles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 25 },
+        1: { halign: "left", cellWidth: "auto" },
+        2: { halign: "left", cellWidth: "auto" },
+        3: { halign: "center", cellWidth: 50 },
+        4: { halign: "center", cellWidth: 30 },
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      margin: { left: margin, right: margin },
+      didParseCell: (data) => {
+        // Resaltar ganadores en verde claro
+        if (data.section === "body" && data.column.index < 3) {
+          const cellText = data.cell.text[0];
+          if (cellText && cellText.startsWith("✓")) {
+            data.cell.styles.fillColor = [212, 237, 218];
+            data.cell.styles.fontStyle = "bold";
+          }
+        }
+      },
+    });
+
+    // Actualizar posición Y
+    yPosition = doc.lastAutoTable.finalY + 10;
+  });
+
+  // Pie de página con número de página
+  const totalPages = doc.internal.pages.length - 1;
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Página ${i} de ${totalPages}`,
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: "center" }
+    );
+  }
+
+  // Guardar el PDF
+  const bracketType = isPlayoff ? "Eliminacion_Directa" : "Bracket";
+  const fileName = `${bracketType}_${tournamentInfo.name.replace(/\s+/g, "_")}_${currentDate.replace(/\s+/g, "_")}.pdf`;
+  doc.save(fileName);
+};
+
 export default {
   generateStandingsPDF,
+  generateEliminationBracketPDF,
   getColumnDescriptions,
 };
