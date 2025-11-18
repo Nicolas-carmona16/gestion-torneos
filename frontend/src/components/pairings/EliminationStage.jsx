@@ -28,6 +28,10 @@ import { generateEliminationBracketPDF } from "../../services/pdfService";
 // Componente personalizado para los nodos de match
 const MatchNode = ({ data }) => {
   const { match } = data;
+  
+  // Detectar si es voleibol
+  const isVolleyball = match?.tournament?.sport?.name?.toLowerCase().includes("voleibol") || 
+                       match?.tournament?.sport?.name?.toLowerCase().includes("volleyball");
 
   const getWinnerStyle = (teamId) => {
     if (!match.seriesWinner) return {};
@@ -122,7 +126,9 @@ const MatchNode = ({ data }) => {
               ))}
               <TableCell align="center">
                 {match.status === "completed" || match.status === "in-progress"
-                  ? match.scoreTeam1
+                  ? isVolleyball 
+                    ? (match.setsTeam1 ?? "-")
+                    : (match.scoreTeam1 ?? "-")
                   : "Pendiente"}
               </TableCell>
             </TableRow>
@@ -141,7 +147,9 @@ const MatchNode = ({ data }) => {
               ))}
               <TableCell align="center">
                 {match.status === "completed" || match.status === "in-progress"
-                  ? match.scoreTeam2
+                  ? isVolleyball 
+                    ? (match.setsTeam2 ?? "-")
+                    : (match.scoreTeam2 ?? "-")
                   : "Pendiente"}
               </TableCell>
             </TableRow>
