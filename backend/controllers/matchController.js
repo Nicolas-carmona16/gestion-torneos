@@ -13,7 +13,7 @@ import {
   generateGroupStageMatches,
   calculateGroupStandings,
 } from "../utils/groupStageGenerator.js";
-import { getNowInColombia, isTeamRegistrationOpen } from "../utils/dateUtils.js";
+import { getNowInColombia, isTeamRegistrationOpen, formatDate } from "../utils/dateUtils.js";
 import {
   generateEliminationBracket,
   generatePlayoffBracket,
@@ -341,8 +341,8 @@ export const updateMatch = async (req, res) => {
       if (updateData.date !== undefined && 
           new Date(updateData.date).getTime() !== new Date(originalValues.date).getTime()) {
         changes.date = {
-          old: originalValues.date ? new Date(originalValues.date).toLocaleDateString('es-CO') : 'No definida',
-          new: new Date(updateData.date).toLocaleDateString('es-CO')
+          old: formatDate(originalValues.date),
+          new: formatDate(updateData.date)
         };
       }
       

@@ -71,3 +71,19 @@ export const isTeamRegistrationOpen = (registrationStart, registrationTeamEnd) =
   
   return now >= start && now <= end;
 };
+
+/**
+ * Formatea una fecha en formato DD/MM/YYYY sin conversión de zona horaria
+ * Útil para mostrar fechas en correos electrónicos y reportes
+ * @param {string|Date} dateValue - Fecha a formatear
+ * @returns {string} Fecha formateada como DD/MM/YYYY o 'No definida' si es null/undefined
+ */
+export const formatDate = (dateValue) => {
+  if (!dateValue) return 'No definida';
+  const date = new Date(dateValue);
+  // Usar métodos UTC para evitar conversiones de zona horaria
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+};
