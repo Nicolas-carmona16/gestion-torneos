@@ -6,6 +6,7 @@ import {
   Button,
   TextField,
   Box,
+  CircularProgress,
 } from "@mui/material";
 
 const EditMatchDialog = ({
@@ -16,6 +17,7 @@ const EditMatchDialog = ({
   formData,
   onFormChange,
   onSubmit,
+  isSaving = false,
 }) => {
   if (!match) return null;
 
@@ -81,11 +83,17 @@ const EditMatchDialog = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="error">
+        <Button onClick={onClose} color="error" disabled={isSaving}>
           Cancelar
         </Button>
-        <Button onClick={onSubmit} color="primary" variant="contained">
-          Guardar
+        <Button 
+          onClick={onSubmit} 
+          color="primary" 
+          variant="contained"
+          disabled={isSaving}
+          startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : null}
+        >
+          {isSaving ? "Guardando..." : "Guardar"}
         </Button>
       </DialogActions>
     </Dialog>

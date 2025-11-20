@@ -7,17 +7,23 @@
 import Tournament from "../models/tournamentModel.js";
 import Team from "../models/teamModel.js";
 import Match from "../models/matchModel.js";
+import User from "../models/userModel.js";
 import {
   generateGroups,
   generateGroupStageMatches,
   calculateGroupStandings,
 } from "../utils/groupStageGenerator.js";
-import { getNowInColombia, isTeamRegistrationOpen } from "../utils/dateUtils.js";
+import { getNowInColombia, isTeamRegistrationOpen, formatDate } from "../utils/dateUtils.js";
 import {
   generateEliminationBracket,
   generatePlayoffBracket,
 } from "../utils/eliminationBracketGenerator.js";
 import { getBestNonQualifiedTeams } from "../utils/groupStageGenerator.js";
+import { sendEmail } from "../utils/emailService.js";
+import {
+  generateMatchUpdateEmailHTML,
+  generateMatchUpdateEmailText,
+} from "../templates/matchUpdateEmail.js";
 import {
   validateVolleyballSets,
   calculateVolleyballResult,
@@ -212,6 +218,14 @@ export const updateMatch = async (req, res) => {
       return res.status(404).json({ error: "Partido no encontrado" });
     }
 
+    // Store original values for email notification
+    const originalValues = {
+      date: match.date,
+      time: match.time,
+      location: match.location,
+      description: match.description,
+    };
+
     // Obtener reglas del deporte
     const tournament = await Tournament.findById(match.tournament).populate(
       "sport"
@@ -318,6 +332,126 @@ export const updateMatch = async (req, res) => {
       .populate("winner", "name")
       .populate("scorers.playerId", "fullName firstName lastName")
       .populate("scorers.teamId", "name");
+
+    // Send email notification if date, time, location, or description changed
+    try {
+      const changes = {};
+      
+      // Check if notification fields changed
+      if (updateData.date !== undefined && 
+          new Date(updateData.date).getTime() !== new Date(originalValues.date).getTime()) {
+        changes.date = {
+          old: formatDate(originalValues.date),
+          new: formatDate(updateData.date)
+        };
+      }
+      
+      if (updateData.time !== undefined && updateData.time !== originalValues.time) {
+        changes.time = {
+          old: originalValues.time || 'No definida',
+          new: updateData.time
+        };
+      }
+      
+      if (updateData.location !== undefined && updateData.location !== originalValues.location) {
+        changes.location = {
+          old: originalValues.location || 'No definida',
+          new: updateData.location
+        };
+      }
+      
+      if (updateData.description !== undefined && updateData.description !== originalValues.description) {
+        changes.description = {
+          old: originalValues.description || 'Sin descripción',
+          new: updateData.description
+        };
+      }
+
+      // If there are changes, send email to both captains
+      if (Object.keys(changes).length > 0) {
+        const matchWithCaptains = await Match.findById(matchId)
+          .populate({
+            path: 'team1',
+            select: 'name captain',
+            populate: {
+              path: 'captain',
+              select: 'email firstName lastName'
+            }
+          })
+          .populate({
+            path: 'team2',
+            select: 'name captain',
+            populate: {
+              path: 'captain',
+              select: 'email firstName lastName'
+            }
+          })
+          .populate('tournament', 'name');
+
+        const team1Captain = matchWithCaptains.team1?.captain;
+        const team2Captain = matchWithCaptains.team2?.captain;
+        const tournamentName = matchWithCaptains.tournament?.name || 'Torneo';
+        
+        const team1Name = matchWithCaptains.team1?.name || 'Equipo 1';
+        const team2Name = matchWithCaptains.team2?.name || 'Equipo 2';
+
+        // Send email to team1 captain
+        if (team1Captain?.email) {
+          const htmlContent = generateMatchUpdateEmailHTML({
+            captainName: `${team1Captain.firstName} ${team1Captain.lastName}`,
+            teamName: team1Name,
+            tournamentName: tournamentName,
+            opponentTeamName: team2Name,
+            changes: changes
+          });
+          
+          const textContent = generateMatchUpdateEmailText({
+            captainName: `${team1Captain.firstName} ${team1Captain.lastName}`,
+            teamName: team1Name,
+            tournamentName: tournamentName,
+            opponentTeamName: team2Name,
+            changes: changes
+          });
+
+          await sendEmail({
+            to: team1Captain.email,
+            subject: `Cambios en el partido - ${tournamentName}`,
+            html: htmlContent,
+            text: textContent
+          });
+        }
+
+        // Send email to team2 captain
+        if (team2Captain?.email) {
+          const htmlContent = generateMatchUpdateEmailHTML({
+            captainName: `${team2Captain.firstName} ${team2Captain.lastName}`,
+            teamName: team2Name,
+            tournamentName: tournamentName,
+            opponentTeamName: team1Name,
+            changes: changes
+          });
+          
+          const textContent = generateMatchUpdateEmailText({
+            captainName: `${team2Captain.firstName} ${team2Captain.lastName}`,
+            teamName: team2Name,
+            tournamentName: tournamentName,
+            opponentTeamName: team1Name,
+            changes: changes
+          });
+
+          await sendEmail({
+            to: team2Captain.email,
+            subject: `Cambios en el partido - ${tournamentName}`,
+            html: htmlContent,
+            text: textContent
+          });
+        }
+        
+        console.log('Email notifications sent successfully for match update');
+      }
+    } catch (emailError) {
+      console.error('Error sending email notifications:', emailError);
+    }
 
     res.status(200).json(populatedMatch);
   } catch (error) {
