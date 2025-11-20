@@ -41,6 +41,7 @@ const TournamentMatches = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingMatch, setEditingMatch] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [editFormData, setEditFormData] = useState({
     scoreTeam1: "",
     scoreTeam2: "",
@@ -243,6 +244,7 @@ const TournamentMatches = () => {
 
   const handleUpdateMatchFromDialog = async () => {
     try {
+      setIsSaving(true);
       const updateData = Object.fromEntries(
         Object.entries(editFormData).filter(
           ([key, value]) => value !== "" && value !== editingMatch[key]
@@ -256,6 +258,8 @@ const TournamentMatches = () => {
     } catch (error) {
       console.error("Error al actualizar el partido:", error);
       setError("Error al actualizar el partido");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -422,6 +426,7 @@ const TournamentMatches = () => {
         formData={editFormData}
         onFormChange={handleEditFormChange}
         onSubmit={handleUpdateMatchFromDialog}
+        isSaving={isSaving}
       />
 
       <SeriesGameDialog
