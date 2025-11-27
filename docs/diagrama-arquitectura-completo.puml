@@ -1,0 +1,358 @@
+@startuml Sistema de Gestión de Torneos Deportivos - Arquitectura Completa\nFacultad de Ingeniería - Universidad de Antioquia
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+' ====================================
+' CAPA DE PRESENTACIÓN (FRONTEND)
+' ====================================
+package "CAPA DE PRESENTACIÓN" #E8F5E9 {
+  
+  package "React Application (Vite)" {
+    component "App.jsx\n(Router + Auth + Theme)" as App
+    
+    package "Pages" {
+      component "Home\nLogin\nProfile" as PublicPages
+      component "ManageTournaments\nCreateTournament\nManageUsers" as AdminPages
+      component "TeamRegistrationPage\nTournamentTeamsPage" as CaptainPages
+      component "TournamentMatches\nTournamentPairings\nManageCarrusel" as ManagePages
+    }
+    
+    package "Components" {
+      component "Header\nProtectedRoute" as CoreComponents
+      component "Tournament Components\nTeam Components\nMatch Components" as FeatureComponents
+      component "EditMatchDialog\nMatchItem\nGroupStage\nEliminationStage" as MatchComponents
+    }
+    
+    package "Services" {
+      component "api.js\n(Axios Instance)" as API
+      component "authService\ntournamentService\nteamService" as Services1
+      component "matchService\nplayerService\nsportService" as Services2
+      component "pdfService\ncarruselService\nchangeLogService" as Services3
+    }
+    
+    package "Hooks" {
+      component "useTeamChanges\n(WebSocket Hook)" as HooksComp
+    }
+    
+    package "Utils" {
+      component "dateHelpers\nformatters\nvalidators" as UtilsComp
+    }
+  }
+  
+  note right of App
+    React 19.0 + Vite 6.2
+    Material-UI v7.0
+    React Router DOM v7.4
+  end note
+}
+
+' ====================================
+' CAPA DE COMUNICACIÓN
+' ====================================
+package "CAPA DE COMUNICACIÓN" #FFF9C4 {
+  
+  component "REST API\n(HTTP/HTTPS)\nGET, POST, PUT, PATCH, DELETE\nJSON Request/Response\nJWT in httpOnly Cookies" as REST
+  
+  component "WebSocket\n(Socket.IO)\nNamespace: /admin\nJWT Authentication\nReal-time Events\nteam-change event" as WebSocket
+  
+  component "Email Service\n(SMTP)\nNodemailer v7.0\nHTML Templates\nMatch Update Notifications\nSend to Captains" as Email
+  
+  note right of REST
+    CORS: localhost:5173
+    Credentials: true
+    Content-Type: application/json
+  end note
+  
+  note right of WebSocket
+    Solo para admins
+    Notificaciones en tiempo real
+    de cambios en equipos
+  end note
+  
+  note right of Email
+    Gmail / Outlook / SMTP
+    Emails a capitanes cuando
+    cambian fecha/hora/ubicación
+  end note
+}
+
+' ====================================
+' CAPA DE APLICACIÓN (BACKEND)
+' ====================================
+package "CAPA DE APLICACIÓN" #E8F5E9 {
+  
+  component "server.js\n(Express + HTTP + Socket.IO)" as Server
+  
+  package "Routes" {
+    component "/api/users\n/api/sports\n/api/tournaments" as Routes1
+    component "/api/teams\n/api/matches\n/api/players" as Routes2
+    component "/api/carrusel\n/api/changelog" as Routes3
+  }
+  
+  package "Middlewares" {
+    component "authMiddleware\n(protect, authorizeRoles)" as AuthMW
+    component "errorMiddleware\nrateLimiter\nvalidationMiddleware" as OtherMW
+    component "uploadImage\nuploadEPS" as UploadMW
+  }
+  
+  package "Controllers" {
+    component "userController\n(Login, Register, CRUD)" as UserCtrl
+    component "tournamentController\n(CRUD, Status Calc)" as TournamentCtrl
+    component "teamController\n(Register, Add/Remove Players)" as TeamCtrl
+    component "matchController\n(Generate, Update, Email)" as MatchCtrl
+    component "sportController\nplayerController\ncarruselController" as OtherCtrl
+  }
+  
+  package "Utils" {
+    component "groupStageGenerator\n(Grupos + Round-robin)" as GroupGen
+    component "eliminationBracketGenerator\n(Single/Double Elimination)" as EliminGen
+    component "volleyballUtils\n(Sets Validation)" as VolleyUtils
+    component "dateUtils\n(Colombia TZ, formatDate)" as DateUtils
+    component "emailService\n(sendEmail, createTransporter)" as EmailService
+  }
+  
+  package "Templates" {
+    component "matchUpdateEmail.js\n(HTML + Text Templates)" as EmailTemplates
+  }
+  
+  note right of Server
+    Node.js + Express 4.21
+    Puerto: 5000
+    Mongoose 8.12
+    Socket.IO 4.8
+  end note
+}
+
+' ====================================
+' CAPA DE DATOS
+' ====================================
+package "CAPA DE DATOS" #FFF3CD {
+  
+  database "MongoDB Atlas" as MongoDB {
+    storage "Users\n(admin, captain, assistant)" as UsersDB
+    storage "Sports\n(name, defaultRules)" as SportsDB
+    storage "Tournaments\n(format, dates, status)" as TournamentsDB
+    storage "Teams\n(captain, players, removedPlayers)" as TeamsDB
+    storage "Players\n(fullName, idNumber, epsUrl)" as PlayersDB
+    storage "Matches\n(scores, sets, brackets)" as MatchesDB
+    storage "TeamChangeLog\n(type, description, readBy)" as ChangeLogDB
+  }
+  
+  cloud "Supabase Storage" as Supabase {
+    folder "carousel-images" as CarouselBucket
+    folder "eps-documents" as EPSBucket
+  }
+  
+  note right of MongoDB
+    Mongoose ODM
+    gestiontorneos.zhy1i.mongodb.net
+    Timestamps: createdAt, updatedAt
+  end note
+  
+  note right of Supabase
+    Almacenamiento de archivos
+    URLs públicas
+    @supabase/supabase-js v2.49
+  end note
+}
+
+' ====================================
+' SERVICIOS EXTERNOS
+' ====================================
+package "SERVICIOS EXTERNOS" #E3F2FD {
+  
+  component "SMTP Server\n(Gmail/Outlook/UdeA)" as SMTPServer
+  
+  note right of SMTPServer
+    Configuración:
+    EMAIL_HOST, EMAIL_PORT
+    EMAIL_USER, EMAIL_PASS
+    EMAIL_FROM_NAME
+  end note
+}
+
+' ====================================
+' CONEXIONES - FRONTEND
+' ====================================
+App --> PublicPages
+App --> AdminPages
+App --> CaptainPages
+App --> ManagePages
+App --> CoreComponents
+
+PublicPages --> API
+AdminPages --> API
+CaptainPages --> API
+ManagePages --> API
+
+CoreComponents --> API
+FeatureComponents --> API
+MatchComponents --> API
+
+API --> Services1
+API --> Services2
+API --> Services3
+
+AdminPages ..> HooksComp : usa
+HooksComp ..> WebSocket : conecta
+
+Services3 ..> UtilsComp : usa
+
+' ====================================
+' CONEXIONES - COMUNICACIÓN
+' ====================================
+Services1 --> REST : HTTP Requests
+Services2 --> REST
+Services3 --> REST
+
+Hooks --> WebSocket : Socket.IO Client
+
+REST --> Server : HTTP
+WebSocket --> Server : WebSocket
+Email ..> SMTPServer : SMTP
+
+' ====================================
+' CONEXIONES - BACKEND
+' ====================================
+Server --> Routes1
+Server --> Routes2
+Server --> Routes3
+
+Routes1 --> AuthMW
+Routes2 --> AuthMW
+Routes3 --> AuthMW
+
+AuthMW --> OtherMW
+OtherMW --> UserCtrl
+OtherMW --> TournamentCtrl
+OtherMW --> TeamCtrl
+OtherMW --> MatchCtrl
+OtherMW --> OtherCtrl
+
+UploadMW ..> Supabase : upload files
+
+UserCtrl --> MongoDB
+TournamentCtrl --> MongoDB
+TeamCtrl --> MongoDB
+MatchCtrl --> MongoDB
+OtherCtrl --> MongoDB
+
+TeamCtrl ..> Server : emit Socket.IO\n"team-change"
+MatchCtrl ..> EmailService : detecta cambios
+MatchCtrl --> GroupGen : genera grupos
+MatchCtrl --> EliminGen : genera brackets
+MatchCtrl --> VolleyUtils : valida sets
+
+EmailService --> EmailTemplates : genera HTML
+EmailService --> Email : envía correos
+DateUtils --> EmailTemplates : formatea fechas
+
+' ====================================
+' CONEXIONES - DATOS
+' ====================================
+MongoDB --> UsersDB
+MongoDB --> SportsDB
+MongoDB --> TournamentsDB
+MongoDB --> TeamsDB
+MongoDB --> PlayersDB
+MongoDB --> MatchesDB
+MongoDB --> ChangeLogDB
+
+Supabase --> CarouselBucket
+Supabase --> EPSBucket
+
+' ====================================
+' FLUJOS PRINCIPALES
+' ====================================
+note as FlowNote
+<b>FLUJOS DE DATOS PRINCIPALES:</b>
+
+<b>1. Autenticación:</b>
+   Login → JWT en Cookie → Verificación en c/request
+
+<b>2. Inscripción de Equipos:</b>
+   Capitán → Upload EPS → Create Team → Socket.IO → Admin
+
+<b>3. Generación de Emparejamientos:</b>
+   Admin → Generate Groups → Round-robin → Create Matches
+
+<b>4. Actualización de Resultados:</b>
+   Update Match → Validate → Advance Winner → Email Captains
+
+<b>5. Notificaciones en Tiempo Real:</b>
+   Team Change → Socket.IO /admin → WebSocket → Frontend
+
+<b>6. Emails Automáticos:</b>
+   Match Update → Detect Changes → Format Email → SMTP
+end note
+
+FlowNote .left. Server
+
+' ====================================
+' SEGURIDAD
+' ====================================
+note as SecurityNote
+<b>SEGURIDAD:</b>
+
+• <b>JWT:</b> httpOnly cookies, firmados con JWT_SECRET
+• <b>Roles:</b> admin, captain, assistant
+• <b>CORS:</b> localhost:5173 con credentials
+• <b>Rate Limiting:</b> Prevención de abuso
+• <b>Validaciones:</b> express-validator en endpoints
+• <b>Passwords:</b> Hasheados con bcrypt
+• <b>Email:</b> @udea.edu.co institucional
+end note
+
+SecurityNote .right. AuthMW
+
+' ====================================
+' TECNOLOGÍAS
+' ====================================
+note as TechNote
+<b>STACK TECNOLÓGICO:</b>
+
+<b>Frontend:</b>
+• React 19.0 + Vite 6.2
+• Material-UI v7.0
+• Axios 1.8.4
+• Socket.IO Client 4.8
+• jsPDF 3.0 + autotable
+• ReactFlow 12.6
+
+<b>Backend:</b>
+• Node.js + Express 4.21
+• MongoDB + Mongoose 8.12
+• Socket.IO 4.8
+• JWT + bcrypt
+• Nodemailer 7.0
+• Multer (uploads)
+
+<b>Storage:</b>
+• MongoDB Atlas (datos)
+• Supabase Storage (archivos)
+end note
+
+TechNote .down. MongoDB
+
+' ====================================
+' CARACTERÍSTICAS ESPECIALES
+' ====================================
+note as FeaturesNote
+<b>CARACTERÍSTICAS:</b>
+
+• <b>Multi-Deporte:</b> Volleyball (sets), Fútbol, 
+  Futsal, Baloncesto (scores)
+• <b>Formatos:</b> Fase de grupos + Eliminación directa
+• <b>Wildcards:</b> Mejores perdedores
+• <b>Best-of Series:</b> Múltiples partidos
+• <b>PDF Export:</b> Tablas y brackets
+• <b>Estados Dinámicos:</b> Auto-cálculo por fechas
+• <b>Histórico:</b> Jugadores eliminados
+• <b>Notificaciones:</b> WebSocket + Email
+end note
+
+FeaturesNote .up. TournamentCtrl
+
+@enduml
