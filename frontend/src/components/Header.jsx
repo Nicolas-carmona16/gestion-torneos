@@ -16,6 +16,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import logo from "../assets/logoUdeA.png";
 import { logoutUser, getUser } from "../services/authService";
 import { useTeamChanges } from "../hooks/useTeamChanges";
@@ -179,6 +180,16 @@ const Header = ({ isAuthenticated, setIsAuthenticated }) => {
             >
               <PhotoLibraryIcon sx={{ mr: 1 }} />
               Gestión del Carrusel
+            </MenuItem>,
+            <MenuItem
+              key="estadisticas"
+              onClick={() => {
+                handleMenuClose();
+                navigate("/estadisticas");
+              }}
+            >
+              <BarChartIcon sx={{ mr: 1 }} />
+              Estadísticas
             </MenuItem>,
           ]}
           <Divider />

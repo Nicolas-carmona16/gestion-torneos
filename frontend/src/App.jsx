@@ -33,6 +33,7 @@ import TournamentMatches from "./pages/TournamentMatches";
 import ManageReglamento from "./pages/ManageReglamento";
 import ManageResoluciones from "./pages/ManageResoluciones";
 import ManageCarrusel from "./pages/ManageCarrusel";
+import Statistics from "./pages/Statistics";
 
 /**
  * Main App component responsible for rendering routes, layout, and theme.
@@ -173,6 +174,17 @@ const App = () => {
                   allowedRoles={["admin"]}
                 >
                   <ManageCarrusel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/estadisticas"
+              element={
+                <ProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  allowedRoles={["admin"]}
+                >
+                  <Statistics />
                 </ProtectedRoute>
               }
             />
