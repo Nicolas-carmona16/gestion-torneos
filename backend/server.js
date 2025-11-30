@@ -17,6 +17,7 @@ import matchRoutes from "./routes/matchRoutes.js";
 import playerRoutes from "./routes/playerRoutes.js";
 import carruselRoutes from "./routes/carruselRoutes.js";
 import teamChangeLogRoutes from "./routes/teamChangeLogRoutes.js";
+import statisticsRoutes from "./routes/statisticsRoutes.js";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import jwt from "jsonwebtoken";
@@ -88,6 +89,7 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/players", playerRoutes);
 app.use("/api/carrusel", carruselRoutes);
 app.use("/api/changelog", teamChangeLogRoutes);
+app.use("/api/statistics", statisticsRoutes);
 
 // Middleware for handling errors
 app.use(notFound);
